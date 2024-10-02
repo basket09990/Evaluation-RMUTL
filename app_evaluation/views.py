@@ -2377,6 +2377,43 @@ def create_evaluation(request):
 
     return render(request, 'app_evaluation/create_evaluation.html', {'form': form, 'evr_round': evr_round_obj})
 
+from django.db.models.signals import post_save
+@receiver(post_save, sender=Profile)
+def create_user_evaluation(sender, instance, created, **kwargs):
+    # ดึงข้อมูลรอบการประเมินปัจจุบัน
+    current_round = evr_round.objects.filter(evr_status=True).first()
+
+    if created:
+        # เมื่อสร้าง Profile ใหม่ ตรวจสอบว่ารอบการประเมินปัจจุบันมีอยู่หรือไม่
+        if current_round:
+            # สร้าง user_evaluation อัตโนมัติ
+            user_evaluation.objects.get_or_create(
+                user=instance.user,
+                evr_id=current_round,
+                defaults={
+                    'c_gtt': None,
+                    'c_wl': None,
+                    'c_sumwl': None,
+                    'approve_status': False,
+                    'evaluater_id': None,
+                    'evaluater_editgtt': None,
+                    'mc_score': None,
+                    'sc_score': None,
+                    'adc_score': None,
+                    'cp_num': None,
+                    'cp_score': None,
+                    'cp_sum': None,
+                    'cp_main_sum': None,
+                    'achievement_work': None,
+                    'performing_work': None,
+                    'other_work': None,
+                    'sum_work': None,
+                    'improved': None,
+                    'suggestions': None,
+                    'ac_id': instance.ac_id,
+                    'administrative_position': instance.administrative_position,
+                }
+            )
 
 # ฟังก์ชันหน้าแบบประเมิน
 @login_required
@@ -2392,9 +2429,16 @@ def evaluation_page(request, evaluation_id):
 
     evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
 
-    # ตรวจสอบว่ามีข้อมูลการประเมินในปัจจุบันหรือไม่
-    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, year=timezone.now().year).first()
+    # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+
+    # ดึงข้อมูล profile ที่เชื่อมกับ user_evaluation
+    profile = evaluation.user.profile
+
+    # ดึงข้อมูลการประเมินผลของผู้ใช้
+    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
     selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
+
 
     # ตรวจสอบว่า user_evaluation มีข้อมูลในรอบนี้หรือไม่
     user_evaluation_obj, created = user_evaluation.objects.get_or_create(
@@ -2424,6 +2468,13 @@ def evaluation_page(request, evaluation_id):
             'administrative_position': profile.administrative_position,
         }
     )
+
+    # ตรวจสอบว่าต้องอัปเดตฟิลด์ ac_id และ administrative_position หรือไม่
+    if not created:  # ถ้าไม่ได้สร้างใหม่ อาจจะต้องทำการอัปเดตข้อมูล
+        if user_evaluation_obj.ac_id != profile.ac_id or user_evaluation_obj.administrative_position != profile.administrative_position:
+            user_evaluation_obj.ac_id = profile.ac_id
+            user_evaluation_obj.administrative_position = profile.administrative_position
+            user_evaluation_obj.save()
 
     # ดึงข้อมูลการทำงานของรอบปัจจุบัน
     user_work_current = user_work_info.objects.filter(user=user, round=evr_round_obj).first()
@@ -3365,7 +3416,20 @@ def update_evr_status(request, evaluation_id):
     # Redirect back to the evaluation page
     return redirect('search_evaluations')
 
-
+@login_required
+def toggle_approve_status(request, evaluation_id):
+    # ดึงข้อมูล user_evaluation จาก evaluation_id
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+    
+    # เปลี่ยนสถานะ approve_status
+    evaluation.approve_status = not evaluation.approve_status
+    evaluation.save()
+    
+    # ส่งข้อความแสดงผลสำเร็จ
+    messages.success(request, f"เปลี่ยนสถานะการอนุมัติสำเร็จเป็น {'อนุมัติ' if evaluation.approve_status else 'ไม่อนุมัติ'}")
+    
+    # กลับไปยังหน้าที่ต้องการ (เช่น หน้ารายการการประเมิน)
+    return redirect('search_evaluations_2', evaluation_id=evaluation_id)  # แก้ไข URL name ให้ตรงกับ project ของคุณ
 
 
 

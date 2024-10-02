@@ -555,10 +555,43 @@
                                                 <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
                                             </div>
+                                            {% if user.groups.all.0.name == "Evaluator" %}
+                                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">
+                                                    เสร็จสิ้นการประเมิน
+                                                </button>
+                                            </form>
+                                            {% endif %}
+
+                                            {% if user.groups.all.0.name == "Staff"%}
+                                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">
+                                                    เสร็จสิ้นการประเมิน
+                                                </button>
+                                            </form>
+                                            
+
                                             <form action="{% url 'update_evr_status' evaluation_id %}" method="post">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
                                             </form>
+                                            {% endif %}
+                                            {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">
+                                                    เสร็จสิ้นการประเมิน
+                                                </button>
+                                            </form>
+                                            
+
+                                            <form action="{% url 'update_evr_status' evaluation_id %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
+                                            </form>
+                                            {% endif %}
 
 </div>
 
