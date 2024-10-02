@@ -2230,10 +2230,6 @@ def select_group(request):
     groups = group.objects.all()
     evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
 
-    # ตรวจสอบว่ารอบการประเมินเปิดอยู่หรือไม่ ถ้าไม่ ให้รีไดเร็กไปหน้าอื่น
-    if not evr_round_obj or not evr_round_obj.evr_status:
-        # รีไดเร็กไปยังหน้าที่คุณต้องการ เช่น หน้าแจ้งเตือน หรือหน้าประกาศ
-        return redirect('search_evaluations')
 
     # ตรวจสอบว่าผู้ใช้มีการเลือกกลุ่มและมีข้อมูลการประเมินสำหรับรอบปัจจุบันแล้วหรือไม่
     selected_agreement = user_evaluation_agreement.objects.filter(
