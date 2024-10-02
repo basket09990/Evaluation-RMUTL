@@ -2377,43 +2377,7 @@ def create_evaluation(request):
 
     return render(request, 'app_evaluation/create_evaluation.html', {'form': form, 'evr_round': evr_round_obj})
 
-from django.db.models.signals import post_save
-@receiver(post_save, sender=Profile)
-def create_user_evaluation(sender, instance, created, **kwargs):
-    # ดึงข้อมูลรอบการประเมินปัจจุบัน
-    current_round = evr_round.objects.filter(evr_status=True).first()
 
-    if created:
-        # เมื่อสร้าง Profile ใหม่ ตรวจสอบว่ารอบการประเมินปัจจุบันมีอยู่หรือไม่
-        if current_round:
-            # สร้าง user_evaluation อัตโนมัติ
-            user_evaluation.objects.get_or_create(
-                user=instance.user,
-                evr_id=current_round,
-                defaults={
-                    'c_gtt': None,
-                    'c_wl': None,
-                    'c_sumwl': None,
-                    'approve_status': False,
-                    'evaluater_id': None,
-                    'evaluater_editgtt': None,
-                    'mc_score': None,
-                    'sc_score': None,
-                    'adc_score': None,
-                    'cp_num': None,
-                    'cp_score': None,
-                    'cp_sum': None,
-                    'cp_main_sum': None,
-                    'achievement_work': None,
-                    'performing_work': None,
-                    'other_work': None,
-                    'sum_work': None,
-                    'improved': None,
-                    'suggestions': None,
-                    'ac_id': instance.ac_id,
-                    'administrative_position': instance.administrative_position,
-                }
-            )
 
 # ฟังก์ชันหน้าแบบประเมิน
 @login_required
