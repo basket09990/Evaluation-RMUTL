@@ -139,6 +139,7 @@ urlpatterns = [
     path('evaluation/delete_personal_diagram2/<int:pd_id>/', views.delete_personal_diagram2, name='delete_personal_diagram2'),
 
     path('toggle-approve-status/<int:evaluation_id>/', views.toggle_approve_status, name='toggle_approve_status'),
+    path('update_evr_status2/<int:evaluation_id>/', views.update_evr_status2, name='update_evr_status2'),
 
     path('get-subfields/<int:f_id>/', views.get_subfields, name='get_subfields'),
     path('get-criteria/<int:sf_id>/', views.get_criteria, name='get_criteria'),

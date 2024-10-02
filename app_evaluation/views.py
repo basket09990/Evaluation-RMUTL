@@ -3417,6 +3417,23 @@ def update_evr_status(request, evaluation_id):
     return redirect('search_evaluations')
 
 @login_required
+def update_evr_status2(request, evaluation_id):
+    # Fetch the user_evaluation object
+    user_evaluation_obj = get_object_or_404(user_evaluation, pk=evaluation_id)
+
+    # Fetch the related evr_round object
+    evr_round_obj = user_evaluation_obj.evr_id
+
+    # Check request method and update evr_status
+    if request.method == 'POST':
+        evr_round_obj.evr_status = True  # or the desired status
+        evr_round_obj.save()
+        messages.success(request, 'สถานะการประเมินถูกอัพเดตเรียบร้อยแล้ว')
+    
+    # Redirect back to the evaluation page
+    return redirect('search_evaluations_2')
+
+@login_required
 def toggle_approve_status(request, evaluation_id):
     # ดึงข้อมูล user_evaluation จาก evaluation_id
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
