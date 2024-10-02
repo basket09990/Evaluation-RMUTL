@@ -1435,7 +1435,7 @@ def evaluation_page_from_1(request, evaluation_id):
         current_round_forms = [sick_leave_form, personal_leave_form, late_form, maternity_leave_form, ordination_leave_form, longsick_leave_form, adsent_work_form]
         all_forms = [profile_form, extended_form, work_form_current] + current_round_forms + list(round_1_forms.values())
 
-        if all(form.is_valid() for form in all_forms):
+        if all(form.is_valid() for form in all_forms if form is not None):
             # บันทึกข้อมูลทุกฟอร์ม
             profile_form.save()
             extended_form.save()
