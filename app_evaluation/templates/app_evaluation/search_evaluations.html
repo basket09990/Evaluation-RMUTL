@@ -1,0 +1,63 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}ค้นหาแบบประเมิน{% endblock %}
+
+{% block content %}
+<div>
+
+
+    <br>
+    <h1>รายการแบบประเมินของคุณ</h1>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อจริง</th>
+                <th>นามสกุล</th>
+                <th>สถานะการอนุมัติ</th>
+                <th>ปี</th>
+                <th>รอบการประเมิน</th>
+                <th>สถานะการประเมิน</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for evaluation in evaluations %}
+            <tr>
+                <td>{{ evaluation.user.first_name }}</td>
+                <td>{{ evaluation.user.last_name }}</td>
+                <td>
+                    {% if evaluation.approve_status %}
+                        อนุมัติแล้ว
+                    {% else %}
+                        ยังไม่ได้อนุมัติ
+                    {% endif %}
+                </td>
+                <td>{{ evaluation.evr_id.evr_year }}</td>
+                <td>{{ evaluation.evr_id.evr_round }}</td>
+                <td>
+                    {% if evaluation.evr_id.evr_status %}
+                        ส่งแบบประเมินแล้ว
+                    {% else %}
+                        ยังไม่ได้ส่งแบบประเมิน
+                    {% endif %}
+                </td>     
+                <td>
+                    <!-- ตรวจสอบสถานะการอนุมัติ -->
+                    
+                        <!-- แสดงปุ่ม "ดู" ถ้าได้รับการอนุมัติ -->
+                        
+                    
+                        <!-- แสดงปุ่ม "แก้ไข" ถ้ายังไม่ได้รับการอนุมัติ -->
+                        <a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-primary">แก้ไข</a>
+                    
+                </td>           
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">ไม่มีข้อมูลการประเมิน</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

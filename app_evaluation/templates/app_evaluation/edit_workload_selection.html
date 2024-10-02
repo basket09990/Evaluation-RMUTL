@@ -1,0 +1,12 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div class="form-group">
+    <form method="post" action="{% url 'edit_workload_selection' selection.id %}">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">บันทึก</button>
+    </form>
+    <a href="{% url 'evaluation_page_2' selection.evaluation.uevr_id %}" class="btn btn-secondary">ยกเลิก</a>
+</div>
+{% endblock %}

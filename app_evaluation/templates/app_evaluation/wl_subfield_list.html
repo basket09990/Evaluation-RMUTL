@@ -1,0 +1,28 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>กลุ่มย่อยภาระงาน: {{ field.f_name }}</h2>
+    <a href="{% url 'wl_subfield_add' field.f_id %}" class="btn btn-primary">เพิ่มกลุ่มย่อย</a>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อกลุ่มย่อย</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for subfield in subfields %}
+            <tr>
+                <td>{{ subfield.sf_name }}</td>
+                <td>
+                    <a href="{% url 'wl_subfield_edit' subfield.pk %}" class="btn btn-warning">แก้ไข</a>
+                    <a href="{% url 'wl_subfield_delete' subfield.pk %}" class="btn btn-danger">ลบ</a>
+                    <a href="{% url 'workload_criteria_list' subfield.sf_id %}" class="btn btn-info">ดูเกณฑ์ภาระงาน</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'wl_field_list' %}" class="btn btn-secondary">กลับไปที่รายการ</a>
+</div>
+{% endblock %}

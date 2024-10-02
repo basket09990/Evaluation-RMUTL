@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h2>ลบ สมรรถนะหลัก</h2>
+    <p>คุณต้องการลบ สมรรถนะหลัก {{ competency.mc_name }} จริงหรือไม่?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <a href="{% url 'list_main_competency' %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>    
+</div>
+{% endblock %}

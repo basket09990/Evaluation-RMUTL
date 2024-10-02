@@ -1,0 +1,15 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div class="form-group">
+    <h2>{{ action }}</h2>
+    <form method="post" action="" >
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">
+            {% if is_edit %} บันทึกการแก้ไข {% else %} เพิ่มเกณฑ์ภาระงาน {% endif %}
+        </button>
+        <!-- ใช้ subfield_id เพื่อกลับไปยังหน้ารายการ -->
+        <a href="{% url 'workload_criteria_list' subfield_id=subfield_id %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+</div>
+{% endblock %}

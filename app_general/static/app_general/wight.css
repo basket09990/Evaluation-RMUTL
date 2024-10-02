@@ -1,0 +1,103 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F5F5F5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    overflow-y: auto; /* ทำให้สามารถเลื่อน sidebar ได้ */
+}
+
+.content {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto; /* ทำให้สามารถเลื่อน sidebar ได้ */
+}
+
+.content-inner {
+    max-width: 100%; /* กำหนดขนาดสูงสุด */
+    overflow: auto; /* อนุญาตให้เลื่อนใน content */
+}
+
+.box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 200px;
+    height: 120px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: #333;
+    text-align: center;
+    padding: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+}
+
+.box:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.box img {
+    width: 40px; /* กำหนดขนาดความกว้างของรูปภาพ */
+    height: 40px; /* กำหนดขนาดความสูงของรูปภาพ */
+    margin-bottom: 10px;
+}
+
+.box1 { background-color: #FFD966; }
+.box2 { background-color: #FFE699; }
+.box3 { background-color: #BFBFBF; }
+.box4 { background-color: #76A5AF; }
+
+
+.messages {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+.messages li {
+    background-color: #DFF2BF;
+    color: #4F8A10;
+    border: 1px solid #4F8A10;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+}
+
+.popup-overlay {
+    display: none; /* ซ่อน overlay */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999; /* ให้อยู่ด้านบนสุด */
+}
+.popup {
+    display: none; /* ซ่อน pop-up */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 20px;
+    background: #fff;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* ให้อยู่ด้านบนสุด */
+}
+.popup button {
+    margin-top: 10px;
+    padding: 10px 20px;
+    background-color: #FFB800;
+    color: #FFF;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}

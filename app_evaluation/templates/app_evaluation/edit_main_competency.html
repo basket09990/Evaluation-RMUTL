@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div class="form-group">
+    <h2>แก้ไข สมรรถนะหลัก: {{ competency.mc_name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+    </form>
+    <a href="{% url 'list_main_competency' %}" class="btn btn-secondary">กลับ</a>    
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h2>กลุ่มภาระงาน</h2>
+    <a href="{% url 'wl_field_add' %}" class="btn btn-primary">เพิ่มภาระงาน</a>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อภาระงาน</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for field in fields %}
+            <tr>
+                <td>{{ field.f_name }}</td>
+                <td>
+                    <a href="{% url 'wl_field_edit' field.pk %}" class="btn btn-warning">แก้ไข</a>
+                    <a href="{% url 'wl_field_delete' field.pk %}" class="btn btn-danger">ลบ</a>
+                    <a href="{% url 'wl_subfield_list' pk=field.f_id %}" class="btn btn-info">ดูรายละเอียด</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

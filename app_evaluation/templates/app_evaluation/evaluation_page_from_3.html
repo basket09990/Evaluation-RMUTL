@@ -1,0 +1,303 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แบบประเมิน{% endblock %}
+{% block content %}
+<style>
+    @media print {
+
+        /* ซ่อนปุ่มลิงก์ที่มี class btn ตอนปริ้น */
+        .btn {
+            display: none;
+        }
+
+    }
+
+    h1 {
+        text-align: center;
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    .form-container {
+        
+        background-color: #F6F0E5;
+       
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+        color: #333;
+        font-weight: bold;
+    }
+
+    .form-table {
+        
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .form-table td {
+        padding: 10px;
+        vertical-align: top;
+       
+    }
+
+    .form-group1 {
+        
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+    .form-group1 label {
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #555;
+    }
+
+    .form-group1 input[type="text"], 
+    .form-group1 input[type="date"] {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    .radio-group {
+        display: flex;
+        gap: 20px;
+        margin-top: 10px;
+    }
+
+    .radio-group label {
+        display: flex;
+        align-items: center;
+        font-weight: normal;
+        color: #333;
+    }
+
+    .button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .button:hover {
+        background-color: #218838;
+    }
+
+    .full-width {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+    .full-width input {
+        width: calc(50% - 10px);
+    }
+
+    .form-table th {
+        padding: 10px;
+        background-color: #f0f0f0;
+        font-weight: bold;
+        text-align: center;
+        border: 1px solid #ddd;
+        
+    }
+
+    .form-table td {
+        border: 1px solid #ddd;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: center;
+        margin: 20px auto;
+        max-width: 400px;
+    }
+    
+    .eval-button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        background-color: #28a745;
+        color: white;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s ease;
+        width: 100%;
+    }
+
+    .eval-button:hover {
+        background-color: #218838;
+    }
+
+    
+    
+</style>
+<div>
+<form action="{% url 'evaluation_page_from_3' evaluation_id %}" method="POST">
+    {% csrf_token %}
+    <h1>ส่วนที่  2 องค์ประกอบที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</h1>
+
+    <h3><strong>ระดับตำแหน่งผู้รับการประเมิน:</strong> {{ user_evaluation_obj.ac_id.ac_name }}</h3>
+
+        <!-- Main Competencies -->
+    <table class="form-table">
+        <thead>
+            <tr>
+                <th>สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)</th>
+                <th>ระดับสมรรถนะที่คาดหวัง</th>
+                <th>ระดับสมรรถนะที่แสดงออก</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for competency in main_competencies %}
+            <tr>
+                <td>{{ competency.mc_name }}</td>
+                <td style="text-align: center;">{{ competency.mc_num }}</td>
+                <td style="text-align: center;">
+                    <input type="number" name="main_actual_score_{{ competency.mc_id }}" 
+                           value="{% for score in main_scores %}{% if score.mc_id_id == competency.mc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" 
+                           max="{{ competency.mc_num }}" style="text-align: center;"/>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Specific Competencies -->
+    <table class="form-table" style="margin-top: 50px;">
+        <thead>
+            <tr>
+                <th>สมรรถนะเฉพาะ (ที่สภามหาวิทยาลัยกำหนด)</th>
+                <th>ระดับสมรรถนะที่คาดหวัง</th>
+                <th>ระดับสมรรถนะที่แสดงออก</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for competency in specific_competencies %}
+            <tr>
+                <td>{{ competency.sc_name }}</td>
+                <td style="text-align: center;">{{ competency.sc_num }}</td>
+                <td style="text-align: center;">
+                    <input type="number" name="specific_actual_score_{{ competency.sc_id }}" 
+                           value="{% for score in specific_scores %}{% if score.sc_id_id == competency.sc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" 
+                           max="{{ competency.sc_num }}" style="text-align: center;"/>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <!-- Administrative Competencies -->
+    {% if user_evaluation_obj.administrative_position %}
+    
+    <table class="form-table" style="margin-top: 50px;">
+        <thead>
+            <h3><strong>ตำแหน่งบริหาร {{ user_evaluation_obj.administrative_position }}</strong></h3>
+            <tr>
+                <th>สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด)</th>
+                <th>ระดับสมรรถนะที่คาดหวัง</th>
+                <th>ระดับสมรรถนะที่แสดงออก</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for competency in administrative_competencies %}
+            <tr>
+                <td>{{ competency.adc_name }}</td>
+                <td style="text-align: center;">{{ competency.adc_num }}</td>
+                <td style="text-align: center;">
+                    <input type="number" name="admin_actual_score_{{ competency.adc_id }}" 
+                           value="{% for score in administrative_scores %}{% if score.adc_id_id == competency.adc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" style="text-align: center;"/>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+
+        <!-- สรุปผลรวมของคะแนน -->
+    
+        <table class="form-table" style="margin-top: 50px;">
+            <thead>
+                <tr>
+                    <th colspan="3">การประเมิน</th>
+                </tr>
+                <tr>
+                    <th>จำนวนสมรรถนะ</th>
+                    <th>คูณ (X)</th>
+                    <th>คะแนน</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">{{ count_3 }}</td>
+                    <td style="text-align: center;">3</td>
+                    <td style="text-align: center;">{{ score_3_total }}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">{{ count_2 }}</td>
+                    <td style="text-align: center;">2</td>
+                    <td style="text-align: center;">{{ score_2_total }}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">{{ count_1 }}</td>
+                    <td style="text-align: center;">1</td>
+                    <td style="text-align: center;">{{ score_1_total }}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">{{ count_0 }}</td>
+                    <td style="text-align: center;">0</td>
+                    <td style="text-align: center;">{{ score_0_total }}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <th colspan="2">ผลรวมคะแนน</th>
+                    <th>{{ total_score }}</th>
+                </tr>
+            </tfoot>
+        </table>
+        </table>
+        <h2>คะแนนที่ได้: {{ calculated_score|floatformat:2 }}</h2>
+
+    <table class="form-table">
+        <tr>
+        <td>หลักเกณฑ์การประเมิน </td>
+        </tr>
+        <tr>
+        <td>จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน </td>
+        </tr>
+        <tr>
+        <td>จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน </td>
+        </tr>
+        <tr>   
+        <td>จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน </td>
+        </tr>
+        <tr>
+        <td>จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน </td>
+        </tr>
+    </table>
+
+    <button type="submit">ส่งข้อมูล</button>
+    </form>
+    <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+{% endblock %}

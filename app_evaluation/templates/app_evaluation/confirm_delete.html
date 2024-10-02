@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div class="form-group">
+    <form method="POST">
+        {% csrf_token %}
+        <p>คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลนี้?</p>
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <a href="{% url 'evaluation_page_2' selection.evaluation.uevr_id %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+    
+</div>
+{% endblock %}

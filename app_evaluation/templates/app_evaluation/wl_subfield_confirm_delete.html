@@ -1,0 +1,14 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>ยืนยันการลบกลุ่มย่อยภาระงาน</h2>
+    <p>คุณต้องการลบกลุ่มย่อยภาระงาน "{{ subfield.sf_name }}" ใช่หรือไม่?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <!-- ในปุ่มยกเลิกหรือการกลับไปยังหน้ารายการ -->
+        <a href="{% url 'wl_subfield_list' pk=subfield.f_id.pk %}" class="btn btn-secondary">ยกเลิก</a>
+
+    </form>
+</div>
+{% endblock %}

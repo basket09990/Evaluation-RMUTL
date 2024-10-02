@@ -1,0 +1,408 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แบบประเมิน{% endblock %}
+{% block content %}
+<style>
+    @media print {
+        /* ซ่อนปุ่มลิงก์ที่มี class btn ตอนปริ้น */
+        .btn {
+            display: none;
+        }
+    }
+
+    .form-container {
+        background-color: #fff;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 210mm;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        margin-left: 80px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    .form-group1 {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .form-group1 label {
+        width: 200px;
+        font-weight: bold;
+        color: #555;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .form-group1 input[type="text"], 
+    .form-group1 input[type="date"] {
+         /* กำหนดขนาดความกว้างของ input */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        text-align: left;
+    }
+    
+    .form-group1 input[type="radio"] {
+        margin-right: 0px;
+        text-align: left;
+    }
+
+    .radio-group, .checkbox-group {
+        width: 100%;
+        text-align: left;
+        flex-direction: row;
+        align-items: left;
+        margin-left: left;
+    }
+
+    .radio-group label, .checkbox-group label {
+        margin-right: 10px;
+        text-align: left;
+    }
+    
+    .radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+        margin-right: 5px;
+    }
+
+    .form-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .form-table th, .form-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .form-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-table td input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+        width: 200px;
+        margin-botton: 20px;
+    }
+
+    button:hover {
+        background-color: #218838;
+    }
+
+    /* Slideshow container */
+    .slideshow-container {
+        position: relative;
+        max-width: 100%;
+        margin: auto;
+    }
+
+    /* Hide the images by default */
+    .mySlides {
+        display: none;
+    }
+
+    /* Next & previous buttons */
+    .prev, .next {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        width: auto;
+        margin-top: -22px;
+        padding: 16px;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        transition: 0.6s ease;
+        border-radius: 0 3px 3px 0;
+        user-select: none;
+        background-color: rgba(0,0,0,0.6);
+    }
+
+    /* Position the "next button" to the right */
+    .next {
+        right: 0;
+        border-radius: 3px 0 0 3px;
+    }
+
+    /* On hover, add a black background color with a little bit see-through */
+    .prev:hover, .next:hover {
+        background-color: rgba(0,0,0,0.8);
+    }
+
+    /* Caption text */
+    .text {
+        color: #f2f2f2;
+        font-size: 15px;
+        padding: 8px 12px;
+        position: absolute;
+        bottom: 8px;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Number text (1/3 etc) */
+    .numbertext {
+        color: #f2f2f2;
+        font-size: 12px;
+        padding: 8px 12px;
+        position: absolute;
+        top: 0;
+    }
+
+    /* The dots/bullets/indicators */
+    .dot {
+        cursor: pointer;
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.6s ease;
+    }
+
+    .active, .dot:hover {
+        background-color: #717171;
+    }
+
+    .file-container {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .file-container span {
+        flex-grow: 1;
+        margin-left: 10px;
+    }
+
+    .file-container button {
+        background-color: #d9534f;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .file-container button:hover {
+        background-color: #c9302c;
+    }
+
+    .slideshow-controls {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .signature-table td {
+        height: 60px; /* ปรับความสูงของช่องสำหรับลายเซ็นต์ */
+        vertical-align: top; /* จัดข้อความให้อยู่ด้านบน */
+        padding-top: 15px; /* เพิ่มระยะห่างด้านบน */
+    }
+
+    .signature-line {
+        display: inline-block;
+        width: 60%; /* ปรับความยาวของเส้น */
+        border-bottom: 1px solid black;
+        margin-left: 10px;
+    }
+
+    .date-section {
+        display: inline-block;
+        width: 20%; /* ปรับความกว้างของช่องวันที่ */
+        border-bottom: 1px solid black;
+        margin: 0 5px;
+    }
+
+    .date-container {
+        text-align: left;
+        padding: 10px;
+    }
+
+    
+    .short-input {
+        width: 100px;  /* ตั้งค่าความกว้างตามที่ต้องการ */
+    }
+   
+    .button-container {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* ระยะห่างระหว่างปุ่ม */
+    }
+ 
+    .btn-small {
+        font-size: 12px;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+ 
+    
+</style>
+<div>
+<div>
+<div>
+    <h2>ส่วนที่ 5 การรับทราบผลการประเมิน</h2>
+    <table class="form-table">
+        <tr>
+            <td colspan="2"><strong>ผู้รับการประเมิน :</strong></td>
+        </tr>
+        <tr>
+            <td rowspan ="3"><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>ได้รับทราบผลการประเมินและแผนพัฒนา<div style=" padding-left: 35px; ">
+            การปฏิบัติราชการรายบุคคลแล้ว</div></td>
+            <td style="padding-top:30px;">ลงชื่อ..........................................................</td>
+        </tr>
+        <tr>
+            
+            <td style="padding-top:30px;">ตำแหน่ง.....................................................</td>
+        </tr>
+        <tr>
+            
+            <td style="padding-top:30px;">วันที่...........................................................</td>
+        </tr>
+        <tr>
+            <td colspan="2"><strong>ผู้ประเมิน :</strong></td>
+        </tr>
+        <tr>
+            <td rowspan ="2"><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>ได้แจ้งผลการประเมินและผู้รับการประเมิน
+        <div style=" padding-left: 35px; ">ได้ลงนามรับทราบ
+        </div>
+        </td>
+            <td style="padding-top:30px;">ลงชื่อ..........................................................</td>
+        </tr>
+        <tr>
+            <td style="padding-top:30px;">ตำแหน่ง...................................................</td>
+        </tr>
+        <tr>
+            <td ><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>ได้แจ้งผลการประเมินเมื่อวันที่.................................................
+            <div style=" padding-left: 35px; ">แต่ผู้รับการประเมินไม่ลงนามรับทราบผลการประเมิน
+            </div>
+            <div style=" padding-left: 35px; padding-top:10px;">โดยมี.......................................................................เป็นพยาน
+            </div>
+        </td>
+            <td>วันที่..........................................................</td>
+        </tr>
+    </table>
+</div>
+<div>
+    <h2>ส่วนที่ 6 ความเห็นของผู้บังคับบัญชาเหนือขึ้นไป</h2>
+    <table class="form-table">
+        <tr>
+            <td colspan="2"><strong>ผู้บังคับบัญชาเหนือขึ้นไป :</strong></td>
+        </tr>
+        <tr>
+            <td><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>เห็นด้วยกับผลการประเมิน</td>
+            <td>ลงชื่อ..........................................................</td>
+        </tr>
+        <tr>
+            <td rowspan="2" ><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>มีความเห็นแตกต่าง ดังนี้
+            <div style=" padding-left: 35px; ">.........................................................................................................
+            </div>
+            <div style=" padding-left: 35px; padding-top:10px;">.........................................................................................................
+            </div>
+        </td>
+            <td>ตำแหน่ง......................................................</td>
+        </tr>
+
+        <tr>
+            <td>วันที่............................................................</td>
+        </tr>
+
+        <tr>
+            <td colspan="2"><strong>ผู้บังคับบัญชาเหนือขึ้นไปอีกชั้นหนึ่ง (ถ้ามี) :</strong></td>
+        </tr>
+        <tr>
+            <td><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>เห็นด้วยกับผลการประเมิน</td>
+            <td>ลงชื่อ..........................................................</td>
+        </tr>
+        <tr>
+            <td rowspan="2" ><div style=" solid black; padding: 10px; display: inline-block;">
+                <label>
+                    <input type="checkbox" name="example_checkbox">
+                </label>
+            </div>มีความเห็นแตกต่าง ดังนี้
+            <div style=" padding-left: 35px; ">.........................................................................................................
+            </div>
+            <div style=" padding-left: 35px; padding-top:10px;">.........................................................................................................
+            </div>
+        </td>
+            <td>ตำแหน่ง......................................................</td>
+        </tr>
+
+        <tr>
+            <td>วันที่............................................................</td>
+        </tr>
+    </table>
+</div>
+</div>
+<div>
+<button onclick="window.history.back()">ย้อนกลับ</button>
+</div>
+</div>
+{% endblock %}

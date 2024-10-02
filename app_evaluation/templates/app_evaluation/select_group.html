@@ -1,0 +1,37 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+
+{% block title %}เลือกด้านที่รับการประเมิน{% endblock %}
+
+{% block content %}
+    <div class="evaluation-container">
+        <h2>เลือกกลุ่มประเมิน</h2>
+
+<form method="post">
+    {% csrf_token %}
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อกลุ่มประเมิน</th>
+                <th>ชื่อกลุ่มใหญ่</th>
+                <th>ภาระงานสูงสุด</th>
+                <th>เลือก</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr>
+                <td>{{ group.g_name }}</td>
+                <td>{{ group.g_field_name }}</td>
+                <td>{{ group.g_max_workload }}</td>
+                <td>
+                    <input type="radio" name="g_name" value="{{ group.g_id }}" required>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">ยืนยัน</button>
+</form>
+    </div>
+{% endblock %}

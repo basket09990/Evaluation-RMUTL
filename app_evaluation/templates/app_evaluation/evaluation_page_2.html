@@ -1,0 +1,381 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แบบประเมิน{% endblock %}
+{% block content %}
+<style>
+    @media print {
+        /* ซ่อนปุ่มลิงก์ที่มี class btn ตอนปริ้น */
+        .btn {
+            display: none;
+        }
+    }
+
+    .form-container {
+        background-color: #fff;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 210mm;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        margin-left: 80px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    .form-group1 {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .form-group1 label {
+        width: 200px;
+        font-weight: bold;
+        color: #555;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .form-group1 input[type="text"], 
+    .form-group1 input[type="date"] {
+         /* กำหนดขนาดความกว้างของ input */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        text-align: left;
+    }
+    
+    .form-group1 input[type="radio"] {
+        margin-right: 0px;
+        text-align: left;
+    }
+
+    .radio-group, .checkbox-group {
+        width: 100%;
+        text-align: left;
+        flex-direction: row;
+        align-items: left;
+        margin-left: left;
+    }
+
+    .radio-group label, .checkbox-group label {
+        margin-right: 10px;
+        text-align: left;
+    }
+    
+    .radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+        margin-right: 5px;
+    }
+
+    .form-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .form-table th, .form-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .form-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-table td input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+        width: 200px;
+        margin-botton: 20px;
+    }
+
+    button:hover {
+        background-color: #218838;
+    }
+
+    /* Slideshow container */
+    .slideshow-container {
+        position: relative;
+        max-width: 100%;
+        margin: auto;
+    }
+
+    /* Hide the images by default */
+    .mySlides {
+        display: none;
+    }
+
+    /* Next & previous buttons */
+    .prev, .next {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        width: auto;
+        margin-top: -22px;
+        padding: 16px;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        transition: 0.6s ease;
+        border-radius: 0 3px 3px 0;
+        user-select: none;
+        background-color: rgba(0,0,0,0.6);
+    }
+
+    /* Position the "next button" to the right */
+    .next {
+        right: 0;
+        border-radius: 3px 0 0 3px;
+    }
+
+    /* On hover, add a black background color with a little bit see-through */
+    .prev:hover, .next:hover {
+        background-color: rgba(0,0,0,0.8);
+    }
+
+    /* Caption text */
+    .text {
+        color: #f2f2f2;
+        font-size: 15px;
+        padding: 8px 12px;
+        position: absolute;
+        bottom: 8px;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Number text (1/3 etc) */
+    .numbertext {
+        color: #f2f2f2;
+        font-size: 12px;
+        padding: 8px 12px;
+        position: absolute;
+        top: 0;
+    }
+
+    /* The dots/bullets/indicators */
+    .dot {
+        cursor: pointer;
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.6s ease;
+    }
+
+    .active, .dot:hover {
+        background-color: #717171;
+    }
+
+    .file-container {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .file-container span {
+        flex-grow: 1;
+        margin-left: 10px;
+    }
+
+    .file-container button {
+        background-color: #d9534f;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .file-container button:hover {
+        background-color: #c9302c;
+    }
+
+    .slideshow-controls {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .signature-table td {
+        height: 60px; /* ปรับความสูงของช่องสำหรับลายเซ็นต์ */
+        vertical-align: top; /* จัดข้อความให้อยู่ด้านบน */
+        padding-top: 15px; /* เพิ่มระยะห่างด้านบน */
+    }
+
+    .signature-line {
+        display: inline-block;
+        width: 60%; /* ปรับความยาวของเส้น */
+        border-bottom: 1px solid black;
+        margin-left: 10px;
+    }
+
+    .date-section {
+        display: inline-block;
+        width: 20%; /* ปรับความกว้างของช่องวันที่ */
+        border-bottom: 1px solid black;
+        margin: 0 5px;
+    }
+
+    .date-container {
+        text-align: left;
+        padding: 10px;
+    }
+
+    
+    .short-input {
+        width: 100px;  /* ตั้งค่าความกว้างตามที่ต้องการ */
+    }
+   
+    .button-container {
+        display: flex;
+        align-items: center;
+        gap: 10px; /* ระยะห่างระหว่างปุ่ม */
+    }
+ 
+    .btn-small {
+        font-size: 12px;
+        padding: 2px 5px;
+        border-radius: 3px;
+    }
+ 
+    
+</style>
+
+<div>
+<div>
+
+<h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
+<h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา</h1>
+<h3>ส่วนที่  1  องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</h3>
+<table class="form-table">
+    <thead>
+        <tr>
+            <th>ภาระงาน/กิจกรรม/โครงการ/งาน</th>
+            <th>จำนวน</th>
+            <th>ภาระงาน</th>
+            <th>รวมภาระงาน</th>
+            <th>หมายเหตุ</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for field in fields %}
+            <!-- แสดงชื่อ field -->
+            <tr>
+                <td>{{ forloop.counter }}. {{ field.f_name }}  
+                    <a href="{% url 'select_subfields' field.f_id user_evaluation.uevr_id %}" class="btn btn-primary btn-small">เพิ่ม Subfields</a>
+                </td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
+            <!-- แสดง subfields ที่เกี่ยวข้องกับ field นี้ -->
+            {% for subfield in selected_subfields %}
+                {% if subfield.f_id == field %}
+                    <tr>
+                        
+                        <!-- แสดงชื่อ subfield -->
+                        <td>{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ subfield.sf_id.sf_name }} 
+                            <div >
+                            <a href="{% url 'select_workload_criteria' user_evaluation.uevr_id subfield.sf_id.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                            <form action="{% url 'delete_selected_subfield' subfield.sf_id.sf_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="evaluation_id" value="{{ evaluation_id }}">
+                                <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ Subfield นี้?');">ลบ Subfield</button>
+                            </form>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <!-- ลิงก์เพื่อเลือกเกณฑ์ภาระงาน -->
+                       
+                        
+                        <!-- ตารางแสดงข้อมูล workload_selections ที่เชื่อมโยงกับ subfield นี้ -->
+                        {% for selection in workload_selections %}
+                            {% if selection.sf_id == subfield.sf_id %}
+                                <tr>
+                                    
+                                    <td>{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ selection.c_id.c_name }}  
+                                        <a href="{% url 'edit_workload_selection' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
+                                        <form action="{% url 'delete_workload_selection' selection.id %}" method="post" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
+                                        </form>
+                                    </td>
+                                    <td style="text-align: center;">{{ selection.selected_unit }}</td>
+                                    <td style="text-align: center;">{{ selection.c_id.c_workload }}</td>
+                                    <td style="text-align: center;">{{ selection.calculated_workload|floatformat:2 }}</td>
+                                    <td style="text-align: center;">{{ selection.notes }}</td>
+                                </tr>
+                            {% else %}
+                                
+                            {% endif %}
+                        
+                        {% endfor %}
+                    </tr>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- แสดงผลรวมที่ท้ายตาราง -->
+<div class="total-workload">
+    <h2>คะแนนภาระงานต้องไม่น้อยกว่า {{min_workload}} ภาระงาน</h2>
+    <h2><strong>ผลรวมของคะแนนภาระงาน:</strong> {{ total_workload|floatformat:2 }}</h2>
+    
+    <h2><strong>คะแนนผลสัมฤทธิ์ของงาน:</strong> {{ achievement_work|floatformat:2 }}</h2>
+</div>
+
+
+<div>
+    <a href="{% url 'evaluation_page' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+</div>
+</div>
+
+{% endblock %}

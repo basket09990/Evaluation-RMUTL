@@ -1,0 +1,15 @@
+{% extends 'app_general/components/base.html' %}
+
+{% block title %}ลบ{% endblock %}
+
+{% block content %}
+<div>
+    <h2>ลบรายละเอียดกลุ่ม</h2>
+    <p>คุณต้องการลบรายละเอียดกลุ่มนี้ใช่หรือไม่?</p>
+    <form method="post" action="{% url 'group_detail_delete' detail.gd_id %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <a href="{% url 'group_detail_list' group_id=detail.g_id.g_id %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>                
+</div>
+{% endblock %}

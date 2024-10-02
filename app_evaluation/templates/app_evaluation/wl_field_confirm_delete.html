@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h2>ยืนยันการลบกลุ่มภาระงาน</h2>
+    <p>คุณต้องการลบกลุ่มภาระงาน "{{ field.f_name }}" ใช่หรือไม่?</p>
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <a href="{% url 'wl_field_list' %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+</div>
+{% endblock %}

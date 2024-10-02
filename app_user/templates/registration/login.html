@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เข้าสู่ระบบ</title>
+    <style>
+        /* รีเซ็ตค่าเริ่มต้น */
+body, h1, p {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    display: auto;
+   
+   
+    height: 100vh;
+    margin: 120px;
+    font-family: Arial, sans-serif;
+    background-color: #F6F0E5;
+}
+
+.container {
+    text-align: center;
+}
+
+.title {
+    font-size: 1.5em;
+    color: #333333;
+}
+
+.avatar-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    margin-bottom: -50px;
+    background-color: #FFD700;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 5px solid #FFF;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-container img {
+    width: 119%;
+    height: auto;
+}
+
+.info-box {
+    margin-top: 60px;
+    padding: 30px;
+    border: 2px solid #FFB800;
+    border-radius: 10px;
+    background-color: #FFF;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    text-align: left;
+    max-width: 400px; /* กำหนดความกว้างสูงสุด */
+    width: 100%; /* ใช้เต็มความกว้างที่มีอยู่ */
+}
+
+.role {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.button {
+    background-color: #FFB800;
+    color: #FFF;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+    width: 95%;
+}
+
+.button:hover {
+    background-color: #FF9A00;
+}
+
+form {
+    margin: 0;
+}
+
+p {
+    margin: 10px 0;
+}
+
+/* เพิ่มสไตล์สำหรับฟอร์ม */
+form input[type="text"],
+form input[type="password"],
+form input[type="email"],
+form button[type="submit"] {
+    width: calc(100% - 20px); /* ใช้เต็มความกว้างของฟอร์มลบกับ padding */
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+}
+
+form input[type="text"]:focus,
+form input[type="password"]:focus,
+form input[type="email"]:focus {
+    border-color: #FFB800;
+    outline: none;
+    box-shadow: 0 0 5px rgba(255, 184, 0, 0.5);
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">
+            ระบบประเมินบุคลากรสายวิชาการ<br>คณะวิศวกรรมศาสตร์ สาขาวิศวกรรมไฟฟ้า
+        </div>
+
+        <div class="info-box">
+            <div class="role">เข้าสู่ระบบ</div>
+            <form action="{% url 'login' %}" method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                {% if request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+                <p>
+                    <button class="button" type="submit">เข้าสู่ระบบ</button>
+                </p>
+            </form>
+            <button class="button" onclick="window.location.href='{% url 'register' %}'">สมัครสมาชิก</button>
+        </div>
+    </div>
+</body>
+</html>

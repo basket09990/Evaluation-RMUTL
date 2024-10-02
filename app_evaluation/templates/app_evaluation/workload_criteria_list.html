@@ -1,0 +1,35 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>เกณฑ์ภาระงาน: {{ subfield.sf_name }}</h2>
+    <a href="{% url 'workload_criteria_add' subfield.sf_id %}" class="btn btn-primary">เพิ่มเกณฑ์ภาระงาน</a>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อเกณฑ์</th>
+                <th>จำนวน</th>
+                <th>จำนวนสูงสุด</th>
+                <th>หน่วย</th>
+                <th>ภาระงาน</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for criterion in criteria %}
+            <tr>
+                <td>{{ criterion.c_name }}</td>
+                <td>{{ criterion.c_num }}</td>
+                <td>{{ criterion.c_maxnum }}</td>
+                <td>{{ criterion.c_unit }}</td>
+                <td>{{ criterion.c_workload }}</td>
+                <td>
+                    <a href="{% url 'workload_criteria_edit' criterion.pk %}" class="btn btn-warning">แก้ไข</a>
+                    <a href="{% url 'workload_criteria_delete' criterion.pk %}" class="btn btn-danger">ลบ</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'wl_subfield_list' pk=subfield.f_id.pk %}" class="btn btn-secondary">กลับไปที่รายการก่อนหน้า</a>
+</div>
+{% endblock %}

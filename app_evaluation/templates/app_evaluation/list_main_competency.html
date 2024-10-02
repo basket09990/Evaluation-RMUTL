@@ -1,0 +1,28 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h2>รายการ สมรรถนะหลัก</h2>
+    <a href="{% url 'add_main_competency' %}" class="btn btn-primary">เพิ่ม Competency</a>
+    <table class="table1">
+        <tr>
+            <th>ชื่อ</th>
+            <th>ประเภทตำแหน่งวิชาการ</th>
+            <th>จำนวน</th>
+            <th>จัดการ</th>
+        </tr>
+        {% for competency in competencies %}
+        <tr>
+            <td>{{ competency.mc_name }}</td>
+            <td>{{ competency.mc_type }}</td>
+            <td>{{ competency.mc_num }}</td>
+            <td>
+                <a href="{% url 'edit_main_competency' competency.mc_id %}" class="btn btn-warning">แก้ไข</a>
+                <a href="{% url 'delete_main_competency' competency.mc_id %}" class="btn btn-danger">ลบ</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="{% url 'score0' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+{% endblock %}

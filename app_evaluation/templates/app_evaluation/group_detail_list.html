@@ -1,0 +1,29 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>รายละเอียดของกลุ่ม: {{ group.g_name }}</h2>
+    <a href="{% url 'group_detail_add' group.g_id %}" class="btn btn-primary">เพิ่มรายละเอียดกลุ่ม</a>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อฟิลด์</th>
+                <th>ภาระงาน</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for detail in details %}
+            <tr>
+                <td>{{ detail.f_id.f_name }}</td>
+                <td>{{ detail.gd_workload }}</td>
+                <td>
+                    <a href="{% url 'group_detail_edit' detail.gd_id %}" class="btn btn-warning">แก้ไข</a>
+                    <a href="{% url 'group_detail_delete' detail.gd_id %}" class="btn btn-danger">ลบ</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <a href="{% url 'group_list' %}" class="btn btn-secondary">กลับไปที่รายการกลุ่ม</a>
+</div>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends 'app_general/components/base.html' %}
+
+{% block title %}สร้างแบบประเมิน{% endblock %}
+
+{% block content %}
+                <div class="info-box">
+                    <h1>กรุณากรอกข้อมูลส่วนตัวก่อนทำแบบประเมิน</h1>
+                    <button class="button button-primary" onclick="window.location.href='{% url 'profile' %}'">กรอกข้อมูลส่วนตัว</button>
+                </div>
+{% endblock %}

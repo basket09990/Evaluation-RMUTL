@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div class="form-group">
+    <h2>เพิ่ม สมรรถนะเฉพาะตามลักษณะงานที่ปฏิบัติ</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">บันทึก</button>
+    </form>
+    <a href="{% url 'list_specific_competency' %}" class="btn btn-secondary">กลับ</a>    
+</div>
+{% endblock %}

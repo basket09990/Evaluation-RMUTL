@@ -1,0 +1,225 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แนบไฟล์และรูปภาพ{% endblock %}
+{% block content %}
+<div>
+    <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
+    <form id="uploadForm" action="{% url 'upload_evidence1' evaluation.uevr_id %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="upload-section">
+            <label for="file">File:</label>
+            <input type="file" id="file" name="file" multiple>
+        </div>
+        <div class="upload-section">
+            <label for="picture">Picture:</label>
+            <input type="file" id="picture" name="picture" multiple>
+        </div>
+        <button type="submit" class="btn btn-upload">อัปโหลด</button>
+    </form>
+    <div class="back-link">
+        <a href="{% url 'evaluation_page1' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+    </div>
+    <div class="uploaded-files">
+        <ul>
+            <!-- สำหรับไฟล์ -->
+            <h2>ไฟล์ที่อัปโหลด</h2>
+            <div class="files-section">
+                {% for evidence in evidences %}
+                {% if evidence.file %}
+                <li class="evidence-item">
+                    <div class="file-info">
+                        <!-- เปิดไฟล์ใน pop-up โดยใช้ iframe และป้องกัน IDM จากการดาวน์โหลด -->
+                        <a href="#" onclick="openPopup('{{ evidence.file.url }}')" class="file-link">{{ evidence.filename }}</a>
+                        <span class="delete-link">
+                            <a href="{% url 'delete_evidence1' evidence.uevd_id %}">ลบไฟล์</a>
+                        </span>
+                    </div>
+                </li>
+                {% endif %}
+                {% endfor %}
+            </div>
+        
+            <!-- สำหรับรูปภาพ -->
+            <h2>รูปภาพที่อัปโหลด</h2>
+            <div class="pictures-section">
+                <div class="picture-grid">
+                    {% for evidence in evidences %}
+                        {% if evidence.picture %}
+                        <div class="picture-item">
+                            <div class="picture-info">
+                                <!-- แสดงรูปภาพใน pop-up -->
+                                <a href="#" onclick="openPopup('{{ evidence.picture.url }}')">
+                                    <img src="{{ evidence.picture.url }}" alt="รูปภาพที่อัปโหลด" class="uploaded-image">
+                                </a>
+                                <span class="delete-link">
+                                    <a href="{% url 'delete_evidence1' evidence.uevd_id %}">ลบรูปภาพ</a>
+                                </span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </ul>
+    </div>
+</div>
+
+<!-- JavaScript Validation -->
+<script>
+    // Function สำหรับตรวจสอบชนิดไฟล์
+    function validateFiles(event) {
+        // ตรวจสอบไฟล์
+        const fileInput = document.getElementById('file');
+        const pictureInput = document.getElementById('picture');
+
+        // Allowed file extensions for files and pictures
+        const allowedFileTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']; // PDF และ DOCX
+        const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif']; // รูปภาพ
+
+        // Check files
+        if (fileInput.files.length > 0) {
+            for (let i = 0; i < fileInput.files.length; i++) {
+                if (!allowedFileTypes.includes(fileInput.files[i].type)) {
+                    alert('ไฟล์ต้องเป็น PDF หรือ DOCX เท่านั้น');
+                    event.preventDefault(); // หยุดการส่งฟอร์ม
+                    return false;
+                }
+            }
+        }
+
+        // Check pictures
+        if (pictureInput.files.length > 0) {
+            for (let i = 0; i < pictureInput.files.length; i++) {
+                if (!allowedImageTypes.includes(pictureInput.files[i].type)) {
+                    alert('รูปภาพต้องเป็น JPEG, PNG, หรือ GIF เท่านั้น');
+                    event.preventDefault(); // หยุดการส่งฟอร์ม
+                    return false;
+                }
+            }
+        }
+        
+        return true; // ผ่านการตรวจสอบ
+    }
+
+    // เพิ่ม event listener เมื่อกด submit
+    document.getElementById('uploadForm').addEventListener('submit', validateFiles);
+
+    function openPopup(url) {
+        // ขนาดของ pop-up window
+        const width = 800;
+        const height = 600;
+        
+        // กำหนดตำแหน่งตรงกลางของหน้าจอ
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+
+        // เปิดหน้าต่าง pop-up
+        window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
+    }
+</script>
+
+
+<style>
+    .upload-section {
+        margin-bottom: 15px;
+    }
+
+    label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+    .btn-upload {
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-upload:hover {
+        background-color: #45a049;
+    }
+
+    .uploaded-files h2 {
+        font-size: 24px;
+        margin-bottom: 15px;
+    }
+
+    .uploaded-files ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .evidence-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .file-info {
+        margin-right: 15px;
+    }
+
+    .file-link {
+        text-decoration: none;
+        color: #3498db;
+        font-size: 16px;
+        font-weight: bold;
+    }
+
+    .file-link:hover {
+        text-decoration: underline;
+    }
+
+    .delete-link a {
+        color: red;
+        margin-left: 10px;
+        font-size: 14px;
+    }
+
+    .uploaded-image {
+        max-width: 200px;
+        border-radius: 5px;
+        margin-right: 10px;
+    }
+
+    .back-link {
+        margin-top: 20px;
+    }
+
+    .back-link a {
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #6c757d;
+        color: white;
+        border-radius: 5px;
+    }
+
+    .back-link a:hover {
+        background-color: #5a6268;
+    }
+
+    .picture-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr); /* สร้าง 10 คอลัมน์ */
+        gap: 10px; /* ระยะห่างระหว่างรูปภาพ */
+        padding: 20px;
+    }
+    
+    .picture-item {
+        text-align: center;
+    }
+    
+    .uploaded-image {
+        max-width: 100px; /* กำหนดขนาดรูปภาพให้พอดีกับคอลัมน์ */
+        max-height: 100px;
+        object-fit: cover; /* ทำให้รูปภาพไม่ถูกยืด */
+    }
+    
+    .delete-link {
+        display: block;
+        margin-top: 5px;
+    }
+</style>
+{% endblock %}

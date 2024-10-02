@@ -1,0 +1,75 @@
+{% extends 'app_general/components/base.html' %}
+{% block title %}ข้อมูลผู้ใช้{% endblock %}
+{% block content %}
+<div>
+    <h5 class="role">ข้อมูลผู้ใช้</h5>
+    <form action="{% url 'user_edit' user_to_edit.id %}" method="post" class="profile-form">
+        {% csrf_token %}
+        {{ user_form.non_field_errors }}
+        <table>
+            <tr>
+                <td>{{ user_form.first_name.label_tag }}</td>
+                <td>{{ user_form.first_name }} {{ user_form.first_name.errors }}</td>
+                <td>{{ user_form.last_name.label_tag }}</td>
+                <td>{{ user_form.last_name }} {{ user_form.last_name.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ profile_form.position.label_tag }}</td>
+                <td>{{ profile_form.position }} {{ profile_form.position.errors }}</td>
+                <td>{{ profile_form.ac_id.label_tag }}</td>
+                <td>{{ profile_form.ac_id }} {{ profile_form.ac_id.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ profile_form.administrative_position.label_tag }}</td>
+                <td>{{ profile_form.administrative_position }} {{ profile_form.administrative_position.errors }}</td>
+                <td>{{ profile_form.salary.label_tag }}</td>
+                <td>{{ profile_form.salary }} {{ profile_form.salary.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ profile_form.position_number.label_tag }}</td>
+                <td>{{ profile_form.position_number }} {{ profile_form.position_number.errors }}</td>
+                <td>{{ profile_form.affiliation.label_tag }}</td>
+                <td>{{ profile_form.affiliation }} {{ profile_form.affiliation.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ profile_form.old_government.label_tag }}</td>
+                <td>{{ profile_form.old_government }} {{ profile_form.old_government.errors }}</td>
+                <td>{{ profile_form.special_position.label_tag }}</td>
+                <td>{{ profile_form.special_position }} {{ profile_form.special_position.errors }}</td>
+            </tr>
+            <tr>
+                <td>{{ profile_form.start_goverment.label_tag }}</td>
+                <td>{{ profile_form.start_goverment }} {{ profile_form.start_goverment.errors }}</td>
+                <td>รวมเวลารับราชการ:</td>
+                <td>{{ profile.years_of_service }} ปี  {{ profile.months_of_service }} เดือน  {{ profile.days_of_service }} วัน</td>
+            </tr>
+        </table>
+        <p>
+            <button class="button button-primary" type="submit">บันทึก</button>
+        </p>
+    </form>
+    <div class="popup-overlay" id="popup-overlay"></div>
+    <div class="popup" id="popup">
+        <p id="popup-message"></p>
+        <button onclick="closePopup()">ปิด</button>
+    </div>
+    <script>
+        function openPopup(message) {
+            document.getElementById('popup-message').innerText = message;
+            document.getElementById('popup-overlay').style.display = 'block';
+            document.getElementById('popup').style.display = 'block';
+        }
+
+        function closePopup() {
+            document.getElementById('popup-overlay').style.display = 'none';
+            document.getElementById('popup').style.display = 'none';
+        }
+
+        {% if messages %}
+            {% for message in messages %}
+                openPopup("{{ message }}");
+            {% endfor %}
+        {% endif %}
+    </script>
+</div>
+{% endblock %}

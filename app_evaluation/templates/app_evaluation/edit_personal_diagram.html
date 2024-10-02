@@ -1,0 +1,16 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div class="form-group">
+    <h2>แก้ไขข้อมูลแผนพัฒนาการปฏิบัติราชการ</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+    </form>
+    
+    <!-- ปุ่มย้อนกลับไปยัง evaluation_page_5 -->
+    <a href="{% url 'evaluation_page_5' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+{% endblock %}

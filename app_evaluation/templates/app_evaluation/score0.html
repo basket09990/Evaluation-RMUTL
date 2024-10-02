@@ -1,0 +1,22 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <div class="evaluation-container">
+        <div class="evaluation-boxes">
+            <a class="evaluation-box evaluation-research" href="{% url 'list_main_competency' %}" title="สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)">
+                <img src="{% static 'app_general/book.png' %}" alt="สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)">
+                <p>สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)</p>
+            </a>
+            <a class="evaluation-box evaluation-general" href="{% url 'list_specific_competency' %}" title="สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)">
+                <img src="{% static 'app_general/teaching.png' %}" alt="สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)">
+                <p>สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)</p>
+            </a>
+            <a class="evaluation-box evaluation-teaching" href="{% url 'list_administrative_competency' %}" title="สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด)">
+                <img src="{% static 'app_general/research.png' %}" alt="สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด)">
+                <p>สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด)</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

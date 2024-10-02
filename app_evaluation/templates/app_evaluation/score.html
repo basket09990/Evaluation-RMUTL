@@ -1,0 +1,22 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <div class="evaluation-container">
+        <div class="evaluation-boxes">
+            <a class="evaluation-box evaluation-general" href="{% url 'group_list' %}" title="น้ำหนักงาน">
+                <img src="{% static 'app_general/book.png' %}" alt="น้ำหนักงาน">
+                <p>น้ำหนักงาน</p>
+            </a>
+            <a class="evaluation-box evaluation-teaching" href="{% url 'wl_field_list' %}" title="เกณฑ์ภาระงานทางวิชาการของบุคลากรสายวิชาการ">
+                <img src="{% static 'app_general/teaching.png' %}" alt="เกณฑ์ภาระงานทางวิชาการของบุคลากรสายวิชาการ">
+                <p>เกณฑ์ภาระงานทางวิชาการของบุคลากรสายวิชาการ</p>
+            </a>
+            <a class="evaluation-box evaluation-research" href="{% url 'score0' %}" title="สมรรถณะ">
+                <img src="{% static 'app_general/research.png' %}" alt="สมรรถณะ">
+                <p>สมรรถณะ</p>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

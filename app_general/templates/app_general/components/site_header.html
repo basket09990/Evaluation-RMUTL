@@ -1,0 +1,32 @@
+{% load static %}
+{% block style %}
+    <link rel="stylesheet" href="{% static 'app_general/main.css' %}">
+{% endblock style %}
+<div class="site-header">
+  <div class="sidebar">
+      <div class="avatar">
+          <img src="{% static 'app_general/avatar.png' %}" alt="User Avatar">
+      </div>
+      <div class="menu">
+        {% if user.is_authenticated %}
+        <form action="{% url 'profile' %}" method="get">
+            <button class="menu-button" type="submit">{{ user.username }}</button>
+        </form>
+        <form action="{% url 'password_change' %}" method="get">
+            <button class="menu-button" type="submit">เปลี่ยนรหัสผ่าน</button>
+        </form>
+        <form action="{% url 'logout' %}" method="post">
+            {% csrf_token %}
+            <button class="menu-button" type="submit">ออกจากระบบ</button>
+        </form>
+        {% else %}
+        <form action="{% url 'login' %}" method="get">
+            <button class="menu-button" type="submit">เข้าสู่ระบบ</button>
+        </form>
+        <form action="{% url 'register' %}" method="get">
+            <button class="menu-button" type="submit">สมัครสมาชิก</button>
+        </form>
+        {% endif %}
+    </div>
+  </div>
+</div>

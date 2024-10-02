@@ -1,0 +1,31 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>รายการกลุ่ม</h2>
+    <a href="{% url 'group_add' %}" class="btn btn-primary">เพิ่มกลุ่ม</a>
+    <table class="table1">
+        <thead>
+            <tr>
+                <th>ชื่อกลุ่ม</th>
+                <th>ชื่อฟิลด์</th>
+                <th>ภาระงานสูงสุด</th>
+                <th>การกระทำ</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for group in groups %}
+            <tr>
+                <td>{{ group.g_name }}</td>
+                <td>{{ group.g_field_name }}</td>
+                <td>{{ group.g_max_workload }}</td>
+                <td>
+                    <a href="{% url 'group_edit' group.pk %}" class="btn btn-warning">แก้ไข</a>
+                    <a href="{% url 'group_delete' group.pk %}" class="btn btn-danger">ลบ</a>
+                    <a href="{% url 'group_detail_list' group.pk %}" class="btn btn-info">ดูรายละเอียด</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

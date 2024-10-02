@@ -1,0 +1,31 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แบบประเมิน{% endblock %}
+{% block content %}
+<div>
+    <form method="POST">
+        {% csrf_token %}
+        <table class="table1">
+            <thead>
+                <tr>
+                    <th>ชื่อ Subfield</th>
+                    <th>เลือก</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for subfield in subfields %}
+                <tr>
+                    <td>{{ subfield.sf_name }}</td>
+                    <td>
+                        <input type="radio" name="sf_id" value="{{ subfield.sf_id }}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit">บันทึก</button>
+    </form>
+    <a href="{% url 'evaluation_page2' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+
+</div>
+{% endblock %}

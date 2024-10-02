@@ -1,0 +1,568 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}แบบประเมิน{% endblock %}
+{% block content %}
+<style>
+
+    @media print {
+        /* ซ่อนกรอบและพื้นหลังของ input, textarea, และ select */
+        input, textarea, select {
+            border: none !important;
+            background-color: transparent !important;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            outline: none !important;
+            box-shadow: none !important;
+            padding: 0;
+            margin: 0;
+            resize: none;
+        }
+    
+        /* ป้องกันการแตกบรรทัดและแก้ไขความสูงของ input */
+        input[type="text"], input[type="number"], textarea {
+            height: auto;
+        }
+    
+        /* ซ่อนปุ่มลิงก์ที่มี class btn ตอนพิมพ์ */
+        .btn {
+            display: none !important;
+        }
+    
+        .form-group1 {
+            page-break-inside: avoid;  /* ป้องกันการแยกหน้าเมื่อพิมพ์ */
+        }
+    
+        .form-table td input {
+            border: none !important;
+            outline: none !important;
+            background-color: transparent !important;
+        }
+    }
+
+    .form-container {
+        background-color: #fff;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 210mm;
+        max-width: 100%;
+        box-sizing: border-box;
+        overflow-y: auto;
+        margin-left: 80px;
+    }
+
+    h1 {
+        text-align: center;
+        color: #333;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    .form-group1 {
+        margin-bottom: 15px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+    }
+
+    .form-group1 label {
+        width: 200px;
+        font-weight: bold;
+        color: #555;
+        text-align: right;
+        margin-right: 10px;
+    }
+
+    .form-group1 input[type="text"], 
+    .form-group1 input[type="date"] {
+         /* กำหนดขนาดความกว้างของ input */
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+        text-align: left;
+    }
+    
+    .form-group1 input[type="radio"] {
+        margin-right: 0px;
+        text-align: left;
+    }
+
+    .radio-group, .checkbox-group {
+        width: 100%;
+        text-align: left;
+        flex-direction: row;
+        align-items: left;
+        margin-left: left;
+    }
+
+    .radio-group label, .checkbox-group label {
+        margin-right: 10px;
+        text-align: left;
+    }
+    
+    .radio-group input[type="radio"], .checkbox-group input[type="checkbox"] {
+        margin-right: 5px;
+    }
+
+
+    .form-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .form-table th, .form-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .form-table th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-table td input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+
+    }
+
+    .form-table3 {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .form-table3 th, .form-table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .form-table3 th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-table3 td input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        text-align: center;
+    }
+
+
+    button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-top: 20px;
+        width: 200px;
+        margin-botton: 20px;
+    }
+
+    button:hover {
+        background-color: #218838;
+    }
+
+    /* Slideshow container */
+    .slideshow-container {
+        position: relative;
+        max-width: 100%;
+        margin: auto;
+    }
+
+    /* Hide the images by default */
+    .mySlides {
+        display: none;
+    }
+
+    /* Next & previous buttons */
+    .prev, .next {
+        cursor: pointer;
+        position: absolute;
+        top: 50%;
+        width: auto;
+        margin-top: -22px;
+        padding: 16px;
+        color: white;
+        font-weight: bold;
+        font-size: 18px;
+        transition: 0.6s ease;
+        border-radius: 0 3px 3px 0;
+        user-select: none;
+        background-color: rgba(0,0,0,0.6);
+    }
+
+    /* Position the "next button" to the right */
+    .next {
+        right: 0;
+        border-radius: 3px 0 0 3px;
+    }
+
+    /* On hover, add a black background color with a little bit see-through */
+    .prev:hover, .next:hover {
+        background-color: rgba(0,0,0,0.8);
+    }
+
+    /* Caption text */
+    .text {
+        color: #f2f2f2;
+        font-size: 15px;
+        padding: 8px 12px;
+        position: absolute;
+        bottom: 8px;
+        width: 100%;
+        text-align: center;
+    }
+
+    /* Number text (1/3 etc) */
+    .numbertext {
+        color: #f2f2f2;
+        font-size: 12px;
+        padding: 8px 12px;
+        position: absolute;
+        top: 0;
+    }
+
+    /* The dots/bullets/indicators */
+    .dot {
+        cursor: pointer;
+        height: 15px;
+        width: 15px;
+        margin: 0 2px;
+        background-color: #bbb;
+        border-radius: 50%;
+        display: inline-block;
+        transition: background-color 0.6s ease;
+    }
+
+    .active, .dot:hover {
+        background-color: #717171;
+    }
+
+    .file-container {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .file-container span {
+        flex-grow: 1;
+        margin-left: 10px;
+    }
+
+    .file-container button {
+        background-color: #d9534f;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .file-container button:hover {
+        background-color: #c9302c;
+    }
+
+    .slideshow-controls {
+        margin-top: 10px;
+        text-align: center;
+    }
+
+    .text-left {
+        text-align: left;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .signature-table td {
+        height: 60px; /* ปรับความสูงของช่องสำหรับลายเซ็นต์ */
+        vertical-align: top; /* จัดข้อความให้อยู่ด้านบน */
+        padding-top: 15px; /* เพิ่มระยะห่างด้านบน */
+    }
+
+    .signature-line {
+        display: inline-block;
+        width: 60%; /* ปรับความยาวของเส้น */
+        border-bottom: 1px solid black;
+        margin-left: 10px;
+    }
+
+    .date-section {
+        display: inline-block;
+        width: 20%; /* ปรับความกว้างของช่องวันที่ */
+        border-bottom: 1px solid black;
+        margin: 0 5px;
+    }
+
+    .date-container {
+        text-align: left;
+        padding: 10px;
+    }
+
+
+    
+</style>
+
+
+    <div>
+        <h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
+        <h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {{ user_evaluation_agreement_year_thai}}</h1>
+                    <form action="{% url 'evaluation_page1' evaluation_id %}"  method="POST">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        
+                        <div>
+                            <h1>หน่วยงาน  คณะวิศวกรรมศาสตร  มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา</h1>
+                        </div>
+
+                        <div >
+                            <h4>กลุ่มที่เลือก:   {{ selected_group.g_field_name }}</h4>
+                        </div>
+
+                        <div>
+                                {% if evr_round.evr_round == 1 %}
+                                    <h4>ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)</h4>
+                                {% elif evr_round.evr_round == 2 %}
+                                    <h4>ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)</h4>
+                                {% else %}
+                                    <p>ยังไม่มีข้อมูลรอบการประเมิน</p>
+                                {% endif %}
+                        </div>
+
+                        <div >
+                                <table class="form-table">
+                                    <tr>
+                                        <td>{{ profile_form.first_name.label_tag }}</td>
+                                        <td>{{ profile_form.first_name }} {{ profile_form.first_name.errors }}</td>
+                                        <td>{{ profile_form.last_name.label_tag }}</td>
+                                        <td>{{ profile_form.last_name }} {{ profile_form.last_name.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.position.label_tag }}</td>
+                                        <td>{{ extended_form.position }} {{ extended_form.position.errors }}</td>
+                                        <td>{{ extended_form.ac_id.label_tag }}</td>
+                                        <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.administrative_position.label_tag }}</td>
+                                        <td>{{ extended_form.administrative_position }} {{ extended_form.administrative_position.errors }}</td>
+                                        <td>{{ extended_form.salary.label_tag }}</td>
+                                        <td>{{ extended_form.salary }} {{ extended_form.salary.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.position_number.label_tag }}</td>
+                                        <td>{{ extended_form.position_number }} {{ extended_form.position_number.errors }}</td>
+                                        <td>{{ extended_form.affiliation.label_tag }}</td>
+                                        <td>{{ extended_form.affiliation }} {{ extended_form.affiliation.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.old_government.label_tag }}</td>
+                                        <td>{{ extended_form.old_government }} {{ extended_form.old_government.errors }}</td>
+                                        <td>{{ extended_form.special_position.label_tag }}</td>
+                                        <td>{{ extended_form.special_position }} {{ extended_form.special_position.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.start_goverment.label_tag }}</td>
+                                        <td>{{ extended_form.start_goverment }} {{ extended_form.start_goverment.errors }}</td>
+                                        <td>
+                                            รวมเวลารับราชการ:
+                                        </td>
+                                        <td>
+                                            {{ profile.years_of_service }} ปี  {{ profile.months_of_service }} เดือน  {{ profile.days_of_service }} วัน
+                                        </td>
+                                    </tr>
+                                </table>
+                        </div>
+
+                        {% if evr_round.evr_round == 1 %}
+                   
+                        <div class="form-table">
+                            <table class="form-table3">
+                                <h4>บันทึกการปฏิบัติงาน</h4>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                        <th colspan="2" class="text-center">รอบที่ 1</th>
+                                        <th colspan="2" class="text-center">รอบที่ 2</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ลาป่วย</td>
+                                        <td>{{ sick_leave_round_1_form.times }}</td>
+                                        <td>{{ sick_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลากิจ</td>
+                                        <td>{{ personal_leave_round_1_form.times }}</td>
+                                        <td>{{ personal_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>มาสาย</td>
+                                        <td>{{ late_round_1_form.times }}</td>
+                                        <td>{{ late_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาคลอดบุตร</td>
+                                        <td>{{ maternity_leave_round_1_form.times }}</td>
+                                        <td>{{ maternity_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาอุปสมบท</td>
+                                        <td>{{ ordination_leave_round_1_form.times }}</td>
+                                        <td>{{ ordination_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                        <td>{{ longsick_leave_round_1_form.times }}</td>
+                                        <td>{{ longsick_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ขาดราชการ</td>
+                                        <td>{{ adsent_work_round_1_form.times }}</td>
+                                        <td>{{ adsent_work_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% elif evr_round.evr_round == 2 %}
+                        <div class="form-table">
+                            <table class="form-table3">
+                                <h4>บันทึกการปฏิบัติงาน</h4>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                        <th colspan="2" class="text-center">รอบที่ 1</th>
+                                        <th colspan="2" class="text-center">รอบที่ 2</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ลาป่วย</td>
+                                        <td>{{ sick_leave_round_1_form.times }}</td>
+                                        <td>{{ sick_leave_round_1_form.days }}</td>
+                                        <td>{{ sick_leave_form.times }}</td>
+                                        <td>{{ sick_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลากิจ</td>
+                                        <td>{{ personal_leave_round_1_form.times }}</td>
+                                        <td>{{ personal_leave_round_1_form.days }}</td>
+                                        <td>{{ personal_leave_form.times }}</td>
+                                        <td>{{ personal_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>มาสาย</td>
+                                        <td>{{ late_round_1_form.times }}</td>
+                                        <td>{{ late_round_1_form.days }}</td>
+                                        <td>{{ late_form.times }}</td>
+                                        <td>{{ late_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาคลอดบุตร</td>
+                                        <td>{{ maternity_leave_round_1_form.times }}</td>
+                                        <td>{{ maternity_leave_round_1_form.days }}</td>
+                                        <td>{{ maternity_leave_form.times }}</td>
+                                        <td>{{ maternity_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาอุปสมบท</td>
+                                        <td>{{ ordination_leave_round_1_form.times }}</td>
+                                        <td>{{ ordination_leave_round_1_form.days }}</td>
+                                        <td>{{ ordination_leave_form.times }}</td>
+                                        <td>{{ ordination_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                        <td>{{ longsick_leave_round_1_form.times }}</td>
+                                        <td>{{ longsick_leave_round_1_form.days }}</td>
+                                        <td>{{ longsick_leave_form.times }}</td>
+                                        <td>{{ longsick_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ขาดราชการ</td>
+                                        <td>{{ adsent_work_round_1_form.times }}</td>
+                                        <td>{{ adsent_work_round_1_form.days }}</td>
+                                        <td>{{ adsent_work_form.times }}</td>
+                                        <td>{{ adsent_work_form.days }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% endif %}
+                        <div>
+                            {{ work_form_current.as_p }}
+                        </div>
+                        
+                        <button type="submit">บันทึก</button>
+                    </form>
+                                            <div class="button-container">
+                                                <a href="{% url 'upload_evidence1' evaluation_id %}" class="btn btn-secondary">แนบไฟล์และรูปภาพ</a>
+                                                <a href="{% url 'evaluation_page2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                                <a href="{% url 'evaluation_page3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                                <a href="{% url 'evaluation_page4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                                <a href="{% url 'evaluation_page5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                                <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+
+                                            </div>
+                                            <form action="{% url 'update_evr_status' evaluation_id %}" method="post">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
+                                            </form>
+
+</div>
+
+
+
+
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'app_general/components/base.html' %}
+{% block content %}
+<div>
+    <h2>ยืนยันการลบเกณฑ์ภาระงาน</h2>
+    <p>คุณแน่ใจหรือว่าต้องการลบเกณฑ์ภาระงาน "{{ criteria.c_name }}"?</p>
+    
+    <form method="post" action="">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">ลบ</button>
+        <a href="{% url 'workload_criteria_list' subfield_id=criteria.sf_id.sf_id %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+</div>
+{% endblock %}

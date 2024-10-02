@@ -1,0 +1,10 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}HOME{% endblock %}
+{% block content %}
+
+    <div>
+        <embed src="{% static 'app_general/files/1592.pdf' %}" type="application/pdf" class="pdf-viewer">
+    </div>
+
+{% endblock %}

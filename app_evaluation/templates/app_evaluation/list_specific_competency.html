@@ -1,0 +1,28 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block content %}
+<div>
+    <h2>รายการ สมรรถนะเฉพาะตามลักษณะงานที่ปฏิบัติ</h2>
+    <a href="{% url 'add_specific_competency' %}" class="btn btn-primary">เพิ่ม สมรรถนะเฉพาะตามลักษณะงานที่ปฏิบัติ</a>
+    <table class="table1">
+        <tr>
+            <th>ชื่อ</th>
+            <th>ประเภทตำแหน่งวิชาการ</th>
+            <th>จำนวน</th>
+            <th>จัดการ</th>
+        </tr>
+        {% for competency in competencies %}
+        <tr>
+            <td>{{ competency.sc_name }}</td>
+            <td>{{ competency.sc_type }}</td>
+            <td>{{ competency.sc_num }}</td>
+            <td>
+                <a href="{% url 'edit_specific_competency' competency.sc_id %}" class="btn btn-warning">แก้ไข</a>
+                <a href="{% url 'delete_specific_competency' competency.sc_id %}" class="btn btn-danger">ลบ</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <a href="{% url 'score0' %}" class="btn btn-secondary">ย้อนกลับ</a>
+</div>
+{% endblock %}

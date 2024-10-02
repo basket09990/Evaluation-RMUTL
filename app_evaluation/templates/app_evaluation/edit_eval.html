@@ -1,0 +1,15 @@
+{% extends 'app_general/components/base.html' %}
+{% block title %}แบบประเมิน{% endblock %}
+
+{% block content %}
+<section>
+<div class="info-box">
+    <h1>แก้ไขแบบประเมิน</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">บันทึก</button>
+    </form>
+</div>
+</section>
+{% endblock %}
