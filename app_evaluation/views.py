@@ -1599,6 +1599,7 @@ def evaluation_page_from_2(request, evaluation_id):
     evaluation.achievement_work = round(achievement_work, 2)
     evaluation.save()
 
+
     # ส่ง context ไปยังเทมเพลต
     context = {
         'user_evaluation': evaluation,
@@ -1611,6 +1612,7 @@ def evaluation_page_from_2(request, evaluation_id):
         'evaluation_id': evaluation_id,
         'min_workload': min_workload,
         'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543 if user_evaluation_agreement_obj else None,
+
     }
 
     return render(request, 'app_evaluation/evaluation_page_from_2.html', context)

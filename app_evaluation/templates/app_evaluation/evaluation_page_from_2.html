@@ -8,6 +8,13 @@
         .btn {
             display: none;
         }
+    
+        .form-table {
+            page-break-inside: avoid;
+        }
+        .form-table tr {
+            page-break-inside: avoid; /* ไม่ให้แถวถูกตัดไปหน้าถัดไป */
+        }
     }
 
     .form-container {
@@ -79,24 +86,25 @@
         margin-right: 5px;
     }
 
-    .form-table {
+    .form-table2 {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
     }
 
-    .form-table th, .form-table td {
+    .form-table2 th, .form-table2 td {
         padding: 10px;
         border: 1px solid #ddd;
+        overflow: visible;
     }
 
-    .form-table th {
+    .form-table2 th {
         background-color: #f0f0f0;
         font-weight: bold;
         color: #333;
     }
 
-    .form-table td input {
+    .form-table2 td input {
         width: 100%;
         padding: 6px;
         box-sizing: border-box;
@@ -283,85 +291,91 @@
 </style>
 
 <div>
-<div>
-
-<h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
-<h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา</h1>
-<h3>ส่วนที่  1  องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</h3>
-<table class="form-table">
+<div >
+<table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <thead>
         <tr>
-            <th>ภาระงาน/กิจกรรม/โครงการ/งาน</th>
-            <th>จำนวน</th>
-            <th>ภาระงาน</th>
-            <th>รวมภาระงาน</th>
-            <th>หมายเหตุ</th>
+            <th style="text-align: left;"><h3>ส่วนที่  1  องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</h3></th>
+            
+        </tr>
+        <tr>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">ภาระงาน/กิจกรรม/โครงการ/งาน</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">จำนวน</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">ภาระงาน</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">รวมภาระงาน</th>
+            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">หมายเหตุ</th>
         </tr>
     </thead>
     <tbody>
+        <!-- สร้างตัวแปร JavaScript เพื่อควบคุมการนับลำดับ -->
+        <script>
+            let fieldCounter = 0;  // ตัวนับ field
+            let subfieldCounter = 0;  // ตัวนับ subfield
+            let selectionCounter = 0;  // ตัวนับ selection
+        </script>
+    
         {% for field in fields %}
-            <!-- แสดงชื่อ field -->
+            <!-- นับ Field -->
             <tr>
-                <td>{{ forloop.counter }}. {{ field.f_name }}  
+                <td style="padding: 10px; border: 1px solid #ddd;">
+                    <script>document.write(++fieldCounter);</script>. {{ field.f_name }}
                     <a href="{% url 'select_subfields3' field.f_id user_evaluation.uevr_id %}" class="btn btn-primary btn-small">เพิ่ม Subfields</a>
                 </td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                <td style="padding: 10px; border: 1px solid #ddd;"></td>
             </tr>
-
-            <!-- แสดง subfields ที่เกี่ยวข้องกับ field นี้ -->
+    
+            <!-- นับ Subfield -->
+            <script>subfieldCounter = 0;</script>  <!-- รีเซ็ตตัวนับ subfield สำหรับ field ใหม่ -->
             {% for subfield in selected_subfields %}
                 {% if subfield.f_id == field %}
                     <tr>
-                        
-                        <!-- แสดงชื่อ subfield -->
-                        <td>{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ subfield.sf_id.sf_name }} 
-                            <div >
-                            <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
-                            <form action="{% url 'delete_selected_subfield3' subfield.sf_id.sf_id %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="evaluation_id" value="{{ evaluation_id }}">
-                                <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ Subfield นี้?');">ลบ Subfield</button>
-                            </form>
+                        <td style="padding: 10px; border: 1px solid #ddd;">
+                            <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_id.sf_name }}
+                            <div>
+                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                                <form action="{% url 'delete_selected_subfield3' subfield.sf_id.sf_id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="evaluation_id" value="{{ evaluation_id }}">
+                                    <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ Subfield นี้?');">ลบ Subfield</button>
+                                </form>
                             </div>
                         </td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <td></td>
-                        <!-- ลิงก์เพื่อเลือกเกณฑ์ภาระงาน -->
-                       
-                        
-                        <!-- ตารางแสดงข้อมูล workload_selections ที่เชื่อมโยงกับ subfield นี้ -->
-                        {% for selection in workload_selections %}
-                            {% if selection.sf_id == subfield.sf_id %}
-                                <tr>
-                                    
-                                    <td>{{ forloop.parentloop.parentloop.counter }}.{{ forloop.parentloop.counter }}.{{ forloop.counter }}. {{ selection.c_id.c_name }}  
-                                        <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
-                                        <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
-                                        </form>
-                                    </td>
-                                    <td style="text-align: center;">{{ selection.selected_unit }}</td>
-                                    <td style="text-align: center;">{{ selection.c_id.c_workload }}</td>
-                                    <td style="text-align: center;">{{ selection.calculated_workload|floatformat:2 }}</td>
-                                    <td style="text-align: center;">{{ selection.notes }}</td>
-                                </tr>
-                            {% else %}
-                                
-                            {% endif %}
-                        
-                        {% endfor %}
+                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
                     </tr>
+    
+                    <!-- นับ Selection -->
+                    <script>selectionCounter = 0;</script>  <!-- รีเซ็ตตัวนับ selection สำหรับ subfield ใหม่ -->
+                    {% for selection in workload_selections %}
+                        {% if selection.sf_id == subfield.sf_id %}
+                            <tr>
+                                <td style="padding: 10px; border: 1px solid #ddd;">
+                                    <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.c_id.c_name }}
+                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
+                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
+                                    </form>
+                                </td>
+                                <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_unit }}</td>
+                                <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.c_id.c_workload }}</td>
+                                <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.calculated_workload|floatformat:2 }}</td>
+                                <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.notes }}</td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
                 {% endif %}
             {% endfor %}
         {% endfor %}
     </tbody>
+    
 </table>
+
 
 <!-- แสดงผลรวมที่ท้ายตาราง -->
 <div class="total-workload">

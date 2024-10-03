@@ -7,6 +7,7 @@
       height: 297mm; /* A4 height */
       padding: 0px;
       margin-top: 0px;
+      overflow: visible;
   }
 
   .site-header, .menu {
@@ -14,10 +15,41 @@
     width: 0px; 
     height: 0px;
   }
+  .menu ul {
+    display: none;/* จัดเมนูในแนวนอน */
+    padding: 0;
+    margin: 0;
+  }
+
+  .menu ul li {
+      display: none;
+      margin: 0px; /* ระยะห่างระหว่างเมนู */
+  }
+
+  .menu ul li a img {
+      display: none;
+      width: 0px; /* ปรับขนาดไอคอน */
+      height: 0px;
+  }
+
+  li a img {
+    display: none;
+    width: 0px; /* ปรับขนาดไอคอน */
+    height: 0px;
+    vertical-align: middle;
+    transition: transform 0.2s;
+  }
+
+  li a img:hover {
+    display: none;
+    transform: scale(1.1); /* เพิ่มเอฟเฟ็กต์ขยายเมื่อ hover */
+  }
 
   .content {
       margin-top: 0; /* เอาช่องว่างด้านบนออก */
       padding: 0; /* ลด Padding เพื่อให้พื้นที่สำหรับการพิมพ์ */
+      overflow: visible;
+      page-break-inside: avoid;
   }
 
   .full-width {
@@ -39,10 +71,12 @@
       height: auto;
       padding: 0px; /* Adjust padding for print */
       border: none; /* Remove borders for clean printing */
+      overflow: visible;
   }
 
   .form-table {
       page-break-inside: avoid; /* Avoid breaking inside tables */
+      overflow: visible;
   }
 
   /* Hide elements not necessary for printing */
@@ -64,6 +98,7 @@
 
   table, tr, td {
     page-break-inside: avoid; /* หลีกเลี่ยงการแบ่งหน้าในตาราง */
+    overflow: visible;
   }
 
   .no-page-break {
@@ -77,6 +112,7 @@
 
   .form-group1 {
     page-break-inside: avoid;  /* ป้องกันการแยกหน้าเมื่อพิมพ์ */
+    overflow: visible;
   }
 
   /* ซ่อนกรอบ input */

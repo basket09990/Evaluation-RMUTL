@@ -14,7 +14,7 @@
         <tbody>
             {% for detail in details %}
             <tr>
-                <td>{{ detail.f_id.f_name }}</td>
+                <td style="text-align: left;">{{ detail.f_id.f_name }}</td>
                 <td>{{ detail.gd_workload }}</td>
                 <td>
                     <a href="{% url 'group_detail_edit' detail.gd_id %}" class="btn btn-warning">แก้ไข</a>

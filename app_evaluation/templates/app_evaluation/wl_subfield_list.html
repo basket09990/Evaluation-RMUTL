@@ -13,7 +13,7 @@
         <tbody>
             {% for subfield in subfields %}
             <tr>
-                <td>{{ subfield.sf_name }}</td>
+                <td style="text-align: left;">{{ subfield.sf_name }}</td>
                 <td>
                     <a href="{% url 'wl_subfield_edit' subfield.pk %}" class="btn btn-warning">แก้ไข</a>
                     <a href="{% url 'wl_subfield_delete' subfield.pk %}" class="btn btn-danger">ลบ</a>
