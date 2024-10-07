@@ -9,6 +9,7 @@
         <form action="{% url 'profile' %}" method="post" class="profile-form">
             {% csrf_token %}
             {{ form.non_field_errors }}
+            {{ extended_form.non_field_errors }}
             <table>
                 <tr>
                     <td>{{ form.first_name.label_tag }}</td>
@@ -17,8 +18,8 @@
                     <td>{{ form.last_name }} {{ form.last_name.errors }}</td>
                 </tr>
                 <tr>
-                    <td>{{ extended_form.position.label_tag }}</td>
-                    <td>{{ extended_form.position }} {{ extended_form.position.errors }}</td>
+                    <td></td>
+                    <td></td>
                     <td>{{ extended_form.ac_id.label_tag }}</td>
                     <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
                 </tr>

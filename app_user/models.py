@@ -83,12 +83,19 @@ class Profile(models.Model):
     months_of_service = models.IntegerField(null=True, blank=True)
     days_of_service = models.IntegerField(null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="ผู้ใช้")
-    ac_id = models.ForeignKey('app_user.academic_type', on_delete=models.CASCADE, verbose_name="ประเภทตำแหน่งวิชาการ")  # เชื่อมกับ academic_type
+    ac_id = models.ForeignKey('app_user.academic_type', on_delete=models.CASCADE, verbose_name="ประเภทตำแหน่งวิชาการ")
 
     def save(self, *args, **kwargs):
         if self.start_goverment:
             try:
-                start_date = datetime.strptime(self.start_goverment, '%Y-%m-%d').date()
+                # ตรวจสอบว่าค่า start_goverment เป็นสตริงหรือ datetime
+                if isinstance(self.start_goverment, str):
+                    start_date = datetime.strptime(self.start_goverment, '%Y-%m-%d').date()
+                elif isinstance(self.start_goverment, date):
+                    start_date = self.start_goverment
+                else:
+                    raise ValueError("Invalid date format")
+
                 today = datetime.today().date()
                 days_passed = (today - start_date).days
                 self.sum_time_goverment = days_passed
@@ -101,8 +108,9 @@ class Profile(models.Model):
                 self.years_of_service = years
                 self.months_of_service = months
                 self.days_of_service = days
-            except ValueError:
-                self.sum_time_goverment = 0  # กรณีวันที่ไม่ถูกต้อง
+            except (ValueError, TypeError):
+                # จัดการกับกรณีวันที่ไม่ถูกต้องหรือค่าเป็น None
+                self.sum_time_goverment = 0
                 self.years_of_service = 0
                 self.months_of_service = 0
                 self.days_of_service = 0
@@ -252,13 +260,7 @@ class user_competency_ceo(models.Model):
     uceo_name = models.TextField(default="", blank=True, null=True)
     uceo_type = models.TextField(default="", blank=True, null=True)
     actual_score = models.IntegerField(default=0, blank=True, null=True)
-
-class user_evident(models.Model):
-    uevd_id = models.AutoField(primary_key=True)
-    uevr_id = models.ForeignKey(user_evaluation, on_delete=models.CASCADE)
-    filename = models.TextField(default="", blank=True, null=True)
-    picture = models.ImageField(default="", blank=True, null=True, upload_to='uploads/')
-    file = models.FileField(default="", blank=True, null=True, upload_to='uploads/')
+    uceo_num = models.IntegerField(default=0, blank=True, null=True)
 
 class PersonalDiagram(models.Model):
     pd_id = models.AutoField(primary_key=True)
@@ -362,3 +364,10 @@ class UserWorkloadSelection(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.c_id.c_name} ({self.calculated_workload})"
 
+class user_evident(models.Model):
+    uevd_id = models.AutoField(primary_key=True)
+    uevr_id = models.ForeignKey(user_evaluation, on_delete=models.CASCADE)
+    uwls_id = models.ForeignKey(UserWorkloadSelection, on_delete=models.CASCADE)
+    filename = models.TextField(default="", blank=True, null=True)
+    picture = models.ImageField(default="", blank=True, null=True, upload_to='uploads/')
+    file = models.FileField(default="", blank=True, null=True, upload_to='uploads/')

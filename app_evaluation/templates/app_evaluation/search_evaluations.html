@@ -4,7 +4,27 @@
 
 {% block content %}
 <div>
+    <form method="GET" action="{% url 'search_evaluations' %}">
+      
+        
+        <!-- ฟิลด์เลือกปี -->
+        <select name="year">
+            <option value="">เลือกปี</option>
+            {% for y in years %}
+                <option value="{{ y }}" {% if y|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- ฟิลด์เลือกรอบ -->
+        <select name="round">
+            <option value="">เลือกรอบ</option>
+            {% for r in rounds %}
+                <option value="{{ r }}" {% if r|stringformat:"s" == round|stringformat:"s" %}selected{% endif %}>รอบ {{ r }}</option>
+            {% endfor %}
+        </select>
 
+        <button type="submit">ค้นหา</button>
+    </form>
 
     <br>
     <h1>รายการแบบประเมินของคุณ</h1>

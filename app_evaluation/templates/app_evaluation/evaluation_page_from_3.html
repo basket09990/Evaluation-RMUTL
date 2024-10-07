@@ -175,7 +175,7 @@
                 <td style="text-align: center;">
                     <input type="number" name="main_actual_score_{{ competency.mc_id }}" 
                            value="{% for score in main_scores %}{% if score.mc_id_id == competency.mc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" 
-                           max="{{ competency.mc_num }}" style="text-align: center;"/>
+                           style="text-align: center;"/>
                 </td>
             </tr>
             {% endfor %}
@@ -199,7 +199,7 @@
                 <td style="text-align: center;">
                     <input type="number" name="specific_actual_score_{{ competency.sc_id }}" 
                            value="{% for score in specific_scores %}{% if score.sc_id_id == competency.sc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" 
-                           max="{{ competency.sc_num }}" style="text-align: center;"/>
+                           style="text-align: center;"/>
                 </td>
             </tr>
             {% endfor %}
@@ -222,7 +222,10 @@
             {% for competency in administrative_competencies %}
             <tr>
                 <td>{{ competency.adc_name }}</td>
-                <td style="text-align: center;">{{ competency.adc_num }}</td>
+                <td style="text-align: center;">
+                    <input type="number" name="admin_uceo_num_{{ competency.adc_id }}" 
+                            value="{% for score in administrative_scores %}{% if score.adc_id_id == competency.adc_id %}{{ score.uceo_num }}{% endif %}{% endfor %}" style="text-align: center;" />
+                    </td>
                 <td style="text-align: center;">
                     <input type="number" name="admin_actual_score_{{ competency.adc_id }}" 
                            value="{% for score in administrative_scores %}{% if score.adc_id_id == competency.adc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" style="text-align: center;"/>

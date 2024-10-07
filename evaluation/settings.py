@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'evaluation.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'mysql.connector.django',
-        'NAME': 'db_2',
+        'NAME': 'db_1',
         'USER': 'root',
         'PASSWORD': 'P@ssW0rd',
         'HOST': '127.0.0.1',

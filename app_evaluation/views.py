@@ -455,15 +455,32 @@ def get_evr_round():
 def search_evaluation(request):
     # ดึงเฉพาะ evaluation ที่เชื่อมกับผู้ใช้ที่ล็อกอินอยู่ และเรียงลำดับจากใหม่ไปเก่า
     evaluations = user_evaluation.objects.filter(user=request.user).order_by('-uevr_id')
-    query = request.GET.get('query', '')
     
-    # กรองตามคำค้นหาถ้ามีการป้อนข้อมูล
+    query = request.GET.get('query', '')
+    year = request.GET.get('year', '')
+    round = request.GET.get('round', '')
+
+    # กรองตามคำค้นหาชื่อผู้ใช้ ถ้ามีการป้อนข้อมูล
     if query:
         evaluations = evaluations.filter(user__username__icontains=query)
     
+    # กรองตามปี ถ้ามีการป้อนข้อมูล
+    if year:
+        evaluations = evaluations.filter(evr_id__evr_year=year)
+    
+    # กรองตามรอบ ถ้ามีการป้อนข้อมูล
+    if round:
+        evaluations = evaluations.filter(evr_id__evr_round=round)
+
+    # ดึงปีและรอบทั้งหมดเพื่อนำไปใช้ในตัวเลือก
+    years = user_evaluation.objects.filter(user=request.user).values_list('evr_id__evr_year', flat=True).distinct()
+    rounds = user_evaluation.objects.filter(user=request.user).values_list('evr_id__evr_round', flat=True).distinct()
+
     context = {
         'evaluations': evaluations,
         'query': query,
+        'years': years,
+        'rounds': rounds,
     }
     return render(request, 'app_evaluation/search_evaluations.html', context)
 
@@ -981,79 +998,73 @@ def calculate_competency_score(actual_score, expected_score):
 
 @login_required
 def evaluation_page3(request, evaluation_id):
-    user = request.user
+    # ดึงข้อมูล user_evaluation
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     
-    # ดึงข้อมูลโปรไฟล์ผู้ใช้
-    try:
-        profile = Profile.objects.get(user=user)
-    except Profile.DoesNotExist:
-        messages.error(request, "กรุณากรอกข้อมูลโปรไฟล์ก่อนทำการประเมิน")
-        return redirect('profile')
 
-    evr_round_obj = get_evr_round()
+    # ดึงข้อมูล profile ที่เชื่อมกับ user_evaluation
+    profile = evaluation.user.profile
 
-    # ดึงข้อมูล user_evaluation ที่สัมพันธ์กับ evaluation_id
-    try:
-        user_evaluation_obj = user_evaluation.objects.get(uevr_id=evaluation_id)
-    except user_evaluation.DoesNotExist:
-        messages.error(request, "ไม่พบข้อมูลการประเมินที่เลือก")
-        return redirect('evaluation_page1', evaluation_id=evaluation_id)
+    # ดึงข้อมูลการประเมินผลของผู้ใช้
+    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=evaluation.user).first()
+    selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
 
-    # ดึงข้อมูล competencies
-    main_competencies = main_competency.objects.filter(mc_type=user_evaluation_obj.ac_id.ac_name)
-    specific_competencies = specific_competency.objects.filter(sc_type=user_evaluation_obj.ac_id.ac_name)
-    administrative_competencies = None
-    if user_evaluation_obj.administrative_position:
+    main_competencies = main_competency.objects.filter(mc_type=evaluation.ac_id.ac_name)
+    specific_competencies = specific_competency.objects.filter(sc_type=evaluation.ac_id.ac_name)
+    administrative_competencies = None  # ตั้งค่าเริ่มต้นเป็น None
+    
+    # เช็คว่าถ้ามีตำแหน่งบริหารและไม่ใช่ "-"
+    if evaluation.administrative_position and evaluation.administrative_position != "-":
         administrative_competencies = administrative_competency.objects.filter()
 
-    # วนลูปผ่าน main_competencies
-    for competency in main_competencies:
-        actual_score = request.POST.get(f'main_actual_score_{competency.mc_id}')
-        if actual_score and actual_score.isdigit():
-            actual_score = int(actual_score)
-            user_competency_main.objects.update_or_create(
-                evaluation=user_evaluation_obj,
-                mc_id=competency,
-               
-                user=user,  # เพิ่ม user เข้าไปในเงื่อนไขการค้นหา
-                defaults={'umc_name': competency.mc_name, 'umc_type': competency.mc_type, 'actual_score': actual_score}
-            )
-
-    # วนลูปผ่าน specific_competencies
-    for competency in specific_competencies:
-        actual_score = request.POST.get(f'specific_actual_score_{competency.sc_id}')
-        if actual_score and actual_score.isdigit():
-            actual_score = int(actual_score)
-            user_competency_councilde.objects.update_or_create(
-                evaluation=user_evaluation_obj,
-                sc_id=competency,
-                
-                user=user,
-                defaults={'ucc_name': competency.sc_name, 'ucc_type': competency.sc_type, 'actual_score': actual_score}
-            )
-
-    # วนลูปผ่าน administrative_competencies (ถ้ามี)
-    if user_evaluation_obj.administrative_position:
-        for competency in administrative_competencies:
-            actual_score = request.POST.get(f'admin_actual_score_{competency.adc_id}')
+    # ตรวจสอบการส่งข้อมูล POST
+    if request.method == 'POST':
+        # วนลูปผ่าน main_competencies
+        for competency in main_competencies:
+            actual_score = request.POST.get(f'main_actual_score_{competency.mc_id}')
             if actual_score and actual_score.isdigit():
                 actual_score = int(actual_score)
-                user_competency_ceo.objects.update_or_create(
-                    evaluation=user_evaluation_obj,
-                    adc_id=competency,
-                    
-                    user=user,
-                    defaults={'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score}
+                user_competency_main.objects.update_or_create(
+                    evaluation=evaluation,
+                    mc_id=competency,
+                  
+                    defaults={'user': evaluation.user, 'umc_name': competency.mc_name, 'umc_type': competency.mc_type, 'actual_score': actual_score}
                 )
 
+        # วนลูปผ่าน specific_competencies
+        for competency in specific_competencies:
+            actual_score = request.POST.get(f'specific_actual_score_{competency.sc_id}')
+            if actual_score and actual_score.isdigit():
+                actual_score = int(actual_score)
+                user_competency_councilde.objects.update_or_create(
+                    evaluation=evaluation,
+                    sc_id=competency,
+                   
+                    defaults={'user': evaluation.user, 'ucc_name': competency.sc_name, 'ucc_type': competency.sc_type, 'actual_score': actual_score}
+                )
+
+        # วนลูปผ่าน administrative_competencies
+        if administrative_competencies is not None:
+            for competency in administrative_competencies:
+                actual_score = request.POST.get(f'admin_actual_score_{competency.adc_id}')
+                uceo_num = request.POST.get(f'admin_uceo_num_{competency.adc_id}') 
+                if actual_score and actual_score.isdigit():
+                    actual_score = int(actual_score)
+                    uceo_num = int(uceo_num) if uceo_num.isdigit() else 0
+                    user_competency_ceo.objects.update_or_create(
+                        evaluation=evaluation,
+                        adc_id=competency,
+                        
+                        defaults={'user': evaluation.user, 'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score,'uceo_num': uceo_num}
+                    )
 
         messages.success(request, "บันทึกคะแนนเรียบร้อยแล้ว!")
-        return redirect('evaluation_page3', evaluation_id=evaluation_id)
+        return redirect('evaluation_page_from_3', evaluation_id=evaluation_id)
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=user_evaluation_obj)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=user_evaluation_obj)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=user_evaluation_obj)
+    main_scores = user_competency_main.objects.filter(evaluation=evaluation)
+    specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
+    administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 
@@ -1077,9 +1088,9 @@ def evaluation_page3(request, evaluation_id):
 
     # คำนวณคะแนนสำหรับ administrative competencies (ถ้ามี)
     administrative_competency_total = 0
-    if user_evaluation_obj.administrative_position:
+    if administrative_competencies is not None:
         for score in administrative_scores:
-            calculated_score = calculate_competency_score(score.actual_score, score.adc_id.adc_num)  # ส่ง expected_score ด้วย
+            calculated_score = calculate_competency_score(score.actual_score, score.uceo_num)
             score_count[calculated_score] += 1
             administrative_competency_total += calculated_score
 
@@ -1095,7 +1106,7 @@ def evaluation_page3(request, evaluation_id):
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
     main_max_num = sum([c.mc_num for c in main_competencies])
     specific_max_num = sum([c.sc_num for c in specific_competencies])
-    administrative_max_num = sum([c.adc_num for c in administrative_competencies]) if user_evaluation_obj.administrative_position else 0
+    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if evaluation.administrative_position is not None else 0
 
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
@@ -1105,10 +1116,11 @@ def evaluation_page3(request, evaluation_id):
     print(f"Total Score: {total_score}")
     print(f"Total Max Num: {total_max_num}")
     # บันทึก calculated_score ใน mc_score ของ user_evaluation
-    user_evaluation_obj.mc_score = calculated_score  # บันทึกคะแนนที่คำนวณได้
-    user_evaluation_obj.save()  # บันทึกการเปลี่ยนแปลงลงในฐานข้อมูล
+    evaluation.mc_score = calculated_score  # บันทึกคะแนนที่คำนวณได้
+    evaluation.save()  # บันทึกการเปลี่ยนแปลงลงในฐานข้อมูล
 
 
+    # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'profile': profile,
         'main_competencies': main_competencies,
@@ -1126,6 +1138,8 @@ def evaluation_page3(request, evaluation_id):
         'administrative_max_num': administrative_max_num,
         'calculated_score': calculated_score,
         'evaluation_id': evaluation_id,
+        'user_evaluation_obj': evaluation,
+        'ac_name': evaluation.ac_id.ac_name,
         'count_3': score_count[3],
         'count_2': score_count[2],
         'count_1': score_count[1],
@@ -1134,11 +1148,10 @@ def evaluation_page3(request, evaluation_id):
         'score_2_total': score_count[2] * 2,
         'score_1_total': score_count[1] * 1,
         'score_0_total': score_count[0] * 0,
-        'user_evaluation_obj': user_evaluation_obj,
-        'ac_name': user_evaluation_obj.ac_id.ac_name,
+        'user_evaluation_obj': evaluation,
     }
 
-    return render(request, 'app_evaluation/evaluation_page3.html', context)
+    return render(request, 'app_evaluation/evaluation_page_from_3.html', context)
 
 @login_required
 def evaluation_page4(request, evaluation_id):
@@ -1330,23 +1343,39 @@ def delete_personal_diagram1(request, pd_id):
 @login_required
 def search_evaluations_2(request):
     query = request.GET.get('q')  # รับค่าค้นหาจาก URL เช่น ?q=คำค้นหา
+    year = request.GET.get('year')  # รับค่าปีจาก URL
+    round = request.GET.get('round')  # รับค่ารอบจาก URL
+    
     evaluations = user_evaluation.objects.all()
 
     # ตรวจสอบว่ามีการค้นหาหรือไม่
     if query:
-        # กรองข้อมูลตามคำค้นหาชื่อหรือนามสกุลของผู้ใช้
         evaluations = evaluations.filter(
             user__first_name__icontains=query
         ) | evaluations.filter(
             user__last_name__icontains=query
         )
+    
+    # ตรวจสอบว่ามีการกรองตามปีหรือไม่
+    if year:
+        evaluations = evaluations.filter(evr_id__evr_year=year)
+    
+    # ตรวจสอบว่ามีการกรองตามรอบหรือไม่
+    if round:
+        evaluations = evaluations.filter(evr_id__evr_round=round)
 
     # เรียงข้อมูลให้ใหม่สุดอยู่ด้านบน โดยใช้ฟิลด์ created_at ในการจัดเรียง
     evaluations = evaluations.order_by('-created_at')  # เปลี่ยน 'created_at' เป็นฟิลด์เวลาที่เหมาะสม
 
+    # ดึงข้อมูลปีและรอบทั้งหมดเพื่อนำไปแสดงในฟอร์มค้นหา
+    years = user_evaluation.objects.values_list('evr_id__evr_year', flat=True).distinct()
+    rounds = user_evaluation.objects.values_list('evr_id__evr_round', flat=True).distinct()
+
     context = {
         'evaluations': evaluations,
         'query': query,
+        'years': years,
+        'rounds': rounds,
     }
 
     return render(request, 'app_evaluation/search_evaluations_2.html', context)
@@ -1824,8 +1853,10 @@ def evaluation_page_from_3(request, evaluation_id):
 
     main_competencies = main_competency.objects.filter(mc_type=evaluation.ac_id.ac_name)
     specific_competencies = specific_competency.objects.filter(sc_type=evaluation.ac_id.ac_name)
-    administrative_competencies = None
-    if evaluation.administrative_position:
+    administrative_competencies = None  # ตั้งค่าเริ่มต้นเป็น None
+    
+    # เช็คว่าถ้ามีตำแหน่งบริหารและไม่ใช่ "-"
+    if evaluation.administrative_position and evaluation.administrative_position != "-":
         administrative_competencies = administrative_competency.objects.filter()
 
     # ตรวจสอบการส่งข้อมูล POST
@@ -1855,16 +1886,18 @@ def evaluation_page_from_3(request, evaluation_id):
                 )
 
         # วนลูปผ่าน administrative_competencies
-        if evaluation.administrative_position:
+        if administrative_competencies is not None:
             for competency in administrative_competencies:
                 actual_score = request.POST.get(f'admin_actual_score_{competency.adc_id}')
+                uceo_num = request.POST.get(f'admin_uceo_num_{competency.adc_id}') 
                 if actual_score and actual_score.isdigit():
                     actual_score = int(actual_score)
+                    uceo_num = int(uceo_num) if uceo_num.isdigit() else 0
                     user_competency_ceo.objects.update_or_create(
                         evaluation=evaluation,
                         adc_id=competency,
                         
-                        defaults={'user': evaluation.user, 'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score}
+                        defaults={'user': evaluation.user, 'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score,'uceo_num': uceo_num}
                     )
 
         messages.success(request, "บันทึกคะแนนเรียบร้อยแล้ว!")
@@ -1897,9 +1930,9 @@ def evaluation_page_from_3(request, evaluation_id):
 
     # คำนวณคะแนนสำหรับ administrative competencies (ถ้ามี)
     administrative_competency_total = 0
-    if evaluation.administrative_position:
+    if administrative_competencies is not None:
         for score in administrative_scores:
-            calculated_score = calculate_competency_score(score.actual_score, score.adc_id.adc_num)  # ส่ง expected_score ด้วย
+            calculated_score = calculate_competency_score(score.actual_score, score.uceo_num)
             score_count[calculated_score] += 1
             administrative_competency_total += calculated_score
 
@@ -1915,7 +1948,7 @@ def evaluation_page_from_3(request, evaluation_id):
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
     main_max_num = sum([c.mc_num for c in main_competencies])
     specific_max_num = sum([c.sc_num for c in specific_competencies])
-    administrative_max_num = sum([c.adc_num for c in administrative_competencies]) if evaluation.administrative_position else 0
+    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if evaluation.administrative_position is not None else 0
 
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
@@ -2958,7 +2991,6 @@ def get_criteria(request, sf_id):
     return JsonResponse(criteria_list, safe=False)
 
 
-
 @login_required
 def evaluation_page_3(request, evaluation_id):
     user = request.user
@@ -2981,8 +3013,10 @@ def evaluation_page_3(request, evaluation_id):
     # ดึงข้อมูล competencies
     main_competencies = main_competency.objects.filter(mc_type=user_evaluation_obj.ac_id.ac_name)
     specific_competencies = specific_competency.objects.filter(sc_type=user_evaluation_obj.ac_id.ac_name)
-    administrative_competencies = None
-    if user_evaluation_obj.administrative_position:
+    administrative_competencies = None  # ตั้งค่าเริ่มต้นเป็น None
+    
+    # เช็คว่าถ้ามีตำแหน่งบริหารและไม่ใช่ "-"
+    if user_evaluation_obj.administrative_position and user_evaluation_obj.administrative_position != "-":
         administrative_competencies = administrative_competency.objects.filter()
 
     # ตรวจสอบการส่งข้อมูล POST
@@ -3011,17 +3045,19 @@ def evaluation_page_3(request, evaluation_id):
                     defaults={'user': user, 'ucc_name': competency.sc_name, 'ucc_type': competency.sc_type, 'actual_score': actual_score}
                 )
 
-        # วนลูปผ่าน administrative_competencies
-        if user_evaluation_obj.administrative_position:
+        # วนลูปผ่าน administrative_competencies ถ้าไม่เป็น None
+        if administrative_competencies is not None:
             for competency in administrative_competencies:
                 actual_score = request.POST.get(f'admin_actual_score_{competency.adc_id}')
+                uceo_num = request.POST.get(f'admin_uceo_num_{competency.adc_id}') 
                 if actual_score and actual_score.isdigit():
                     actual_score = int(actual_score)
+                    uceo_num = int(uceo_num) if uceo_num.isdigit() else 0
                     user_competency_ceo.objects.update_or_create(
                         evaluation=user_evaluation_obj,
                         adc_id=competency,
                         evr_id=evr_round_obj,
-                        defaults={'user': user, 'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score}
+                        defaults={'user': user, 'uceo_name': competency.adc_name, 'uceo_type': competency.adc_type, 'actual_score': actual_score,'uceo_num': uceo_num }
                     )
 
         messages.success(request, "บันทึกคะแนนเรียบร้อยแล้ว!")
@@ -3033,30 +3069,27 @@ def evaluation_page_3(request, evaluation_id):
     administrative_scores = user_competency_ceo.objects.filter(evaluation=user_evaluation_obj)
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
-    score_count = {3: 0, 
-                   2: 0, 
-                   1: 0, 
-                   0: 0}
+    score_count = {3: 0, 2: 0, 1: 0, 0: 0}
 
     # คำนวณคะแนนสำหรับ main competencies
     main_competency_total = 0
     for score in main_scores:
-        calculated_score = calculate_competency_score(score.actual_score, score.mc_id.mc_num)  # ส่ง expected_score ด้วย
+        calculated_score = calculate_competency_score(score.actual_score, score.mc_id.mc_num)
         score_count[calculated_score] += 1
         main_competency_total += calculated_score
 
     # คำนวณคะแนนสำหรับ specific competencies
     specific_competency_total = 0
     for score in specific_scores:
-        calculated_score = calculate_competency_score(score.actual_score, score.sc_id.sc_num)  # ส่ง expected_score ด้วย
+        calculated_score = calculate_competency_score(score.actual_score, score.sc_id.sc_num)
         score_count[calculated_score] += 1
         specific_competency_total += calculated_score
 
-    # คำนวณคะแนนสำหรับ administrative competencies (ถ้ามี)
+    # คำนวณคะแนนสำหรับ administrative competencies ถ้าไม่เป็น None
     administrative_competency_total = 0
-    if user_evaluation_obj.administrative_position:
+    if administrative_competencies is not None:
         for score in administrative_scores:
-            calculated_score = calculate_competency_score(score.actual_score, score.adc_id.adc_num)  # ส่ง expected_score ด้วย
+            calculated_score = calculate_competency_score(score.actual_score, score.uceo_num)
             score_count[calculated_score] += 1
             administrative_competency_total += calculated_score
 
@@ -3072,18 +3105,22 @@ def evaluation_page_3(request, evaluation_id):
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
     main_max_num = sum([c.mc_num for c in main_competencies])
     specific_max_num = sum([c.sc_num for c in specific_competencies])
-    administrative_max_num = sum([c.adc_num for c in administrative_competencies]) if user_evaluation_obj.administrative_position else 0
+    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if administrative_competencies is not None else 0
 
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
 
+    calculated_score = 0
     if total_max_num > 0:
         calculated_score = (total_score / total_max_num) * 30
+
+
     print(f"Total Score: {total_score}")
     print(f"Total Max Num: {total_max_num}")
+
     # บันทึก calculated_score ใน mc_score ของ user_evaluation
-    user_evaluation_obj.mc_score = calculated_score  # บันทึกคะแนนที่คำนวณได้
-    user_evaluation_obj.save()  # บันทึกการเปลี่ยนแปลงลงในฐานข้อมูล
+    user_evaluation_obj.mc_score = calculated_score
+    user_evaluation_obj.save()
     
     context = {
         'profile': profile,
@@ -3101,14 +3138,14 @@ def evaluation_page_3(request, evaluation_id):
         'count_2': score_count[2],
         'count_1': score_count[1],
         'count_0': score_count[0],
-        'score_3_total': score_3_total,  # คะแนนที่คำนวณจากการคูณ 3
-        'score_2_total': score_2_total,  # คะแนนที่คำนวณจากการคูณ 2
-        'score_1_total': score_1_total,  # คะแนนที่คำนวณจากการคูณ 1
-        'score_0_total': score_0_total,  # คะแนนที่คำนวณจากการคูณ 0
-        'main_max_num': main_max_num,  # รวมคะแนนสมรรถนะหลัก
-        'specific_max_num': specific_max_num,  # รวมคะแนนสมรรถนะเฉพาะ
-        'administrative_max_num': administrative_max_num,  # รวมคะแนนสมรรถนะทางการบริหาร
-        'calculated_score': calculated_score,  # คะแนนที่คำนวณจากสูตร
+        'score_3_total': score_3_total,
+        'score_2_total': score_2_total,
+        'score_1_total': score_1_total,
+        'score_0_total': score_0_total,
+        'main_max_num': main_max_num,
+        'specific_max_num': specific_max_num,
+        'administrative_max_num': administrative_max_num,
+        'calculated_score': calculated_score,
         'evaluation_id': evaluation_id,
     }
 

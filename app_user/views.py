@@ -46,11 +46,9 @@ def profile(request: HttpRequest):
             if is_new_profile:
                 profile.user = user
 
-            # ดึงค่า ac_id จากฟอร์มและตรวจสอบ
             ac_id = extended_form.cleaned_data.get('ac_id')
-
             if ac_id:
-                profile.ac_id = ac_id  # บันทึก ac_id ที่ได้รับจากฟอร์ม
+                profile.ac_id = ac_id
             else:
                 messages.error(request, "กรุณาเลือกประเภทตำแหน่งวิชาการ.")
                 return render(request, "app_user/profile.html", {

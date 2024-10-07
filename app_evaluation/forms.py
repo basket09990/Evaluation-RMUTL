@@ -112,11 +112,11 @@ class AdministrativeCompetencyForm(forms.ModelForm):
 
     class Meta:
         model = administrative_competency
-        fields = ['adc_name', 'adc_num']
+        fields = ['adc_name']
         labels = {
             'adc_name': 'สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด) ',
             
-            'adc_num': 'ระดับสมรรถนะที่คาดหวัง',
+            
         }
 
 class GroupSelectionForm(forms.ModelForm):

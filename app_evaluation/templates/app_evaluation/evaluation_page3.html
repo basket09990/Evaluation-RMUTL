@@ -222,7 +222,10 @@
             {% for competency in administrative_competencies %}
             <tr>
                 <td>{{ competency.adc_name }}</td>
-                <td style="text-align: center;">{{ competency.adc_num }}</td>
+                <td style="text-align: center;">
+                    <input type="number" name="admin_uceo_num_{{ competency.adc_id }}" 
+                            value="{% for score in administrative_scores %}{% if score.adc_id_id == competency.adc_id %}{{ score.uceo_num }}{% endif %}{% endfor %}" style="text-align: center;" />
+                    </td>
                 <td style="text-align: center;">
                     <input type="number" name="admin_actual_score_{{ competency.adc_id }}" 
                            value="{% for score in administrative_scores %}{% if score.adc_id_id == competency.adc_id %}{{ score.actual_score }}{% endif %}{% endfor %}" style="text-align: center;"/>
@@ -232,7 +235,6 @@
         </tbody>
     </table>
     {% endif %}
-
         <!-- สรุปผลรวมของคะแนน -->
     
         <table class="form-table" style="margin-top: 50px;">

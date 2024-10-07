@@ -35,11 +35,11 @@ class ExtendedProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ("position", "ac_id", "administrative_position", "salary",
+        fields = ( "ac_id", "administrative_position", "salary",
                   "position_number", "affiliation", "old_government", 
                   "special_position", "start_goverment", "sum_time_goverment")
         labels = {
-            'position': 'ตำแหน่ง',
+            
             'ac_id': 'ประเภทตำแหน่งวิชาการ',
             'administrative_position': 'ตำแหน่งบริหาร',
             'salary': 'เงินเดือน',
@@ -50,7 +50,7 @@ class ExtendedProfileForm(forms.ModelForm):
             'start_goverment': 'เริ่มรับราชการเมื่อวันที่',
         }
         widgets = {
-            'position': forms.TextInput(attrs={'class': 'form-control'}),
+            
             'ac_id': forms.Select(attrs={'class': 'form-control'}),
             'administrative_position': forms.TextInput(attrs={'class': 'form-control'}),
             'salary': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -66,8 +66,14 @@ class ExtendedProfileForm(forms.ModelForm):
 
     def clean_start_goverment(self):
         start_goverment = self.cleaned_data.get('start_goverment', None)
+        # ตรวจสอบว่ามีค่าและไม่ใช่สตริงก็ส่งค่าคืนกลับมาได้เลย
+        if isinstance(start_goverment, date):  # ตรวจสอบ `datetime.date` ไม่ใช่ `datetime`
+            return start_goverment
+        
+        # ถ้าเป็นสตริงให้แปลง
         if start_goverment:
             try:
+                # แปลงสตริงเป็นวันที่
                 datetime.strptime(start_goverment, '%Y-%m-%d')
             except ValueError:
                 raise forms.ValidationError("รูปแบบวันที่ไม่ถูกต้อง. กรุณาใช้รูปแบบ YYYY-MM-DD.")
@@ -86,10 +92,6 @@ class CombinedUserProfileForm(forms.Form):
     )
     last_name = forms.CharField(
         label='นามสกุล', 
-        widget=forms.TextInput(attrs={'class': 'form-control'})
-    )
-    position = forms.CharField(
-        label='ตำแหน่ง', 
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
     ac_id = forms.CharField(

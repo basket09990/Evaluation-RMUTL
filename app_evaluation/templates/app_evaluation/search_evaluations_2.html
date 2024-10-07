@@ -7,6 +7,23 @@
 <div class="info-box">
     <form method="GET" action="{% url 'search_evaluations_2' %}">
         <input type="text" name="q" value="{{ request.GET.q|default_if_none:'' }}" placeholder="ค้นหาชื่อหรือนามสกุล">
+        
+        <!-- เพิ่มฟิลด์ค้นหาปี -->
+        <select name="year">
+            <option value="">เลือกปี</option>
+            {% for year in years %}
+                <option value="{{ year }}" {% if year == request.GET.year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- เพิ่มฟิลด์ค้นหารอบ -->
+        <select name="round">
+            <option value="">เลือกรอบการประเมิน</option>
+            {% for round in rounds %}
+                <option value="{{ round }}" {% if round == request.GET.round %}selected{% endif %}>รอบ {{ round }}</option>
+            {% endfor %}
+        </select>
+        
         <button type="submit">ค้นหา</button>
     </form>
     
