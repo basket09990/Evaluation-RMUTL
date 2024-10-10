@@ -28,6 +28,10 @@ from django.db.models import Q
 from django.db.models import Max
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+import openpyxl
+from django.template.loader import render_to_string
+from bs4 import BeautifulSoup
+
 
 # สัญญาณที่จะถูกเรียกเมื่อ UserSelectedSubField ถูกลบ
 @receiver(post_delete, sender=UserSelectedSubField)
@@ -3403,3 +3407,280 @@ def eval_4(request):
 @login_required
 def eval_5(request):
     return render(request,'app_evaluation/evaluation5.html')
+
+
+@login_required
+def export_evaluation_to_excel(request, evaluation_id):
+    user = request.user
+    # ดึงข้อมูล evaluation
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+    profile = evaluation.user.profile
+    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
+
+    # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+
+    # ดึงข้อมูล profile ที่เชื่อมกับ user_evaluation
+    profile = evaluation.user.profile
+
+    # ดึงข้อมูลการประเมินผลของผู้ใช้
+    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
+    selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
+
+    # ตรวจสอบว่า user_evaluation มีข้อมูลในรอบนี้หรือไม่
+    user_evaluation_obj, created = user_evaluation.objects.get_or_create(
+        user=user,
+        evr_id=evr_round_obj,
+        defaults={
+            'c_gtt': None,
+            'c_wl': None,
+            'c_sumwl': None,
+            'approve_status': False,
+            'evaluater_id': None,
+            'evaluater_editgtt': None,
+            'mc_score': None,
+            'sc_score': None,
+            'adc_score': None,
+            'cp_num': None,
+            'cp_score': None,
+            'cp_sum': None,
+            'cp_main_sum': None,
+            'achievement_work': None,
+            'performing_work': None,
+            'other_work': None,
+            'sum_work': None,
+            'improved': None,
+            'suggestions': None,
+            'ac_id': profile.ac_id,
+            'administrative_position': profile.administrative_position,
+        }
+    )
+    
+    # ดึงข้อมูลการทำงานของรอบปัจจุบัน
+    user_work_current = user_work_info.objects.filter(user=user, round=evr_round_obj).first()
+    # ดึงข้อมูลการทำงานในรอบที่ 1
+    round_1 = evr_round.objects.filter(evr_round=1, evr_year=(timezone.now().year - 1 if evr_round_obj.evr_round == 2 else timezone.now().year)).first()
+
+    user_work_round_1 = user_work_info.objects.filter(user=user, round=round_1).first() if round_1 else None
+    
+    # ดึงข้อมูลการลาในรอบปัจจุบันและรอบที่ 1
+    def get_or_create_leave(user, round_obj, leave_type):
+        leave, created = WorkLeave.objects.get_or_create(
+            user=user,
+            round=round_obj,
+            leave_type=leave_type,
+            defaults={'times': 0, 'days': 0}
+        )
+        return leave
+
+    # สร้างหรือดึงข้อมูลการลาในแต่ละประเภทสำหรับรอบที่ 1 และรอบปัจจุบัน
+    sick_leave_round_1 = get_or_create_leave(user, round_1, 'SL') if round_1 else None
+    sick_leave_current = get_or_create_leave(user, evr_round_obj, 'SL')
+
+    personal_leave_round_1 = get_or_create_leave(user, round_1, 'PL') if round_1 else None
+    personal_leave_current = get_or_create_leave(user, evr_round_obj, 'PL')
+
+    late_round_1 = get_or_create_leave(user, round_1, 'LT') if round_1 else None
+    late_current = get_or_create_leave(user, evr_round_obj, 'LT')
+
+    maternity_leave_round_1 = get_or_create_leave(user, round_1, 'ML') if round_1 else None
+    maternity_leave_current = get_or_create_leave(user, evr_round_obj, 'ML')
+
+    ordination_leave_round_1 = get_or_create_leave(user, round_1, 'OL') if round_1 else None
+    ordination_leave_current = get_or_create_leave(user, evr_round_obj, 'OL')
+
+    longsick_leave_round_1 = get_or_create_leave(user, round_1, 'LSL') if round_1 else None
+    longsick_leave_current = get_or_create_leave(user, evr_round_obj, 'LSL')
+
+    adsent_work_round_1 = get_or_create_leave(user, round_1, 'AW') if round_1 else None
+    adsent_work_current = get_or_create_leave(user, evr_round_obj, 'AW')
+
+    if request.method == 'POST':
+        profile_form = UserProfileForm(request.POST, instance=user)
+        extended_form = ExtendedProfileForm(request.POST, instance=profile)
+        work_form_current = UserWorkInfoForm(request.POST, instance=user_work_current)
+
+        # ฟอร์มข้อมูลการลา สำหรับรอบที่ 1 (ถ้ามี)
+        if round_1:
+            sick_leave_round_1_form = WorkLeaveForm(request.POST, instance=sick_leave_round_1, prefix='sick_leave_round_1')
+            personal_leave_round_1_form = WorkLeaveForm(request.POST, instance=personal_leave_round_1, prefix='personal_leave_round_1')
+            late_round_1_form = WorkLeaveForm(request.POST, instance=late_round_1, prefix='late_round_1')
+            maternity_leave_round_1_form = WorkLeaveForm(request.POST, instance=maternity_leave_round_1, prefix='maternity_leave_round_1')
+            ordination_leave_round_1_form = WorkLeaveForm(request.POST, instance=ordination_leave_round_1, prefix='ordination_leave_round_1')
+            longsick_leave_round_1_form = WorkLeaveForm(request.POST, instance=longsick_leave_round_1, prefix='longsick_leave_round_1')
+            adsent_work_round_1_form = WorkLeaveForm(request.POST, instance=adsent_work_round_1, prefix='adsent_work_round_1')
+
+        # ฟอร์มข้อมูลการลา สำหรับรอบที่ 2 (ปัจจุบัน)
+        sick_leave_form = WorkLeaveForm(request.POST, instance=sick_leave_current, prefix='sick_leave')
+        personal_leave_form = WorkLeaveForm(request.POST, instance=personal_leave_current, prefix='personal_leave')
+        late_form = WorkLeaveForm(request.POST, instance=late_current, prefix='late')
+        maternity_leave_form = WorkLeaveForm(request.POST, instance=maternity_leave_current, prefix='maternity_leave')
+        ordination_leave_form = WorkLeaveForm(request.POST, instance=ordination_leave_current, prefix='ordination_leave')
+        longsick_leave_form = WorkLeaveForm(request.POST, instance=longsick_leave_current, prefix='longsick_leave')
+        adsent_work_form = WorkLeaveForm(request.POST, instance=adsent_work_current, prefix='adsent_work')
+
+        # ตรวจสอบฟอร์มและบันทึกเฉพาะฟอร์มที่ถูกต้อง
+        if profile_form.is_valid():
+            profile_form.save()
+            extended_profile = extended_form.save(commit=False)
+            extended_profile.user = user
+            extended_profile.save()
+
+            if work_form_current.is_valid():
+                work_instance = work_form_current.save(commit=False)
+                work_instance.user = user
+                work_instance.round = evr_round_obj
+                work_instance.save()
+
+            # ตรวจสอบและบันทึกข้อมูลการลาในรอบที่ 1 (ถ้ามี)
+            if round_1:
+                form_list_round_1 = [
+                    (sick_leave_round_1_form, 'SL'),
+                    (personal_leave_round_1_form, 'PL'),
+                    (late_round_1_form, 'LT'),
+                    (maternity_leave_round_1_form, 'ML'),
+                    (ordination_leave_round_1_form, 'OL'),
+                    (longsick_leave_round_1_form, 'LSL'),
+                    (adsent_work_round_1_form, 'AW')
+                ]
+
+                # บันทึกฟอร์มข้อมูลการลาในรอบที่ 1
+                for form, leave_type in form_list_round_1:
+                    if form.is_valid():
+                        # กำหนดค่า leave_type
+                        form.instance.leave_type = leave_type
+                        form.save()
+                    else:
+                        print(f"{form.prefix} Form Errors: ", form.errors)
+
+            # ตรวจสอบและบันทึกข้อมูลการลาในรอบที่ 2 (ปัจจุบัน)
+            form_list_round_2 = [
+                (sick_leave_form, 'SL'),
+                (personal_leave_form, 'PL'),
+                (late_form, 'LT'),
+                (maternity_leave_form, 'ML'),
+                (ordination_leave_form, 'OL'),
+                (longsick_leave_form, 'LSL'),
+                (adsent_work_form, 'AW')
+            ]
+
+            # บันทึกฟอร์มข้อมูลการลาในรอบที่ 2 (ปัจจุบัน)
+            for form, leave_type in form_list_round_2:
+                if form.is_valid():
+                    # กำหนดค่า leave_type
+                    form.instance.leave_type = leave_type
+                    form.save()
+                else:
+                    print(f"{form.prefix} Form Errors: ", form.errors)
+
+            messages.success(request, "บันทึกข้อมูลเรียบร้อยแล้ว!")
+            return redirect('evaluation_page', evaluation_id=evaluation_id)
+        else:
+            print("Profile Form Errors: ", profile_form.errors)
+            print("Extended Form Errors:", extended_form.errors)
+            print("Work Form Errors:", work_form_current.errors)
+            if round_1:
+                for form, _ in form_list_round_1:
+                    print(f"{form.prefix} Form Errors: ", form.errors)
+            for form, _ in form_list_round_2:
+                print(f"{form.prefix} Form Errors: ", form.errors)
+            messages.error(request, "มีข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบข้อมูลอีกครั้ง")
+    else:
+        # ถ้าเป็นการ GET ให้แสดงฟอร์มปัจจุบัน
+        profile_form = UserProfileForm(instance=user)
+        extended_form = ExtendedProfileForm(instance=profile)
+        work_form_current = UserWorkInfoForm(instance=user_work_current)
+
+        # สร้างฟอร์มสำหรับ round 1 เฉพาะเมื่อ round_1 มีข้อมูล
+        if round_1:
+            sick_leave_round_1_form = WorkLeaveForm(instance=sick_leave_round_1, prefix='sick_leave_round_1')
+            personal_leave_round_1_form = WorkLeaveForm(instance=personal_leave_round_1, prefix='personal_leave_round_1')
+            late_round_1_form = WorkLeaveForm(instance=late_round_1, prefix='late_round_1')
+            maternity_leave_round_1_form = WorkLeaveForm(instance=maternity_leave_round_1, prefix='maternity_leave_round_1')
+            ordination_leave_round_1_form = WorkLeaveForm(instance=ordination_leave_round_1, prefix='ordination_leave_round_1')
+            longsick_leave_round_1_form = WorkLeaveForm(instance=longsick_leave_round_1, prefix='longsick_leave_round_1')
+            adsent_work_round_1_form = WorkLeaveForm(instance=adsent_work_round_1, prefix='adsent_work_round_1')
+
+        sick_leave_form = WorkLeaveForm(instance=sick_leave_current, prefix='sick_leave')
+        personal_leave_form = WorkLeaveForm(instance=personal_leave_current, prefix='personal_leave')
+        late_form = WorkLeaveForm(instance=late_current, prefix='late')
+        maternity_leave_form = WorkLeaveForm(instance=maternity_leave_current, prefix='maternity_leave')
+        ordination_leave_form = WorkLeaveForm(instance=ordination_leave_current, prefix='ordination_leave')
+        longsick_leave_form = WorkLeaveForm(instance=longsick_leave_current, prefix='longsick_leave')
+        adsent_work_form = WorkLeaveForm(instance=adsent_work_current, prefix='adsent_work')
+    # ดึงข้อมูลจาก HTML เทมเพลตที่ต้องการ
+    html_content = render_to_string('app_evaluation/evaluation_page.html', {
+        'profile_form': profile_form,
+        'extended_form': extended_form,
+        'work_form_current': work_form_current,
+        'user_work_round_1': user_work_round_1,
+        'evr_round': evr_round_obj,
+        'profile': profile,
+        'user_evaluation_agreement': user_evaluation_agreement_obj,
+        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543,
+        'selected_group': selected_group,
+        'user_evaluation': user_evaluation_obj,
+        'evaluation_id': evaluation_id,
+        # ข้อมูลการลา round 1
+        **({'sick_leave_round_1_form': sick_leave_round_1_form,
+            'personal_leave_round_1_form': personal_leave_round_1_form,
+            'late_round_1_form': late_round_1_form,
+            'maternity_leave_round_1_form': maternity_leave_round_1_form,
+            'ordination_leave_round_1_form': ordination_leave_round_1_form,
+            'longsick_leave_round_1_form': longsick_leave_round_1_form,
+            'adsent_work_round_1_form': adsent_work_round_1_form} if round_1 else {}),
+        # ข้อมูลการลา round 2 (ปัจจุบัน)
+        'sick_leave_form': sick_leave_form,
+        'personal_leave_form': personal_leave_form,
+        'late_form': late_form,
+        'maternity_leave_form': maternity_leave_form,
+        'ordination_leave_form': ordination_leave_form,
+        'longsick_leave_form': longsick_leave_form,
+        'adsent_work_form': adsent_work_form,
+        # เพิ่ม context อื่น ๆ ที่จำเป็น
+    })
+
+    # ใช้ BeautifulSoup เพื่อแยกข้อมูลจาก HTML
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # สร้าง Workbook ใหม่
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "ข้อมูลการประเมิน"
+
+    # หัวตาราง
+    headers = ["ชื่อ", "นามสกุล", "ตำแหน่งวิชาการ", "ตำแหน่งบริหาร", "คะแนนภาระงาน", "หมายเหตุ"]
+    ws.append(headers)
+
+    # เพิ่มข้อมูลส่วนบุคคลลงในตาราง
+    ws.append([
+        profile.user.first_name,
+        profile.user.last_name,
+        profile.ac_id.ac_name if profile.ac_id else "-",
+        profile.administrative_position or "-",
+        evaluation.c_wl,
+        evaluation.achievement_work
+    ])
+
+    # ดึงข้อมูลเพิ่มเติมจาก HTML (เช่น ข้อมูลภาระงานที่แสดงในตาราง)
+    # ตัวอย่างการดึงข้อมูลจากตารางใน HTML
+    table_rows = soup.select('table tbody tr')
+    for row in table_rows:
+        cells = row.find_all('td')
+        row_data = [cell.get_text(strip=True) for cell in cells]
+        ws.append(row_data)
+
+    # บันทึกข้อมูลลงใน BytesIO แทนที่จะเป็นไฟล์จริง
+    excel_file = BytesIO()
+    wb.save(excel_file)
+    excel_file.seek(0)  # ตั้งตำแหน่งการอ่านข้อมูลให้เริ่มจากจุดเริ่มต้น
+
+    # สร้าง response สำหรับการดาวน์โหลดไฟล์ Excel
+    response = HttpResponse(
+        excel_file,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
+    return response
+
+

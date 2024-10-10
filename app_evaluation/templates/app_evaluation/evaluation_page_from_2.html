@@ -311,7 +311,12 @@
             <tr class="field-row" data-field-id="{{ field.f_id }}">
                 <td style="padding: 10px; border: 1px solid #ddd;">
                     <script>document.write(++fieldCounter);</script>. {{ field.f_name }}
+                    {% if user.groups.all.0.name == "Staff"%}
                     <a href="{% url 'select_subfields3' field.f_id user_evaluation.uevr_id %}" class="btn btn-primary btn-small">เพิ่ม Subfields</a>
+                    {% endif %}
+                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                    <a href="{% url 'select_subfields3' field.f_id user_evaluation.uevr_id %}" class="btn btn-primary btn-small">เพิ่ม Subfields</a>
+                    {% endif %}
                 </td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
@@ -326,12 +331,22 @@
                         <td style="padding: 10px; border: 1px solid #ddd;">
                             <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_id.sf_name }}
                             <div>
+                                {% if user.groups.all.0.name == "Staff"%}
                                 <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
                                 <form action="{% url 'delete_selected_subfield3' subfield.sf_id.sf_id %}" method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="evaluation_id" value="{{ evaluation_id }}">
                                     <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ Subfield นี้?');">ลบ Subfield</button>
                                 </form>
+                                {% endif %}
+                                {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                                <form action="{% url 'delete_selected_subfield3' subfield.sf_id.sf_id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="evaluation_id" value="{{ evaluation_id }}">
+                                    <button type="submit" class="btn btn-danger btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ Subfield นี้?');">ลบ Subfield</button>
+                                </form>
+                                {% endif %}
                             </div>
                         </td>
                         <td style="padding: 10px; border: 1px solid #ddd;"></td>
@@ -346,11 +361,20 @@
                             <tr class="selection-row" data-field-id="{{ field.f_id }}" data-calculated-workload="{{ selection.calculated_workload }}">
                                 <td style="padding: 10px; border: 1px solid #ddd;">
                                     <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.selected_name }}
+                                    {% if user.groups.all.0.name == "Staff"%}
                                     <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
                                     <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
                                     </form>
+                                    {% endif %}
+                                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
+                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
+                                    </form>
+                                    {% endif %}
                                 </td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_num }}</td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_workload }}</td>

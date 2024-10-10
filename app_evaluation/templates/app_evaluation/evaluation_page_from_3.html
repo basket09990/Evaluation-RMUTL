@@ -298,8 +298,12 @@
         <td>จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน </td>
         </tr>
     </table>
-
+    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
     <button type="submit">ส่งข้อมูล</button>
+    {% endif %}
+    {% if user.groups.all.0.name == "Staff"%}
+    <button type="submit">ส่งข้อมูล</button>
+    {% endif %}
     </form>
     <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>

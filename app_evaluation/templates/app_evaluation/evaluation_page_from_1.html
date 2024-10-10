@@ -360,7 +360,7 @@
                                         <td>{{ profile_form.last_name }} {{ profile_form.last_name.errors }}</td>
                                     </tr>
                                     <tr>
-                                        <td>ในกรณีที่ไม่ทราบข้อมูลให้ใช่เครื่องหมาย (-)</td>
+                                        <td>ในกรณีที่ไม่มีตำแหน่งบริหารให้ใช้เครื่องหมาย (-)</td>
                                         <td style="text-align: center; font-size:35px;"> - </td>
                                         <td>{{ extended_form.ac_id.label_tag }}</td>
                                         <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
@@ -543,8 +543,12 @@
                         <div>
                             {{ work_form_current.as_p }}
                         </div>
-                        
+                        {% if user.groups.all.0.name == "Staff"%}
                         <button type="submit">บันทึก</button>
+                        {% endif %}
+                        {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                        <button type="submit">บันทึก</button>
+                        {% endif %}
                     </form>
                                             <div class="button-container">
                                                 <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
@@ -554,14 +558,6 @@
                                                 <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
                                             </div>
-                                            {% if user.groups.all.0.name == "Evaluator" %}
-                                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary">
-                                                    เสร็จสิ้นการประเมิน
-                                                </button>
-                                            </form>
-                                            {% endif %}
 
                                             {% if user.groups.all.0.name == "Staff"%}
                                             <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
@@ -585,7 +581,7 @@
                                                 </button>
                                             </form>
                                             
-
+                                            
                                             <form action="{% url 'update_evr_status2' evaluation_id %}" method="post">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>

@@ -4,6 +4,7 @@
 {% block content %}
 <div>
     <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
+    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
     <form id="uploadForm" action="{% url 'upload_evidence2' evaluation.uevr_id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="upload-section">
@@ -16,6 +17,21 @@
         </div>
         <button type="submit" class="btn btn-upload">อัปโหลด</button>
     </form>
+    {% endif %}
+    {% if user.groups.all.0.name == "Staff"%}
+    <form id="uploadForm" action="{% url 'upload_evidence2' evaluation.uevr_id %}" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="upload-section">
+            <label for="file">File:</label>
+            <input type="file" id="file" name="file" multiple>
+        </div>
+        <div class="upload-section">
+            <label for="picture">Picture:</label>
+            <input type="file" id="picture" name="picture" multiple>
+        </div>
+        <button type="submit" class="btn btn-upload">อัปโหลด</button>
+    </form>
+    {% endif %}
     <div class="back-link">
         <a href="{% url 'evaluation_page_from_2' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
@@ -31,7 +47,12 @@
                         <!-- เปิดไฟล์ใน pop-up โดยใช้ iframe และป้องกัน IDM จากการดาวน์โหลด -->
                         <a href="#" onclick="openPopup('{{ evidence.file.url }}')" class="file-link">{{ evidence.filename }}</a>
                         <span class="delete-link">
+                            {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
                             <a href="{% url 'delete_evidence2' evidence.uevd_id %}">ลบไฟล์</a>
+                            {% endif %}
+                            {% if user.groups.all.0.name == "Staff"%}
+                            <a href="{% url 'delete_evidence2' evidence.uevd_id %}">ลบไฟล์</a>
+                            {% endif %}
                         </span>
                     </div>
                 </li>
@@ -52,7 +73,12 @@
                                     <img src="{{ evidence.picture.url }}" alt="รูปภาพที่อัปโหลด" class="uploaded-image">
                                 </a>
                                 <span class="delete-link">
+                                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
                                     <a href="{% url 'delete_evidence2' evidence.uevd_id %}">ลบรูปภาพ</a>
+                                    {% endif %}
+                                    {% if user.groups.all.0.name == "Staff"%}
+                                    <a href="{% url 'delete_evidence2' evidence.uevd_id %}">ลบรูปภาพ</a>
+                                    {% endif %}
                                 </span>
                             </div>
                         </div>

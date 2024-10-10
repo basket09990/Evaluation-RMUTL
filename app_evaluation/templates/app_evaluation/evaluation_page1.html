@@ -360,7 +360,7 @@
                                         <td>{{ profile_form.last_name }} {{ profile_form.last_name.errors }}</td>
                                     </tr>
                                     <tr>
-                                        <td>ในกรณีที่ไม่ทราบข้อมูลให้ใช่เครื่องหมาย (-)</td>
+                                        <td>ในกรณีที่ไม่มีตำแหน่งบริหารให้ใช้เครื่องหมาย (-)</td>
                                         <td style="text-align: center; font-size:35px;"> - </td>
                                         <td>{{ extended_form.ac_id.label_tag }}</td>
                                         <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
@@ -554,10 +554,12 @@
                                                 <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
                                             </div>
+                                            {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
                                             <form action="{% url 'update_evr_status' evaluation_id %}" method="post">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
                                             </form>
+                                            {% endif %}
 
 </div>
 

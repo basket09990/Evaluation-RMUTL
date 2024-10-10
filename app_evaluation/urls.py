@@ -120,7 +120,7 @@ urlpatterns = [
     path('evaluation_page_from_4/<int:evaluation_id>/', views.evaluation_page_from_4, name='evaluation_page_from_4'),
     path('evaluation_page_from_5/<int:evaluation_id>/', views.evaluation_page_from_5, name='evaluation_page_from_5'),
 
-
+    path('evaluation/<int:evaluation_id>/export_excel/', views.export_evaluation_to_excel, name='export_evaluation_to_excel'),
 
 
     path('evaluation/evaluation_page/<int:criteria_id>/upload2/', views.upload_evidence2, name='upload_evidence2'),

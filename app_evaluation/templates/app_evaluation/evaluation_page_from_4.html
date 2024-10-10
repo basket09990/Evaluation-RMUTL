@@ -354,7 +354,12 @@
                 </div>
             </fieldset>
             
-            <button type="submit">บันทึก</button>
+            {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+            <button type="submit">ส่งข้อมูล</button>
+            {% endif %}
+            {% if user.groups.all.0.name == "Staff"%}
+            <button type="submit">ส่งข้อมูล</button>
+            {% endif %}
         </form>
         
     
