@@ -4,7 +4,7 @@
 {% block content %}
 <div>
     <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
-    <form id="uploadForm" action="{% url 'upload_evidence' evaluation.uevr_id %}" method="post" enctype="multipart/form-data">
+    <form id="uploadForm" action="{% url 'upload_evidence' criteria.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="upload-section">
             <label for="file">File:</label>
@@ -17,7 +17,7 @@
         <button type="submit" class="btn btn-upload">อัปโหลด</button>
     </form>
     <div class="back-link">
-        <a href="{% url 'evaluation_page' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+        <a href="{% url 'evaluation_page_2' criteria.evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
     <div class="uploaded-files">
         <ul>

@@ -14,8 +14,8 @@
                 <td>{{ user_form.last_name }} {{ user_form.last_name.errors }}</td>
             </tr>
             <tr>
-                <td>{{ profile_form.position.label_tag }}</td>
-                <td>{{ profile_form.position }} {{ profile_form.position.errors }}</td>
+                <td>ในกรณีที่ไม่ทราบข้อมูลให้ใช่เครื่องหมาย (-)</td>
+                <td style="text-align: center; font-size:35px;"> - </td>
                 <td>{{ profile_form.ac_id.label_tag }}</td>
                 <td>{{ profile_form.ac_id }} {{ profile_form.ac_id.errors }}</td>
             </tr>
@@ -59,17 +59,29 @@
             document.getElementById('popup-overlay').style.display = 'block';
             document.getElementById('popup').style.display = 'block';
         }
-
+    
         function closePopup() {
             document.getElementById('popup-overlay').style.display = 'none';
             document.getElementById('popup').style.display = 'none';
         }
-
-        {% if messages %}
-            {% for message in messages %}
-                openPopup("{{ message }}");
-            {% endfor %}
-        {% endif %}
+    
+        // ตรวจสอบ referrer เพื่อบล็อก pop-up ถ้ามาจากหน้าอื่น
+        document.addEventListener('DOMContentLoaded', function () {
+            const referrer = document.referrer;
+    
+            // ตรวจสอบว่ามาจาก URL อื่นหรือไม่
+            if (referrer && !referrer.includes(window.location.origin)) {
+                console.log("การเข้าถึงมาจากภายนอก: " + referrer);
+                // ไม่แสดง pop-up หากการเข้าถึงมาจากหน้าอื่น
+                return;
+            }
+    
+            {% if messages %}
+                {% for message in messages %}
+                    openPopup("{{ message }}");
+                {% endfor %}
+            {% endif %}
+        });
     </script>
 </div>
 {% endblock %}

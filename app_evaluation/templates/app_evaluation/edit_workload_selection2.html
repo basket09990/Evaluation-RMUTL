@@ -4,9 +4,34 @@
 <div class="form-group">
     <form method="post" action="{% url 'edit_workload_selection2' selection.id %}">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">บันทึก</button>
+    
+        <h3>แก้ไขภาระงานใหม่</h3>
+    
+        <table class="table1">
+            <thead>
+                <tr>
+                    <th>ชื่อภาระงาน</th>
+                    <th>จำนวน</th>
+                    <th>หมายเหตุ</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <!-- แสดงฟิลด์ selected_id ซึ่งเป็น dropdown ให้เลือกชื่อภาระงาน -->
+                    <td>{{ form.selected_name }}</td>
+                    <!-- ฟิลด์สำหรับหน่วย -->
+                    <td>
+                        {{ form.selected_num }}
+                    </td>
+                    <!-- ฟิลด์สำหรับหมายเหตุ -->
+                    <td>{{ form.notes }}</td>
+                </tr>
+            </tbody>
+        </table>
+    
+        <button type="submit" class="btn btn-success">บันทึก</button>
+        <a href="{% url 'evaluation_page2' selection.evaluation.uevr_id %}" class="btn btn-secondary">ยกเลิก</a>
     </form>
-    <a href="{% url 'evaluation_page2' selection.evaluation.uevr_id %}" class="btn btn-secondary">ยกเลิก</a>
+    
 </div>
 {% endblock %}

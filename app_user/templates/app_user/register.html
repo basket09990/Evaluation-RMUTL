@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>สมัครสมาชิก</title>
     <style>
-        /* Reset CSS */
+        /* รีเซ็ตค่าเริ่มต้น */
         body, h1, p {
             margin: 0;
             padding: 0;
@@ -15,7 +15,6 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
             margin: 0;
             font-family: Arial, sans-serif;
             background-color: #F6F0E5;
@@ -23,17 +22,20 @@
 
         .container {
             text-align: center;
+            max-width: 600px; /* ขยายขนาด container */
+            width: 100%;
+            padding: 0px;
         }
 
         .title {
-            font-size: 1.5em;
+            font-size: 2em; /* ขยายขนาดของ title */
             color: #333333;
-            
+            margin-bottom: 0px; /* เพิ่มระยะห่างด้านล่าง */
         }
 
         .avatar-container {
-            width: 150px;
-            height: 150px;
+            width: 180px; /* ขยายขนาดของ avatar */
+            height: 180px;
             margin: 0 auto;
             margin-bottom: -50px;
             background-color: #FFD700;
@@ -47,40 +49,43 @@
         }
 
         .avatar-container img {
-            width: 100%;
+            width: 130%;
             height: auto;
         }
 
         .info-box {
-            margin-top: 60px;
-            padding: 30px;
+            margin-top: 0px;
+            padding: 40px;
             border: 2px solid #FFB800;
             border-radius: 10px;
             background-color: #FFF;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
             display: inline-block;
             text-align: left;
+            max-width: 500px; /* กำหนดความกว้างสูงสุด */
+            width: 100%; /* ใช้เต็มความกว้างที่มีอยู่ */
         }
 
         .role {
-            font-size: 1.2em;
-            margin-bottom: 20px;
+            font-size: 1.5em; /* ขยายขนาดของ role */
+            margin-bottom: 30px; /* เพิ่มระยะห่างด้านล่าง */
             text-align: center;
         }
 
         .button {
             background-color: #FFB800;
             color: #FFF;
-            padding: 10px 20px;
+            padding: 15px 30px; /* เพิ่ม padding ให้ปุ่มใหญ่ขึ้น */
             border: none;
             border-radius: 5px;
-            font-size: 1em;
+            font-size: 1.2em; /* ขยายขนาดของข้อความในปุ่ม */
             text-decoration: none;
             display: inline-block;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            margin-top: 10px;
-            width: 100%;
+            margin-top: 20px;
+            width: 96%; /* ปรับให้ปุ่มกว้างเท่ากัน */
+            box-sizing: border-box; /* ปรับขนาดปุ่มให้รองรับ padding */
         }
 
         .button:hover {
@@ -93,6 +98,28 @@
 
         p {
             margin: 10px 0;
+        }
+
+        /* เพิ่มสไตล์สำหรับฟอร์ม */
+        form input[type="text"],
+        form input[type="password"],
+        form input[type="email"],
+        form button[type="submit"] {
+            width: calc(100% - 20px); /* ใช้เต็มความกว้างของฟอร์มลบกับ padding */
+            padding: 15px; /* ขยาย padding */
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1.1em; /* ขยายขนาดของ input */
+        }
+
+        form input[type="text"]:focus,
+        form input[type="password"]:focus,
+        form input[type="email"]:focus {
+            border-color: #FFB800;
+            outline: none;
+            box-shadow: 0 0 8px rgba(255, 184, 0, 0.5);
         }
     </style>
 </head>

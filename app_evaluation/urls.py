@@ -64,7 +64,7 @@ urlpatterns = [
 
 
 
-    path('evaluation/evaluation_page/<int:evaluation_id>/upload1/', views.upload_evidence1, name='upload_evidence1'),
+    path('evaluation/evaluation_page/<int:criteria_id>/upload1/', views.upload_evidence1, name='upload_evidence1'),
     path('evaluation/evidence/<int:evidence_id>/delete1/', views.delete_evidence1, name='delete_evidence1'),
 
 
@@ -86,7 +86,7 @@ urlpatterns = [
     path('eval_0/', views.create_evaluation, name='eval_0'),
 
 
-    path('evaluation/evaluation_page/<int:evaluation_id>/upload/', views.upload_evidence, name='upload_evidence'),
+    path('upload_evidence/<int:criteria_id>/', views.upload_evidence, name='upload_evidence'),
     path('evaluation/evidence/<int:evidence_id>/delete/', views.delete_evidence, name='delete_evidence'),
 
 
@@ -106,6 +106,7 @@ urlpatterns = [
     path('evaluation/select_subfields/<int:f_id>/<int:evaluation_id>/', views.select_subfields, name='select_subfields'),
     path('delete_subfield/<int:sf_id>/', views.delete_selected_subfield, name='delete_selected_subfield'),
     path('evaluation/select_workload_criteria/<int:evaluation_id>/<int:sf_id>/', views.select_workload_criteria, name='select_workload_criteria'),
+   
     path('edit_workload_selection/<int:selection_id>/', views.edit_workload_selection, name='edit_workload_selection'),
     path('delete_workload_selection/<int:selection_id>/', views.delete_workload_selection, name='delete_workload_selection'),
     path('add_personal_diagram/<int:evaluation_id>/', views.add_personal_diagram, name='add_personal_diagram'),
@@ -122,7 +123,7 @@ urlpatterns = [
 
 
 
-    path('evaluation/evaluation_page/<int:evaluation_id>/upload2/', views.upload_evidence2, name='upload_evidence2'),
+    path('evaluation/evaluation_page/<int:criteria_id>/upload2/', views.upload_evidence2, name='upload_evidence2'),
     path('evaluation/evidence/<int:evidence_id>/delete2/', views.delete_evidence2, name='delete_evidence2'),
 
 

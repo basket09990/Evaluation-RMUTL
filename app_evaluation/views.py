@@ -12,7 +12,7 @@ from django.urls import reverse_lazy,reverse
 from django.views.generic import CreateView, UpdateView, DeleteView, ListView 
 from app_user.models import WorkLeave,PersonalDiagram,UserWorkloadSelection,UserSelectedSubField,SelectedWorkload,SelectedSubfields,WorkloadCriteria,main_competency,Profile ,user_evaluation_score,UserMainCompetencyScore,UserAdministrativeCompetencyScore,UserSpecificCompetencyScore
 from .forms import UserWorkloadSelectionForm,UserWorkInfoForm, GroupForm, GroupDetailForm, WlFieldForm ,WorkloadCriteriaForm,WlSubfieldForm ,MainCompetencyForm,SpecificCompetencyForm,AdministrativeCompetencyForm,GroupSelectionForm,UserEvaluationForm ,UserEvidentForm
-from .forms import UserEvaluationScoreForm , SubFieldForm , SelectSubfieldForm , WorkloadCriteriaSelectionForm, SubFieldSelectionForm,PersonalDiagramForm,WorkLeaveForm
+from .forms import UserWorkloadSelectionForm1,UserEvaluationScoreForm , SubFieldForm , SelectSubfieldForm , WorkloadCriteriaSelectionForm, SubFieldSelectionForm,PersonalDiagramForm,WorkLeaveForm
 from django.utils import timezone
 from app_user.forms import UserProfileForm,ExtendedProfileForm
 from django.forms import modelformset_factory
@@ -776,77 +776,55 @@ def select_workload_criteria2(request, evaluation_id, sf_id):
     # ดึงข้อมูล evaluation และ subfield ที่เกี่ยวข้อง
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     subfield = get_object_or_404(wl_subfield, pk=sf_id)
-
-    # ดึงเกณฑ์ภาระงานที่เกี่ยวข้องกับ subfield
-    criteria = WorkloadCriteria.objects.filter(sf_id=subfield)
-
-    # สร้างฟอร์มสำหรับเพิ่มเกณฑ์ภาระงานใหม่
-    criteria_form = WorkloadCriteriaForm(initial={'sf_id': subfield})
+    
+    # สร้างฟอร์มและส่งค่า subfield ไปยังฟอร์มเพื่อกรองข้อมูลใน selected_id
+    criteria_form = UserWorkloadSelectionForm(initial={'sf_id': subfield}, subfield=subfield)
 
     # ตรวจสอบการส่งฟอร์ม
     if request.method == 'POST':
-        if 'selected_criteria' in request.POST:
-            # รับค่าที่เลือกหลายตัวจาก checkboxs
-            selected_criteria_ids = request.POST.getlist('criteria_ids')
+        criteria_form = UserWorkloadSelectionForm(request.POST, subfield=subfield)
+        if criteria_form.is_valid():
+            new_criteria = criteria_form.save(commit=False)
+            new_criteria.sf_id = subfield
+            new_criteria.evaluation = evaluation
+            new_criteria.user = request.user
 
-            for selected_criteria in selected_criteria_ids:
-                selected_unit = request.POST.get(f'selected_unit_{selected_criteria}')
-                notes = request.POST.get(f'notes_{selected_criteria}', '')
+            try:
+                # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
+                selected_num = float(new_criteria.selected_num )
+                selected_maxnum = float(new_criteria.selected_maxnum )
+                selected_unit = float(new_criteria.selected_unit )
+                selected_workload = float(new_criteria.selected_workload )
 
-                if selected_criteria:
-                    criteria_obj = get_object_or_404(WorkloadCriteria, c_id=selected_criteria)
+                # คำนวณค่า calculated_workload
+                if selected_maxnum == 0:
+                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                else:
+                    if selected_num <= selected_maxnum:
+                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                    else:
+                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
 
-                    # ถ้าไม่มีการกรอก selected_unit ใช้ค่า c_unit ของ criteria แทน
-                    if not selected_unit or selected_unit == '':
-                        selected_unit = criteria_obj.c_unit  # ใช้ค่า c_unit ของ criteria แทน
+                # แสดงข้อมูลการคำนวณใน log
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"calculated_workload: {calculated_workload}")
 
-                    # คำนวณ workload
-                    calculated_workload = float(selected_unit) * criteria_obj.c_workload
-
-                    # บันทึกข้อมูลลงใน UserWorkloadSelection
-                    UserWorkloadSelection.objects.create(
-                        user=request.user,
-                        evaluation=evaluation,
-                        sf_id=subfield,
-                        c_id=criteria_obj,
-                        selected_unit=float(selected_unit),
-                        calculated_workload=calculated_workload,
-                        notes=notes
-                    )
-
-            messages.success(request, 'บันทึกภาระงานเรียบร้อยแล้ว!')
-            return redirect('evaluation_page2', evaluation_id=evaluation_id)
-
-        elif 'add_new_criteria' in request.POST:
-            # กรณีที่เพิ่มเกณฑ์ภาระงานใหม่
-            criteria_form = WorkloadCriteriaForm(request.POST)
-            if criteria_form.is_valid():
-                new_criteria = criteria_form.save(commit=False)
-                new_criteria.sf_id = subfield
+                # บันทึกค่า calculated_workload ลงใน new_criteria
+                new_criteria.calculated_workload = calculated_workload
                 new_criteria.save()
 
-                # ใช้ค่า c_unit จากฟอร์มแทน selected_unit
-                selected_unit = criteria_form.cleaned_data['c_unit']  # ใช้ค่า c_unit เป็น selected_unit
-                calculated_workload = (selected_unit) * new_criteria.c_workload
-
-                # บันทึกข้อมูลลงใน UserWorkloadSelection
-                UserWorkloadSelection.objects.create(
-                    user=request.user,
-                    evaluation=evaluation,
-                    sf_id=subfield,
-                    c_id=new_criteria,
-                    selected_unit=float(selected_unit),  # บันทึก c_unit เป็น selected_unit
-                    calculated_workload=calculated_workload,
-                    notes=request.POST.get('notes', '')
-                )
-                messages.success(request, 'เพิ่มภาระงานใหม่เรียบร้อยแล้ว!')
+                messages.success(request, f'เพิ่มภาระงานใหม่เรียบร้อยแล้ว! คำนวณภาระงาน: {calculated_workload:.2f}')
                 return redirect('evaluation_page2', evaluation_id=evaluation_id)
+
+            except ValueError as e:
+                # ถ้ามีข้อผิดพลาดในการแปลงค่า แสดงใน log
+                print(f"ValueError: {e}")
+                messages.error(request, 'ไม่สามารถคำนวณค่าได้ โปรดตรวจสอบข้อมูลที่กรอก.')
 
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'evaluation': evaluation,
         'subfield': subfield,
-        'criteria': criteria,
         'criteria_form': criteria_form,
     }
     return render(request, 'app_evaluation/select_workload_criteria2.html', context)
@@ -856,37 +834,24 @@ def edit_workload_selection2(request, selection_id):
     selection = get_object_or_404(UserWorkloadSelection, pk=selection_id)
 
     if request.method == 'POST':
-        form = UserWorkloadSelectionForm(request.POST, instance=selection)
+        form = UserWorkloadSelectionForm1(request.POST, instance=selection)
 
         if form.is_valid():
-            # ดึง `c_id` ที่เป็นตัวเลขจากฟอร์ม
-            c_id_value = form.cleaned_data['c_id'].c_id
-            selected_unit = form.cleaned_data['selected_unit']
-
-            try:
-                # หาข้อมูล `WorkloadCriteria` ที่สัมพันธ์กับ `c_id_value`
-                criteria_obj = WorkloadCriteria.objects.get(c_id=c_id_value)
-
-                # อัปเดตข้อมูลใน `UserWorkloadSelection`
-                selection.c_id = criteria_obj
-                selection.selected_unit = selected_unit
-                selection.calculated_workload = selected_unit * criteria_obj.c_workload
-                selection.notes = form.cleaned_data['notes']
-                selection.save()
-
-                # อัปเดต `c_name` ใน `WorkloadCriteria`
-                new_c_name = form.cleaned_data['c_name']
-                criteria_obj.c_name = new_c_name
-                criteria_obj.save()
-
-                messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
-                return redirect('evaluation_page2', evaluation_id=selection.evaluation.uevr_id)
-
-            except WorkloadCriteria.DoesNotExist:
-                messages.error(request, 'ไม่พบข้อมูลเกณฑ์ภาระงาน กรุณาตรวจสอบข้อมูลที่กรอก')
-
+            # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
+            if selection.selected_maxnum == 0:
+                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+            else:
+                if selection.selected_num <= selection.selected_maxnum:
+                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                else:
+                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+            form.save()
+            messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
+            return redirect('evaluation_page2', evaluation_id=selection.evaluation.uevr_id)
+        else:
+            messages.error(request, 'กรุณาเลือกข้อมูลภาระงานให้ครบถ้วน.')
     else:
-        form = UserWorkloadSelectionForm(instance=selection)
+        form = UserWorkloadSelectionForm1(instance=selection)
 
     return render(request, 'app_evaluation/edit_workload_selection2.html', {
         'form': form,
@@ -908,8 +873,10 @@ def delete_workload_selection2(request, selection_id):
     })
 
 @login_required
-def upload_evidence1(request, evaluation_id):
-    evaluation = get_object_or_404(user_evaluation, uevr_id=evaluation_id)
+def upload_evidence1(request, criteria_id):
+    # ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
+    criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
+    evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
     if request.method == 'POST':
         form = UserEvidentForm(request.POST, request.FILES)
@@ -920,7 +887,12 @@ def upload_evidence1(request, evaluation_id):
             # บันทึกไฟล์ PDF และ DOCX
             for file in files:
                 new_filename = f"{uuid.uuid4()}_{file.name}"
-                evidence = user_evident(uevr_id=evaluation, file=file, filename=new_filename)
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    file=file,
+                    filename=new_filename
+                )
                 evidence.save()
 
             # ลดขนาดรูปภาพก่อนบันทึก
@@ -939,18 +911,22 @@ def upload_evidence1(request, evaluation_id):
 
                 # บันทึกไฟล์ลงใน storage
                 file_name = default_storage.save(f"uploads/{new_filename}", img_io)
-                evidence = user_evident(uevr_id=evaluation, picture=file_name, filename=new_filename)
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    picture=file_name,
+                    filename=new_filename
+                )
                 evidence.save()
 
             messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
-            # เปลี่ยน redirect กลับไปที่ evaluation_page หลังจากอัปโหลดเสร็จ
-            return redirect('upload_evidence1', evaluation_id=evaluation_id)
+            return redirect('upload_evidence1', criteria_id=criteria_id)
 
     else:
         form = UserEvidentForm()
 
     # แสดงรายการไฟล์ที่อัปโหลด
-    evidences = user_evident.objects.filter(uevr_id=evaluation)
+    evidences = user_evident.objects.filter(uwls_id=criteria)
 
     return render(request, 'app_evaluation/upload_evidence1.html', {
         'form': form,
@@ -975,7 +951,8 @@ def delete_evidence1(request, evidence_id):
     evidence.delete()
     messages.success(request, "ลบไฟล์/รูปภาพเรียบร้อยแล้ว!")
     
-    return redirect('upload_evidence1', evaluation_id=evidence.uevr_id.uevr_id)  # กลับไปหน้ารายการอัปโหลด
+    # ใช้ `redirect` ให้ไปยัง `upload_evidence` โดยใช้ `criteria_id`
+    return redirect('upload_evidence1', criteria_id=evidence.uwls_id.id)  # เปลี่ยน `evaluation_id` เป็น `criteria_id`
 
 
 def calculate_competency_score(actual_score, expected_score):
@@ -1059,7 +1036,7 @@ def evaluation_page3(request, evaluation_id):
                     )
 
         messages.success(request, "บันทึกคะแนนเรียบร้อยแล้ว!")
-        return redirect('evaluation_page_from_3', evaluation_id=evaluation_id)
+        return redirect('evaluation_page3', evaluation_id=evaluation_id)
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
     main_scores = user_competency_main.objects.filter(evaluation=evaluation)
@@ -1151,7 +1128,7 @@ def evaluation_page3(request, evaluation_id):
         'user_evaluation_obj': evaluation,
     }
 
-    return render(request, 'app_evaluation/evaluation_page_from_3.html', context)
+    return render(request, 'app_evaluation/evaluation_page3.html', context)
 
 @login_required
 def evaluation_page4(request, evaluation_id):
@@ -1507,74 +1484,6 @@ def evaluation_page_from_1(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_from_1.html', context)
 
-@login_required
-def upload_evidence2(request, evaluation_id):
-    evaluation = get_object_or_404(user_evaluation, uevr_id=evaluation_id)
-
-    if request.method == 'POST':
-        form = UserEvidentForm(request.POST, request.FILES)
-        files = request.FILES.getlist('file')
-        pictures = request.FILES.getlist('picture')
-
-        if form.is_valid():
-            # บันทึกไฟล์ PDF และ DOCX
-            for file in files:
-                new_filename = f"{uuid.uuid4()}_{file.name}"
-                evidence = user_evident(uevr_id=evaluation, file=file, filename=new_filename)
-                evidence.save()
-
-            # ลดขนาดรูปภาพก่อนบันทึก
-            for picture in pictures:
-                new_filename = f"{uuid.uuid4()}_{picture.name}"
-                image = Image.open(picture)
-
-                # ลดขนาดรูปภาพ
-                max_size = (800, 800)  # ขนาดที่ต้องการ
-                image.thumbnail(max_size)
-
-                # บันทึกรูปภาพที่ลดขนาด
-                img_io = ContentFile(b'')
-                image_format = image.format or 'JPEG'
-                image.save(img_io, format=image_format)
-
-                # บันทึกไฟล์ลงใน storage
-                file_name = default_storage.save(f"uploads/{new_filename}", img_io)
-                evidence = user_evident(uevr_id=evaluation, picture=file_name, filename=new_filename)
-                evidence.save()
-
-            messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
-            # เปลี่ยน redirect กลับไปที่ evaluation_page หลังจากอัปโหลดเสร็จ
-            return redirect('upload_evidence2', evaluation_id=evaluation_id)
-
-    else:
-        form = UserEvidentForm()
-
-    # แสดงรายการไฟล์ที่อัปโหลด
-    evidences = user_evident.objects.filter(uevr_id=evaluation)
-
-    return render(request, 'app_evaluation/upload_evidence2.html', {
-        'form': form,
-        'evaluation': evaluation,
-        'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
-    })
-
-@login_required
-def delete_evidence2(request, evidence_id):
-    evidence = get_object_or_404(user_evident, uevd_id=evidence_id)
-
-    # ลบไฟล์หรือรูปภาพที่เกี่ยวข้องจากระบบ
-    if evidence.file:
-        if os.path.isfile(evidence.file.path):
-            os.remove(evidence.file.path)  # ลบไฟล์จาก storage
-    if evidence.picture:
-        if os.path.isfile(evidence.picture.path):
-            os.remove(evidence.picture.path)  # ลบรูปภาพจาก storage
-
-    # ลบรายการ evidence จากฐานข้อมูล
-    evidence.delete()
-    messages.success(request, "ลบไฟล์/รูปภาพเรียบร้อยแล้ว!")
-    
-    return redirect('upload_evidence2', evaluation_id=evidence.uevr_id.uevr_id)  # กลับไปหน้ารายการอัปโหลด
 
 @login_required
 def evaluation_page_from_2(request, evaluation_id):
@@ -1646,6 +1555,7 @@ def evaluation_page_from_2(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_from_2.html', context)
 
+
 @login_required
 def select_subfields3(request, f_id, evaluation_id):
     field = get_object_or_404(wl_field, pk=f_id)
@@ -1702,82 +1612,61 @@ def delete_selected_subfield3(request, sf_id):
 
     return redirect('evaluation_page_from_2', evaluation_id=evaluation_id)
 
+
 @login_required
 def select_workload_criteria3(request, evaluation_id, sf_id):
     # ดึงข้อมูล evaluation และ subfield ที่เกี่ยวข้อง
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     subfield = get_object_or_404(wl_subfield, pk=sf_id)
-
-    # ดึงเกณฑ์ภาระงานที่เกี่ยวข้องกับ subfield
-    criteria = WorkloadCriteria.objects.filter(sf_id=subfield)
-
-    # สร้างฟอร์มสำหรับเพิ่มเกณฑ์ภาระงานใหม่
-    criteria_form = WorkloadCriteriaForm(initial={'sf_id': subfield})
+    
+    # สร้างฟอร์มและส่งค่า subfield ไปยังฟอร์มเพื่อกรองข้อมูลใน selected_id
+    criteria_form = UserWorkloadSelectionForm(initial={'sf_id': subfield}, subfield=subfield)
 
     # ตรวจสอบการส่งฟอร์ม
     if request.method == 'POST':
-        if 'selected_criteria' in request.POST:
-            # รับค่าที่เลือกหลายตัวจาก checkboxs
-            selected_criteria_ids = request.POST.getlist('criteria_ids')
+        criteria_form = UserWorkloadSelectionForm(request.POST, subfield=subfield)
+        if criteria_form.is_valid():
+            new_criteria = criteria_form.save(commit=False)
+            new_criteria.sf_id = subfield
+            new_criteria.evaluation = evaluation
+            new_criteria.user = request.user
 
-            for selected_criteria in selected_criteria_ids:
-                selected_unit = request.POST.get(f'selected_unit_{selected_criteria}')
-                notes = request.POST.get(f'notes_{selected_criteria}', '')
+            try:
+                # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
+                selected_num = float(new_criteria.selected_num )
+                selected_maxnum = float(new_criteria.selected_maxnum )
+                selected_unit = float(new_criteria.selected_unit )
+                selected_workload = float(new_criteria.selected_workload )
 
-                if selected_criteria:
-                    criteria_obj = get_object_or_404(WorkloadCriteria, c_id=selected_criteria)
+                # คำนวณค่า calculated_workload
+                if selected_maxnum == 0:
+                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                else:
+                    if selected_num <= selected_maxnum:
+                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                    else:
+                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
 
-                    # ถ้าไม่มีการกรอก selected_unit ใช้ค่า c_unit ของ criteria แทน
-                    if not selected_unit or selected_unit == '':
-                        selected_unit = criteria_obj.c_unit  # ใช้ค่า c_unit ของ criteria แทน
+                # แสดงข้อมูลการคำนวณใน log
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"calculated_workload: {calculated_workload}")
 
-                    # คำนวณ workload
-                    calculated_workload = float(selected_unit) * criteria_obj.c_workload
-
-                    # บันทึกข้อมูลลงใน UserWorkloadSelection
-                    UserWorkloadSelection.objects.create(
-                        user=request.user,
-                        evaluation=evaluation,
-                        sf_id=subfield,
-                        c_id=criteria_obj,
-                        selected_unit=float(selected_unit),
-                        calculated_workload=calculated_workload,
-                        notes=notes
-                    )
-
-            messages.success(request, 'บันทึกภาระงานเรียบร้อยแล้ว!')
-            return redirect('evaluation_page_from_2', evaluation_id=evaluation_id)
-
-        elif 'add_new_criteria' in request.POST:
-            # กรณีที่เพิ่มเกณฑ์ภาระงานใหม่
-            criteria_form = WorkloadCriteriaForm(request.POST)
-            if criteria_form.is_valid():
-                new_criteria = criteria_form.save(commit=False)
-                new_criteria.sf_id = subfield
+                # บันทึกค่า calculated_workload ลงใน new_criteria
+                new_criteria.calculated_workload = calculated_workload
                 new_criteria.save()
 
-                # ใช้ค่า c_unit จากฟอร์มแทน selected_unit
-                selected_unit = criteria_form.cleaned_data['c_unit']  # ใช้ค่า c_unit เป็น selected_unit
-                calculated_workload = (selected_unit) * new_criteria.c_workload
-
-                # บันทึกข้อมูลลงใน UserWorkloadSelection
-                UserWorkloadSelection.objects.create(
-                    user=request.user,
-                    evaluation=evaluation,
-                    sf_id=subfield,
-                    c_id=new_criteria,
-                    selected_unit=float(selected_unit),  # บันทึก c_unit เป็น selected_unit
-                    calculated_workload=calculated_workload,
-                    notes=request.POST.get('notes', '')
-                )
-                messages.success(request, 'เพิ่มภาระงานใหม่เรียบร้อยแล้ว!')
+                messages.success(request, f'เพิ่มภาระงานใหม่เรียบร้อยแล้ว! คำนวณภาระงาน: {calculated_workload:.2f}')
                 return redirect('evaluation_page_from_2', evaluation_id=evaluation_id)
+
+            except ValueError as e:
+                # ถ้ามีข้อผิดพลาดในการแปลงค่า แสดงใน log
+                print(f"ValueError: {e}")
+                messages.error(request, 'ไม่สามารถคำนวณค่าได้ โปรดตรวจสอบข้อมูลที่กรอก.')
 
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'evaluation': evaluation,
         'subfield': subfield,
-        'criteria': criteria,
         'criteria_form': criteria_form,
     }
     return render(request, 'app_evaluation/select_workload_criteria3.html', context)
@@ -1787,37 +1676,24 @@ def edit_workload_selection3(request, selection_id):
     selection = get_object_or_404(UserWorkloadSelection, pk=selection_id)
 
     if request.method == 'POST':
-        form = UserWorkloadSelectionForm(request.POST, instance=selection)
+        form = UserWorkloadSelectionForm1(request.POST, instance=selection)
 
         if form.is_valid():
-            # ดึง `c_id` ที่เป็นตัวเลขจากฟอร์ม
-            c_id_value = form.cleaned_data['c_id'].c_id
-            selected_unit = form.cleaned_data['selected_unit']
-
-            try:
-                # หาข้อมูล `WorkloadCriteria` ที่สัมพันธ์กับ `c_id_value`
-                criteria_obj = WorkloadCriteria.objects.get(c_id=c_id_value)
-
-                # อัปเดตข้อมูลใน `UserWorkloadSelection`
-                selection.c_id = criteria_obj
-                selection.selected_unit = selected_unit
-                selection.calculated_workload = selected_unit * criteria_obj.c_workload
-                selection.notes = form.cleaned_data['notes']
-                selection.save()
-
-                # อัปเดต `c_name` ใน `WorkloadCriteria`
-                new_c_name = form.cleaned_data['c_name']
-                criteria_obj.c_name = new_c_name
-                criteria_obj.save()
-
-                messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
-                return redirect('evaluation_page_from_2', evaluation_id=selection.evaluation.uevr_id)
-
-            except WorkloadCriteria.DoesNotExist:
-                messages.error(request, 'ไม่พบข้อมูลเกณฑ์ภาระงาน กรุณาตรวจสอบข้อมูลที่กรอก')
-
+            # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
+            if selection.selected_maxnum == 0:
+                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+            else:
+                if selection.selected_num <= selection.selected_maxnum:
+                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                else:
+                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+            form.save()
+            messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
+            return redirect('evaluation_page_from_2', evaluation_id=selection.evaluation.uevr_id)
+        else:
+            messages.error(request, 'กรุณาเลือกข้อมูลภาระงานให้ครบถ้วน.')
     else:
-        form = UserWorkloadSelectionForm(instance=selection)
+        form = UserWorkloadSelectionForm1(instance=selection)
 
     return render(request, 'app_evaluation/edit_workload_selection3.html', {
         'form': form,
@@ -1837,6 +1713,90 @@ def delete_workload_selection3(request, selection_id):
     return render(request, 'app_evaluation/confirm_delete3.html', {
         'selection': selection,
     })
+
+@login_required
+def upload_evidence2(request, criteria_id):
+    # ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
+    criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
+    evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
+
+    if request.method == 'POST':
+        form = UserEvidentForm(request.POST, request.FILES)
+        files = request.FILES.getlist('file')
+        pictures = request.FILES.getlist('picture')
+
+        if form.is_valid():
+            # บันทึกไฟล์ PDF และ DOCX
+            for file in files:
+                new_filename = f"{uuid.uuid4()}_{file.name}"
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    file=file,
+                    filename=new_filename
+                )
+                evidence.save()
+
+            # ลดขนาดรูปภาพก่อนบันทึก
+            for picture in pictures:
+                new_filename = f"{uuid.uuid4()}_{picture.name}"
+                image = Image.open(picture)
+
+                # ลดขนาดรูปภาพ
+                max_size = (800, 800)  # ขนาดที่ต้องการ
+                image.thumbnail(max_size)
+
+                # บันทึกรูปภาพที่ลดขนาด
+                img_io = ContentFile(b'')
+                image_format = image.format or 'JPEG'
+                image.save(img_io, format=image_format)
+
+                # บันทึกไฟล์ลงใน storage
+                file_name = default_storage.save(f"uploads/{new_filename}", img_io)
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    picture=file_name,
+                    filename=new_filename
+                )
+                evidence.save()
+
+            messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
+            return redirect('upload_evidence2', criteria_id=criteria_id)
+
+    else:
+        form = UserEvidentForm()
+
+    # แสดงรายการไฟล์ที่อัปโหลด
+    evidences = user_evident.objects.filter(uwls_id=criteria)
+
+    return render(request, 'app_evaluation/upload_evidence2.html', {
+        'form': form,
+        'evaluation': evaluation,
+        'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
+    })
+
+
+@login_required
+def delete_evidence2(request, evidence_id):
+    evidence = get_object_or_404(user_evident, uevd_id=evidence_id)
+
+    # ลบไฟล์หรือรูปภาพที่เกี่ยวข้องจากระบบ
+    if evidence.file:
+        if os.path.isfile(evidence.file.path):
+            os.remove(evidence.file.path)  # ลบไฟล์จาก storage
+    if evidence.picture:
+        if os.path.isfile(evidence.picture.path):
+            os.remove(evidence.picture.path)  # ลบรูปภาพจาก storage
+
+    # ลบรายการ evidence จากฐานข้อมูล
+    evidence.delete()
+    messages.success(request, "ลบไฟล์/รูปภาพเรียบร้อยแล้ว!")
+    
+    # ใช้ `redirect` ให้ไปยัง `upload_evidence` โดยใช้ `criteria_id`
+    return redirect('upload_evidence2', criteria_id=evidence.uwls_id.id)  # เปลี่ยน `evaluation_id` เป็น `criteria_id`
+
+
 
 @login_required
 def evaluation_page_from_3(request, evaluation_id):
@@ -2846,77 +2806,55 @@ def select_workload_criteria(request, evaluation_id, sf_id):
     # ดึงข้อมูล evaluation และ subfield ที่เกี่ยวข้อง
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     subfield = get_object_or_404(wl_subfield, pk=sf_id)
-
-    # ดึงเกณฑ์ภาระงานที่เกี่ยวข้องกับ subfield
-    criteria = WorkloadCriteria.objects.filter(sf_id=subfield)
-
-    # สร้างฟอร์มสำหรับเพิ่มเกณฑ์ภาระงานใหม่
-    criteria_form = WorkloadCriteriaForm(initial={'sf_id': subfield})
+    
+    # สร้างฟอร์มและส่งค่า subfield ไปยังฟอร์มเพื่อกรองข้อมูลใน selected_id
+    criteria_form = UserWorkloadSelectionForm(initial={'sf_id': subfield}, subfield=subfield)
 
     # ตรวจสอบการส่งฟอร์ม
     if request.method == 'POST':
-        if 'selected_criteria' in request.POST:
-            # รับค่าที่เลือกหลายตัวจาก checkboxs
-            selected_criteria_ids = request.POST.getlist('criteria_ids')
+        criteria_form = UserWorkloadSelectionForm(request.POST, subfield=subfield)
+        if criteria_form.is_valid():
+            new_criteria = criteria_form.save(commit=False)
+            new_criteria.sf_id = subfield
+            new_criteria.evaluation = evaluation
+            new_criteria.user = request.user
 
-            for selected_criteria in selected_criteria_ids:
-                selected_unit = request.POST.get(f'selected_unit_{selected_criteria}')
-                notes = request.POST.get(f'notes_{selected_criteria}', '')
+            try:
+                # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
+                selected_num = float(new_criteria.selected_num )
+                selected_maxnum = float(new_criteria.selected_maxnum )
+                selected_unit = float(new_criteria.selected_unit )
+                selected_workload = float(new_criteria.selected_workload )
 
-                if selected_criteria:
-                    criteria_obj = get_object_or_404(WorkloadCriteria, c_id=selected_criteria)
+                # คำนวณค่า calculated_workload
+                if selected_maxnum == 0:
+                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                else:
+                    if selected_num <= selected_maxnum:
+                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                    else:
+                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
 
-                    # ถ้าไม่มีการกรอก selected_unit ใช้ค่า c_unit ของ criteria แทน
-                    if not selected_unit or selected_unit == '':
-                        selected_unit = criteria_obj.c_unit  # ใช้ค่า c_unit ของ criteria แทน
+                # แสดงข้อมูลการคำนวณใน log
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"calculated_workload: {calculated_workload}")
 
-                    # คำนวณ workload
-                    calculated_workload = float(selected_unit) * criteria_obj.c_workload
-
-                    # บันทึกข้อมูลลงใน UserWorkloadSelection
-                    UserWorkloadSelection.objects.create(
-                        user=request.user,
-                        evaluation=evaluation,
-                        sf_id=subfield,
-                        c_id=criteria_obj,
-                        selected_unit=float(selected_unit),
-                        calculated_workload=calculated_workload,
-                        notes=notes
-                    )
-
-            messages.success(request, 'บันทึกภาระงานเรียบร้อยแล้ว!')
-            return redirect('evaluation_page_2', evaluation_id=evaluation_id)
-
-        elif 'add_new_criteria' in request.POST:
-            # กรณีที่เพิ่มเกณฑ์ภาระงานใหม่
-            criteria_form = WorkloadCriteriaForm(request.POST)
-            if criteria_form.is_valid():
-                new_criteria = criteria_form.save(commit=False)
-                new_criteria.sf_id = subfield
+                # บันทึกค่า calculated_workload ลงใน new_criteria
+                new_criteria.calculated_workload = calculated_workload
                 new_criteria.save()
 
-                # ใช้ค่า c_unit จากฟอร์มแทน selected_unit
-                selected_unit = criteria_form.cleaned_data['c_unit']  # ใช้ค่า c_unit เป็น selected_unit
-                calculated_workload = (selected_unit) * new_criteria.c_workload
-
-                # บันทึกข้อมูลลงใน UserWorkloadSelection
-                UserWorkloadSelection.objects.create(
-                    user=request.user,
-                    evaluation=evaluation,
-                    sf_id=subfield,
-                    c_id=new_criteria,
-                    selected_unit=float(selected_unit),  # บันทึก c_unit เป็น selected_unit
-                    calculated_workload=calculated_workload,
-                    notes=request.POST.get('notes', '')
-                )
-                messages.success(request, 'เพิ่มภาระงานใหม่เรียบร้อยแล้ว!')
+                messages.success(request, f'เพิ่มภาระงานใหม่เรียบร้อยแล้ว! คำนวณภาระงาน: {calculated_workload:.2f}')
                 return redirect('evaluation_page_2', evaluation_id=evaluation_id)
+
+            except ValueError as e:
+                # ถ้ามีข้อผิดพลาดในการแปลงค่า แสดงใน log
+                print(f"ValueError: {e}")
+                messages.error(request, 'ไม่สามารถคำนวณค่าได้ โปรดตรวจสอบข้อมูลที่กรอก.')
 
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'evaluation': evaluation,
         'subfield': subfield,
-        'criteria': criteria,
         'criteria_form': criteria_form,
     }
     return render(request, 'app_evaluation/select_workload_criteria.html', context)
@@ -2926,37 +2864,24 @@ def edit_workload_selection(request, selection_id):
     selection = get_object_or_404(UserWorkloadSelection, pk=selection_id)
 
     if request.method == 'POST':
-        form = UserWorkloadSelectionForm(request.POST, instance=selection)
+        form = UserWorkloadSelectionForm1(request.POST, instance=selection)
 
         if form.is_valid():
-            # ดึง `c_id` ที่เป็นตัวเลขจากฟอร์ม
-            c_id_value = form.cleaned_data['c_id'].c_id
-            selected_unit = form.cleaned_data['selected_unit']
-
-            try:
-                # หาข้อมูล `WorkloadCriteria` ที่สัมพันธ์กับ `c_id_value`
-                criteria_obj = WorkloadCriteria.objects.get(c_id=c_id_value)
-
-                # อัปเดตข้อมูลใน `UserWorkloadSelection`
-                selection.c_id = criteria_obj
-                selection.selected_unit = selected_unit
-                selection.calculated_workload = selected_unit * criteria_obj.c_workload
-                selection.notes = form.cleaned_data['notes']
-                selection.save()
-
-                # อัปเดต `c_name` ใน `WorkloadCriteria`
-                new_c_name = form.cleaned_data['c_name']
-                criteria_obj.c_name = new_c_name
-                criteria_obj.save()
-
-                messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
-                return redirect('evaluation_page_2', evaluation_id=selection.evaluation.uevr_id)
-
-            except WorkloadCriteria.DoesNotExist:
-                messages.error(request, 'ไม่พบข้อมูลเกณฑ์ภาระงาน กรุณาตรวจสอบข้อมูลที่กรอก')
-
+            # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
+            if selection.selected_maxnum == 0:
+                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+            else:
+                if selection.selected_num <= selection.selected_maxnum:
+                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                else:
+                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+            form.save()
+            messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
+            return redirect('evaluation_page_2', evaluation_id=selection.evaluation.uevr_id)
+        else:
+            messages.error(request, 'กรุณาเลือกข้อมูลภาระงานให้ครบถ้วน.')
     else:
-        form = UserWorkloadSelectionForm(instance=selection)
+        form = UserWorkloadSelectionForm1(instance=selection)
 
     return render(request, 'app_evaluation/edit_workload_selection.html', {
         'form': form,
@@ -3151,10 +3076,11 @@ def evaluation_page_3(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_3.html', context)
 
-
 @login_required
-def upload_evidence(request, evaluation_id):
-    evaluation = get_object_or_404(user_evaluation, uevr_id=evaluation_id)
+def upload_evidence(request, criteria_id):
+    # ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
+    criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
+    evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
     if request.method == 'POST':
         form = UserEvidentForm(request.POST, request.FILES)
@@ -3165,7 +3091,12 @@ def upload_evidence(request, evaluation_id):
             # บันทึกไฟล์ PDF และ DOCX
             for file in files:
                 new_filename = f"{uuid.uuid4()}_{file.name}"
-                evidence = user_evident(uevr_id=evaluation, file=file, filename=new_filename)
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    file=file,
+                    filename=new_filename
+                )
                 evidence.save()
 
             # ลดขนาดรูปภาพก่อนบันทึก
@@ -3184,25 +3115,28 @@ def upload_evidence(request, evaluation_id):
 
                 # บันทึกไฟล์ลงใน storage
                 file_name = default_storage.save(f"uploads/{new_filename}", img_io)
-                evidence = user_evident(uevr_id=evaluation, picture=file_name, filename=new_filename)
+                evidence = user_evident(
+                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
+                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    picture=file_name,
+                    filename=new_filename
+                )
                 evidence.save()
 
             messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
-            # เปลี่ยน redirect กลับไปที่ evaluation_page หลังจากอัปโหลดเสร็จ
-            return redirect('upload_evidence', evaluation_id=evaluation_id)
+            return redirect('upload_evidence', criteria_id=criteria_id)
 
     else:
         form = UserEvidentForm()
 
     # แสดงรายการไฟล์ที่อัปโหลด
-    evidences = user_evident.objects.filter(uevr_id=evaluation)
+    evidences = user_evident.objects.filter(uwls_id=criteria)
 
     return render(request, 'app_evaluation/upload_evidence.html', {
         'form': form,
-        'evaluation': evaluation,
-        'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
+        'evidences': evidences,  # ส่งรายการไฟล์/รูปภาพไปยัง template
+        'criteria': criteria  # ส่งข้อมูล criteria ไปยัง template
     })
-
 
 @login_required
 def delete_evidence(request, evidence_id):
@@ -3220,7 +3154,8 @@ def delete_evidence(request, evidence_id):
     evidence.delete()
     messages.success(request, "ลบไฟล์/รูปภาพเรียบร้อยแล้ว!")
     
-    return redirect('upload_evidence', evaluation_id=evidence.uevr_id.uevr_id)  # กลับไปหน้ารายการอัปโหลด
+    # ใช้ `redirect` ให้ไปยัง `upload_evidence` โดยใช้ `criteria_id`
+    return redirect('upload_evidence', criteria_id=evidence.uwls_id.id)  # เปลี่ยน `evaluation_id` เป็น `criteria_id`
 
 @login_required
 def evaluation_page_4(request, evaluation_id):

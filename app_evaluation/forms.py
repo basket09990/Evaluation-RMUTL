@@ -313,52 +313,49 @@ class WorkloadCriteriaSelectionForm(forms.ModelForm):
         self.fields['notes'].label = 'หมายเหตุ'
 
 class UserWorkloadSelectionForm(forms.ModelForm):
-    c_id = forms.ModelChoiceField(
-        queryset=WorkloadCriteria.objects.all(),
-        label="เกณฑ์ภาระงาน",
+    selected_id = forms.ModelChoiceField(
+        queryset=WorkloadCriteria.objects.none(),  # เริ่มต้นด้วย queryset ว่าง
+        label="เลือกเกณฑ์ภาระงาน",
         required=True,
-        widget=forms.HiddenInput()
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
-    
-    c_name = forms.CharField(
-        label="ชื่อเกณฑ์ภาระงาน",
-        required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'พิมพ์ชื่อเกณฑ์ภาระงาน'})
-    )
-
-    c_workload = forms.FloatField(
-        label="ภาระงาน",
-        required=False,
-        widget=forms.NumberInput(attrs={'readonly': 'readonly'})
+    selected_unit = forms.FloatField(
+        label="จำนวน",
+        required=False,  # กำหนดเป็น False เพื่อไม่ให้ฟอร์มบังคับฟิลด์นี้เสมอ
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
     )
 
     class Meta:
         model = UserWorkloadSelection
-        fields = ['c_id','c_name', 'selected_unit', 'c_workload', 'notes']
+        fields = ['selected_id', 'selected_name', 'selected_num', 'selected_unit', 'notes']
         labels = {
             'selected_unit': 'จำนวน',
-            'c_workload': 'ภาระงาน',
+            'notes': 'หมายเหตุ',
         }
 
     def __init__(self, *args, **kwargs):
+        subfield = kwargs.pop('subfield', None)  # ดึง subfield จาก kwargs
         super().__init__(*args, **kwargs)
-        if self.instance and self.instance.c_id:
-            # ตั้งค่าเริ่มต้นให้กับ `c_id` และ `c_name`
-            self.fields['c_id'].initial = self.instance.c_id
-            self.fields['c_name'].initial = self.instance.c_id.c_name
-            self.fields['c_workload'].initial = self.instance.c_id.c_workload
+        
+        # ถ้ามี subfield ให้กำหนดค่า queryset ของ selected_id ใหม่
+        if subfield:
+            self.fields['selected_id'].queryset = WorkloadCriteria.objects.filter(sf_id=subfield)
+        
+        # ถ้า instance มีค่า selected_id ให้ใช้ค่า c_unit เป็นค่าเริ่มต้นของ selected_unit
+        if self.instance and getattr(self.instance, 'selected_id', None):
+            self.fields['selected_unit'].initial = self.instance.selected_id.c_unit
 
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        # อัปเดตชื่อ `c_name` ของ `WorkloadCriteria`
-        new_c_name = self.cleaned_data['c_name']
-        instance.c_id.c_name = new_c_name
+class UserWorkloadSelectionForm1(forms.ModelForm):
 
-        # บันทึก `WorkloadCriteria` ที่แก้ไขแล้ว
-        if commit:
-            instance.c_id.save()
-            instance.save()
-        return instance
+
+    class Meta:
+        model = UserWorkloadSelection
+        fields = [ 'selected_name', 'selected_num', 'notes']
+        labels = {
+            'selected_unit': 'จำนวน',
+            'notes': 'หมายเหตุ',
+        }
+
 
 class PersonalDiagramForm(forms.ModelForm):
     class Meta:

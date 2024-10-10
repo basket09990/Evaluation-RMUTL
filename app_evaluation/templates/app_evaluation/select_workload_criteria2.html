@@ -36,7 +36,7 @@
 
     <form method="POST">
         {% csrf_token %}
-
+    
         <h3>หรือเพิ่มภาระงานใหม่</h3>
     
         <table class="table1">
@@ -44,67 +44,34 @@
                 <tr>
                     <th>ชื่อภาระงาน</th>
                     <th>จำนวน</th>
-                    <th>จำนวนสูงสุด</th>
-                    <th>หน่วย</th>
-                    <th>คะแนนภาระงาน</th>
+               
+                    <th>เลือกคะแนนภาระงาน</th>
                     <th>หมายเหตุ</th>
-                  
                 </tr>
             </thead>
             <tbody>
-            <tr>
-                <td>{{ criteria_form.c_name }}</td>
-                <td>{{ criteria_form.c_num }}</td>
-                <td>{{ criteria_form.c_maxnum }}</td>
-                <td>{{ criteria_form.c_unit }}</td>
-                <td>{{ criteria_form.c_workload }}</td>
+                <tr>
+                    <!-- แสดงฟิลด์ selected_id ซึ่งเป็น dropdown ให้เลือกชื่อภาระงาน -->
+                    <td>{{ criteria_form.selected_name }}</td>
+                    <!-- ฟิลด์สำหรับจำนวน -->
+                    <td>{{ criteria_form.selected_num }}</td>
 
-                <td colspan="2">
-                    <input type="text" name="notes" placeholder="หมายเหตุ (ถ้ามี)" />
-                </td>
-            </tr>
-        </tbody>
-        </table>
-    
-        <button type="submit" name="add_new_criteria" class="btn btn-secondary">เพิ่มภาระงานใหม่</button>
-
-        <table class="table1">
-            <thead>
-                <tr>
-                    <th>ชื่อภาระงาน</th>
-                    <th>หน่วย</th>
-                    <th>หน่วย</th>
-                    <th>คะแนนภาระงาน</th>
-                    <th>หมายเหตุ</th>
-                    <th>เลือก</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for criterion in criteria %}
-                <tr>
-                    <td>{{ criterion.c_name }}</td>
-                    <!-- กำหนดชื่อของ selected_unit และ notes ให้แตกต่างกันโดยใช้ c_id -->
+                    <!-- ฟิลด์สำหรับคะแนนภาระงาน -->
                     <td>
-                        <input type="number" name="selected_unit_{{ criterion.c_id }}" value="{{ criterion.c_unit }}" />
+                        {{ criteria_form.selected_id }}
                     </td>
-                    <td>{{ criterion.c_unit }}</td>
-                    <td>{{ criterion.c_workload }}</td>
-                    <td><input type="text" name="notes_{{ criterion.c_id }}" /></td>
-                    <td>
-                        <input type="checkbox" id="checkbox-{{ forloop.counter }}" name="criteria_ids" value="{{ criterion.c_id }}" />
-                        <label for="checkbox-{{ forloop.counter }}">เลือก</label>
-                    </td>
+                    <!-- ฟิลด์สำหรับหมายเหตุ -->
+                    <td>{{ criteria_form.notes }}</td>
                 </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="9">ไม่มีภาระงานที่เกี่ยวข้อง</td>
-                </tr>
-                {% endfor %}
             </tbody>
         </table>
-        <button type="submit" name="selected_criteria" class="btn btn-primary">บันทึกภาระงานที่เลือก</button>
     
+        <button type="submit" class="btn btn-success">เพิ่มภาระงานใหม่</button>
+        <a href="{% url 'evaluation_page2' evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </form>
-    <a href="{% url 'evaluation_page2' evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+    
+    
 </div>
+
+
 {% endblock %}

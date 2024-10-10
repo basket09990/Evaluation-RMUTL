@@ -71,13 +71,13 @@ class academic_type(models.Model):
 
 class Profile(models.Model):
     position = models.TextField(default="", blank=True, null=True, verbose_name="ตำแหน่ง")
-    administrative_position = models.TextField(default="", blank=True, null=True, verbose_name="ตำแหน่งบริหาร")
-    salary = models.TextField(default="", blank=True, null=True, verbose_name="เงินเดือน")
-    position_number = models.TextField(default="", blank=True, null=True, verbose_name="เลขที่ประจำตำแหน่ง")
-    affiliation = models.TextField(default="", blank=True, null=True, verbose_name="สังกัด")
-    old_government = models.TextField(default="", blank=True, null=True, verbose_name="มาช่วยราชการจากที่ใด (ถ้ามี)")
-    special_position = models.TextField(default="", blank=True, null=True, verbose_name="หน้าที่พิเศษ")
-    start_goverment = models.TextField(default="", blank=True, null=True, verbose_name="เริ่มรับราชการเมื่อวันที่")
+    administrative_position = models.TextField(default="", verbose_name="ตำแหน่งบริหาร")
+    salary = models.TextField(default="", verbose_name="เงินเดือน")
+    position_number = models.TextField(default="", verbose_name="เลขที่ประจำตำแหน่ง")
+    affiliation = models.TextField(default="", verbose_name="สังกัด")
+    old_government = models.TextField(default="", verbose_name="มาช่วยราชการจากที่ใด (ถ้ามี)")
+    special_position = models.TextField(default="", verbose_name="หน้าที่พิเศษ")
+    start_goverment = models.TextField(default="", verbose_name="เริ่มรับราชการเมื่อวันที่")
     sum_time_goverment = models.IntegerField(null=True, blank=True)
     years_of_service = models.IntegerField(null=True, blank=True)
     months_of_service = models.IntegerField(null=True, blank=True)
@@ -129,15 +129,24 @@ class WorkloadCriteria(models.Model):
     c_id = models.AutoField(primary_key=True)
     c_name = models.TextField(default="", blank=True, null=True)
     c_num = models.FloatField(default="0", blank=True, null=True)
-    c_unit = models.FloatField(default="0", blank=True, null=True)
+    c_unit = models.FloatField(default="1", blank=True, null=True)
     c_maxnum = models.FloatField(default="0", blank=True, null=True)
     c_workload = models.FloatField(default="0", blank=True, null=True)
     f_id = models.ForeignKey(wl_field, on_delete=models.CASCADE, blank=True, null=True)
     sf_id = models.ForeignKey(wl_subfield, on_delete=models.CASCADE)
 
-     # เพิ่ม __str__ method เพื่อแสดงค่าที่ต้องการ
     def __str__(self):
         return f"{self.c_name}"
+
+    # ฟังก์ชันเพื่อดึงตัวเลือก c_name ที่สัมพันธ์กับ c_maxnum
+    @classmethod
+    def get_maxnum_choices(cls):
+        return [(criteria.c_id, f"{criteria.c_name} (Max: {criteria.c_maxnum})") for criteria in cls.objects.all()]
+
+    # ฟังก์ชันเพื่อดึงตัวเลือก c_name ที่สัมพันธ์กับ c_workload
+    @classmethod
+    def get_workload_choices(cls):
+        return [(criteria.c_id, f"{criteria.c_name} (Workload: {criteria.c_workload})") for criteria in cls.objects.all()]
 
 class WorkLeave(models.Model):
     # กำหนดประเภทการลา
@@ -356,13 +365,39 @@ class UserWorkloadSelection(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     evaluation = models.ForeignKey(user_evaluation, on_delete=models.CASCADE)
     sf_id = models.ForeignKey(wl_subfield, on_delete=models.CASCADE)
-    c_id = models.ForeignKey(WorkloadCriteria, on_delete=models.PROTECT)
-    selected_unit = models.FloatField()
-    calculated_workload = models.FloatField()
-    notes = models.TextField(blank=True, null=True)  # หมายเหตุ
+    selected_id = models.ForeignKey(WorkloadCriteria, on_delete=models.PROTECT)
+    selected_name = models.TextField(default="", blank=True, null=True)
+    selected_num = models.FloatField(default="0", blank=True, null=True)
+
+    # ใช้ FloatField แทน choices เพื่อดึงข้อมูลโดยตรงจาก selected_id
+    selected_maxnum = models.FloatField(default="0", blank=True, null=True)
+    selected_unit = models.FloatField(default="1")
+    selected_workload = models.FloatField(default="0", blank=True, null=True)
+    calculated_workload = models.FloatField(default="0")
+    notes = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.c_id.c_name} ({self.calculated_workload})"
+        return f"{self.user.username} - {self.selected_name} "
+
+    def save(self, *args, **kwargs):
+        if self.selected_id:
+            # ตั้งค่า selected_maxnum, selected_unit, และ selected_workload จาก selected_id
+            self.selected_maxnum = self.selected_id.c_maxnum
+            self.selected_unit = self.selected_id.c_unit
+            self.selected_workload = self.selected_id.c_workload
+
+            # คำนวณค่า calculated_workload
+            if self.selected_maxnum == 0:
+                self.calculated_workload = (self.selected_num * self.selected_unit) * self.selected_workload
+            else:
+                if self.selected_num <= self.selected_maxnum:
+                    self.calculated_workload = (self.selected_num * self.selected_unit) * self.selected_workload
+                else:
+                    self.calculated_workload = (self.selected_maxnum * self.selected_unit) * self.selected_workload
+
+        # เรียกใช้ฟังก์ชันบันทึกของแม่แบบ
+        super().save(*args, **kwargs)
+
 
 class user_evident(models.Model):
     uevd_id = models.AutoField(primary_key=True)
