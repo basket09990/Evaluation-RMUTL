@@ -31,6 +31,7 @@ from django.dispatch import receiver
 import openpyxl
 from django.template.loader import render_to_string
 from bs4 import BeautifulSoup
+from openpyxl.styles import Alignment, Border, Side
 
 
 # สัญญาณที่จะถูกเรียกเมื่อ UserSelectedSubField ถูกลบ
@@ -797,20 +798,19 @@ def select_workload_criteria2(request, evaluation_id, sf_id):
                 # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
                 selected_num = float(new_criteria.selected_num )
                 selected_maxnum = float(new_criteria.selected_maxnum )
-                selected_unit = float(new_criteria.selected_unit )
                 selected_workload = float(new_criteria.selected_workload )
 
                 # คำนวณค่า calculated_workload
                 if selected_maxnum == 0:
-                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                    calculated_workload = selected_num * selected_workload
                 else:
                     if selected_num <= selected_maxnum:
-                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                        calculated_workload = selected_num * selected_workload
                     else:
-                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
+                        calculated_workload = selected_maxnum* selected_workload
 
                 # แสดงข้อมูลการคำนวณใน log
-                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_workload: {selected_workload}")
                 print(f"calculated_workload: {calculated_workload}")
 
                 # บันทึกค่า calculated_workload ลงใน new_criteria
@@ -843,12 +843,12 @@ def edit_workload_selection2(request, selection_id):
         if form.is_valid():
             # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
             if selection.selected_maxnum == 0:
-                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                selection.calculated_workload = selection.selected_num * selection.selected_workload
             else:
                 if selection.selected_num <= selection.selected_maxnum:
-                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_num * selection.selected_workload
                 else:
-                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_maxnum  * selection.selected_workload
             form.save()
             messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
             return redirect('evaluation_page2', evaluation_id=selection.evaluation.uevr_id)
@@ -1087,7 +1087,7 @@ def evaluation_page3(request, evaluation_id):
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
     main_max_num = sum([c.mc_num for c in main_competencies])
     specific_max_num = sum([c.sc_num for c in specific_competencies])
-    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if evaluation.administrative_position is not None else 0
+    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if administrative_competencies is not None else 0
 
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
@@ -1639,20 +1639,19 @@ def select_workload_criteria3(request, evaluation_id, sf_id):
                 # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
                 selected_num = float(new_criteria.selected_num )
                 selected_maxnum = float(new_criteria.selected_maxnum )
-                selected_unit = float(new_criteria.selected_unit )
                 selected_workload = float(new_criteria.selected_workload )
 
                 # คำนวณค่า calculated_workload
                 if selected_maxnum == 0:
-                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                    calculated_workload = selected_num  * selected_workload
                 else:
                     if selected_num <= selected_maxnum:
-                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                        calculated_workload = selected_num  * selected_workload
                     else:
-                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
+                        calculated_workload = selected_maxnum  * selected_workload
 
                 # แสดงข้อมูลการคำนวณใน log
-                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_workload: {selected_workload}")
                 print(f"calculated_workload: {calculated_workload}")
 
                 # บันทึกค่า calculated_workload ลงใน new_criteria
@@ -1685,12 +1684,12 @@ def edit_workload_selection3(request, selection_id):
         if form.is_valid():
             # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
             if selection.selected_maxnum == 0:
-                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                selection.calculated_workload = selection.selected_num * selection.selected_workload
             else:
                 if selection.selected_num <= selection.selected_maxnum:
-                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_num  * selection.selected_workload
                 else:
-                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_maxnum * selection.selected_workload
             form.save()
             messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
             return redirect('evaluation_page_from_2', evaluation_id=selection.evaluation.uevr_id)
@@ -1799,8 +1798,6 @@ def delete_evidence2(request, evidence_id):
     
     # ใช้ `redirect` ให้ไปยัง `upload_evidence` โดยใช้ `criteria_id`
     return redirect('upload_evidence2', criteria_id=evidence.uwls_id.id)  # เปลี่ยน `evaluation_id` เป็น `criteria_id`
-
-
 
 @login_required
 def evaluation_page_from_3(request, evaluation_id):
@@ -1912,7 +1909,7 @@ def evaluation_page_from_3(request, evaluation_id):
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
     main_max_num = sum([c.mc_num for c in main_competencies])
     specific_max_num = sum([c.sc_num for c in specific_competencies])
-    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if evaluation.administrative_position is not None else 0
+    administrative_max_num = sum([score.uceo_num for score in administrative_scores]) if administrative_competencies is not None else 0
 
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
@@ -2608,6 +2605,7 @@ def evaluation_page(request, evaluation_id):
         'user_evaluation': user_evaluation_obj,
         'upload_url': upload_url,
         'evaluation_id': evaluation_id,
+        'evaluation': evaluation,
         # ข้อมูลการลา round 1
         **({'sick_leave_round_1_form': sick_leave_round_1_form,
             'personal_leave_round_1_form': personal_leave_round_1_form,
@@ -2827,20 +2825,19 @@ def select_workload_criteria(request, evaluation_id, sf_id):
                 # แปลงค่าทั้งหมดเป็น float ก่อนทำการคำนวณ
                 selected_num = float(new_criteria.selected_num )
                 selected_maxnum = float(new_criteria.selected_maxnum )
-                selected_unit = float(new_criteria.selected_unit )
                 selected_workload = float(new_criteria.selected_workload )
 
                 # คำนวณค่า calculated_workload
                 if selected_maxnum == 0:
-                    calculated_workload = (selected_num * selected_unit) * selected_workload
+                    calculated_workload = selected_num  * selected_workload
                 else:
                     if selected_num <= selected_maxnum:
-                        calculated_workload = (selected_num * selected_unit) * selected_workload
+                        calculated_workload = selected_num * selected_workload
                     else:
-                        calculated_workload = (selected_maxnum * selected_unit) * selected_workload
+                        calculated_workload = selected_maxnum  * selected_workload
 
                 # แสดงข้อมูลการคำนวณใน log
-                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_unit: {selected_unit}, selected_workload: {selected_workload}")
+                print(f"selected_num: {selected_num}, selected_maxnum: {selected_maxnum}, selected_workload: {selected_workload}")
                 print(f"calculated_workload: {calculated_workload}")
 
                 # บันทึกค่า calculated_workload ลงใน new_criteria
@@ -2873,12 +2870,12 @@ def edit_workload_selection(request, selection_id):
         if form.is_valid():
             # ถ้าฟอร์มถูกต้อง ให้บันทึกการเปลี่ยนแปลง
             if selection.selected_maxnum == 0:
-                selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                selection.calculated_workload = selection.selected_num * selection.selected_workload
             else:
                 if selection.selected_num <= selection.selected_maxnum:
-                    selection.calculated_workload = (selection.selected_num * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_num  * selection.selected_workload
                 else:
-                    selection.calculated_workload = (selection.selected_maxnum * selection.selected_unit) * selection.selected_workload
+                    selection.calculated_workload = selection.selected_maxnum  * selection.selected_workload
             form.save()
             messages.success(request, 'แก้ไขภาระงานเรียบร้อยแล้ว!')
             return redirect('evaluation_page_2', evaluation_id=selection.evaluation.uevr_id)
@@ -3388,7 +3385,7 @@ def toggle_approve_status(request, evaluation_id):
     messages.success(request, f"เปลี่ยนสถานะการอนุมัติสำเร็จเป็น {'อนุมัติ' if evaluation.approve_status else 'ไม่อนุมัติ'}")
     
     # กลับไปยังหน้าที่ต้องการ (เช่น หน้ารายการการประเมิน)
-    return redirect('search_evaluations_2', evaluation_id=evaluation_id)  # แก้ไข URL name ให้ตรงกับ project ของคุณ
+    return redirect('search_evaluations_2')  # แก้ไข URL name ให้ตรงกับ project ของคุณ
 
 
 
@@ -3409,40 +3406,149 @@ def eval_5(request):
     return render(request,'app_evaluation/evaluation5.html')
 
 
+
+
+
 @login_required
-def export_evaluation_to_excel(request, evaluation_id):
+def export_html_to_excel(request, evaluation_id):
     user = request.user
+    # ดึงข้อมูล evaluation
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     profile = evaluation.user.profile
-    evr_round_obj = get_evr_round()
-    
-    # ดึงข้อมูลจาก HTML เทมเพลตที่ต้องการ
-    html_content = render_to_string('app_evaluation/evaluation_page.html', {
-        'profile_form': UserProfileForm(instance=user),
-        'extended_form': ExtendedProfileForm(instance=profile),
-        'evr_round': evr_round_obj,
-        'profile': profile,
-        'user_evaluation': evaluation,
-        'evaluation_id': evaluation_id,
-        # เพิ่ม context อื่น ๆ ที่จำเป็น
-    })
+    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
 
-    # ใช้ BeautifulSoup เพื่อแยกข้อมูลจาก HTML
-    soup = BeautifulSoup(html_content, 'html.parser')
+    # ดึงข้อมูลของรอบที่ 1
+    round_1 = evr_round.objects.filter(
+        evr_round=1,
+        evr_year=(timezone.now().year - 1 if evr_round_obj.evr_round == 2 else timezone.now().year)
+    ).first()
+
+    # ดึงข้อมูลการลาในรอบปัจจุบันและรอบที่ 1
+    def get_or_create_leave(user, round_obj, leave_type):
+        leave, created = WorkLeave.objects.get_or_create(
+            user=user,
+            round=round_obj,
+            leave_type=leave_type,
+            defaults={'times': 0, 'days': 0}
+        )
+        return leave
+
+    # สร้างหรือดึงข้อมูลการลาในแต่ละประเภทสำหรับรอบที่ 1 และรอบปัจจุบัน
+    sick_leave_round_1 = get_or_create_leave(user, round_1, 'SL') if round_1 else None
+    sick_leave_current = get_or_create_leave(user, evr_round_obj, 'SL')
+
+    personal_leave_round_1 = get_or_create_leave(user, round_1, 'PL') if round_1 else None
+    personal_leave_current = get_or_create_leave(user, evr_round_obj, 'PL')
+
+    late_round_1 = get_or_create_leave(user, round_1, 'LT') if round_1 else None
+    late_current = get_or_create_leave(user, evr_round_obj, 'LT')
+
+    maternity_leave_round_1 = get_or_create_leave(user, round_1, 'ML') if round_1 else None
+    maternity_leave_current = get_or_create_leave(user, evr_round_obj, 'ML')
+
+    ordination_leave_round_1 = get_or_create_leave(user, round_1, 'OL') if round_1 else None
+    ordination_leave_current = get_or_create_leave(user, evr_round_obj, 'OL')
+
+    longsick_leave_round_1 = get_or_create_leave(user, round_1, 'LSL') if round_1 else None
+    longsick_leave_current = get_or_create_leave(user, evr_round_obj, 'LSL')
+
+    adsent_work_round_1 = get_or_create_leave(user, round_1, 'AW') if round_1 else None
+    adsent_work_current = get_or_create_leave(user, evr_round_obj, 'AW')
+
 
     # สร้าง Workbook ใหม่
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "ข้อมูลการประเมิน"
 
-    # ดึงข้อมูลจากทุกตารางใน HTML
-    tables = soup.find_all('table')
-    for table in tables:
-        rows = table.find_all('tr')
-        for row in rows:
-            cells = row.find_all(['th', 'td'])  # ดึงข้อมูลจากทั้งหัวข้อและเซลล์
-            row_data = [cell.get_text(strip=True) for cell in cells]
-            ws.append(row_data)
+    # จัดรูปแบบสำหรับหัวตาราง
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    center_alignment = Alignment(horizontal='center', vertical='center')
+
+    # ใส่ข้อมูลส่วนบุคคลในเซลล์ต่างๆ
+    ws.merge_cells('A1:B1')
+    ws['A1'] = "ชื่อ - สกุล"
+    ws['A1'].alignment = center_alignment
+    ws['A1'].border = thin_border
+
+    ws.merge_cells('C1:D1')
+    ws['C1'] = f"{profile.user.first_name} {profile.user.last_name}"
+    ws['C1'].alignment = center_alignment
+    ws['C1'].border = thin_border
+
+    ws['A2'] = "ตำแหน่งบริหาร"
+    ws.merge_cells('C2:D2')
+    ws['C2'] = profile.administrative_position or "-"
+
+    # ใส่ข้อมูลเงินเดือน
+    ws['A3'] = "เงินเดือน"
+    ws.merge_cells('B3:C3')
+    ws['B3'] = f"{profile.salary} บาท"
+    ws.merge_cells('D3:E3')
+    ws['D3'] = f"เลขที่ประจำตำแหน่ง {profile.position_number}"
+
+    # ใส่ข้อมูลสังกัด
+    ws['A4'] = "สังกัด"
+    ws.merge_cells('C4:E4')
+    ws['C4'] = profile.affiliation
+
+    # ใส่ข้อมูลรวมเวลาราชการ
+    ws['A5'] = "รวมเวลาราชการ"
+    ws.merge_cells('C5:E5')
+    ws['C5'] = f"{profile.years_of_service} ปี {profile.months_of_service} เดือน {profile.days_of_service} วัน"
+
+    # ใส่หัวตารางข้อมูลการลา
+    ws['A7'] = "บันทึกการลา"
+    ws.merge_cells('A7:E7')
+    ws['A7'].alignment = center_alignment
+    ws['A7'].border = thin_border
+
+    # สร้างตารางสำหรับข้อมูลการลา
+    ws['A8'] = "ประเภท"
+    ws['B8'] = "รอบที่ 1"
+    ws['C8'] = ""
+    ws['D8'] = "รอบที่ 2"
+    ws['E8'] = ""
+    ws.merge_cells('B8:C8')
+    ws.merge_cells('D8:E8')
+    ws['B8'].alignment = center_alignment
+    ws['D8'].alignment = center_alignment
+
+    ws['B9'] = "ครั้ง"
+    ws['C9'] = "วัน"
+    ws['D9'] = "ครั้ง"
+    ws['E9'] = "วัน"
+
+    # ใส่ข้อมูลการลาแต่ละประเภท
+    leave_types = [
+        ("ลาป่วย", sick_leave_round_1, sick_leave_current),
+        ("ลากิจ", personal_leave_round_1, personal_leave_current),
+        ("มาสาย", late_round_1, late_current),
+        ("ลาคลอดบุตร", maternity_leave_round_1, maternity_leave_current),
+        ("ลาอุปสมบท", ordination_leave_round_1, ordination_leave_current),
+        ("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานาน", longsick_leave_round_1, longsick_leave_current),
+        ("ขาดราชการ", adsent_work_round_1, adsent_work_current),
+    ]
+
+    row = 10
+    for leave_type, round_1, current_round in leave_types:
+        ws[f'A{row}'] = leave_type
+        ws[f'B{row}'] = round_1.times if round_1 else ""
+        ws[f'C{row}'] = round_1.days if round_1 else ""
+        ws[f'D{row}'] = current_round.times if current_round else ""
+        ws[f'E{row}'] = current_round.days if current_round else ""
+        row += 1
+
+    # จัดการเส้นขอบและการจัดตำแหน่ง
+    for row in ws.iter_rows(min_row=1, max_row=row, min_col=1, max_col=5):
+        for cell in row:
+            cell.alignment = center_alignment
+            cell.border = thin_border
 
     # บันทึกข้อมูลลงใน BytesIO แทนที่จะเป็นไฟล์จริง
     excel_file = BytesIO()
@@ -3456,6 +3562,7 @@ def export_evaluation_to_excel(request, evaluation_id):
     )
     response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
     return response
+
 
 
 

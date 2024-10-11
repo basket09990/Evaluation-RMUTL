@@ -180,7 +180,7 @@ class UserWorkInfoForm(forms.ModelForm):
         }
 
 
-ALLOWED_FILE_EXTENSIONS = ['pdf', 'docx']
+ALLOWED_FILE_EXTENSIONS = ['pdf', 'docx', 'xlsx']
 ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png']
 
 def validate_file_extension(value):

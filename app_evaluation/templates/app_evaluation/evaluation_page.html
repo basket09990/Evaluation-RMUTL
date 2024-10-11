@@ -560,8 +560,7 @@
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
                                             </form>
                                             {% endif %}
-                                            <a href="{% url 'export_evaluation_to_excel' evaluation_id=evaluation_id %}" class="btn btn-success">ดาวน์โหลด Excel</a>
-
+                                            <a href="{% url 'export_html_to_excel' evaluation_id=evaluation.uevr_id %}" class="btn btn-success">ดาวน์โหลด Excel</a>
 
 </div>
 

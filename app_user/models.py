@@ -129,7 +129,7 @@ class WorkloadCriteria(models.Model):
     c_id = models.AutoField(primary_key=True)
     c_name = models.TextField(default="", blank=True, null=True)
     c_num = models.FloatField(default="0", blank=True, null=True)
-    c_unit = models.FloatField(default="1", blank=True, null=True)
+    c_unit = models.TextField(default="", blank=True, null=True)
     c_maxnum = models.FloatField(default="0", blank=True, null=True)
     c_workload = models.FloatField(default="0", blank=True, null=True)
     f_id = models.ForeignKey(wl_field, on_delete=models.CASCADE, blank=True, null=True)
@@ -371,7 +371,7 @@ class UserWorkloadSelection(models.Model):
 
     # ใช้ FloatField แทน choices เพื่อดึงข้อมูลโดยตรงจาก selected_id
     selected_maxnum = models.FloatField(default="0", blank=True, null=True)
-    selected_unit = models.FloatField(default="1")
+    selected_unit = models.TextField(default="", blank=True, null=True)
     selected_workload = models.FloatField(default="0", blank=True, null=True)
     calculated_workload = models.FloatField(default="0")
     notes = models.TextField(blank=True, null=True)
@@ -388,12 +388,12 @@ class UserWorkloadSelection(models.Model):
 
             # คำนวณค่า calculated_workload
             if self.selected_maxnum == 0:
-                self.calculated_workload = (self.selected_num * self.selected_unit) * self.selected_workload
+                self.calculated_workload = self.selected_num  * self.selected_workload
             else:
                 if self.selected_num <= self.selected_maxnum:
-                    self.calculated_workload = (self.selected_num * self.selected_unit) * self.selected_workload
+                    self.calculated_workload = self.selected_num  * self.selected_workload
                 else:
-                    self.calculated_workload = (self.selected_maxnum * self.selected_unit) * self.selected_workload
+                    self.calculated_workload = self.selected_maxnum  * self.selected_workload
 
         # เรียกใช้ฟังก์ชันบันทึกของแม่แบบ
         super().save(*args, **kwargs)

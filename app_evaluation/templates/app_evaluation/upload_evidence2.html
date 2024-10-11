@@ -99,14 +99,18 @@
         const pictureInput = document.getElementById('picture');
 
         // Allowed file extensions for files and pictures
-        const allowedFileTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']; // PDF และ DOCX
+        const allowedFileTypes = [
+            'application/pdf',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        ]; // PDF, DOCX, และ XLSX
         const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif']; // รูปภาพ
 
         // Check files
         if (fileInput.files.length > 0) {
             for (let i = 0; i < fileInput.files.length; i++) {
                 if (!allowedFileTypes.includes(fileInput.files[i].type)) {
-                    alert('ไฟล์ต้องเป็น PDF หรือ DOCX เท่านั้น');
+                    alert('ไฟล์ต้องเป็น PDF, DOCX หรือ XLSX เท่านั้น');
                     event.preventDefault(); // หยุดการส่งฟอร์ม
                     return false;
                 }
@@ -143,7 +147,6 @@
         window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
     }
 </script>
-
 
 <style>
     .upload-section {
