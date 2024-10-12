@@ -300,6 +300,7 @@
 
     <button type="submit">ส่งข้อมูล</button>
     </form>
+    <a href="{% url 'export_evaluation3_to_excel' evaluation_id=evaluation_id %}" class="btn btn-success">ดาวน์โหลด Excel</a>
     <a href="{% url 'evaluation_page' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
 {% endblock %}

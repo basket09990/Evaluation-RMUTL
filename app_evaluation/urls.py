@@ -120,7 +120,19 @@ urlpatterns = [
     path('evaluation_page_from_4/<int:evaluation_id>/', views.evaluation_page_from_4, name='evaluation_page_from_4'),
     path('evaluation_page_from_5/<int:evaluation_id>/', views.evaluation_page_from_5, name='evaluation_page_from_5'),
 
+
+
+
+
+
+
     path('evaluation/export/<int:evaluation_id>/', views.export_html_to_excel, name='export_html_to_excel'),
+    path('export/evaluation2/<int:evaluation_id>/', views.export_evaluation2_to_excel, name='export_evaluation2_to_excel'),
+    path('export/evaluation3/<int:evaluation_id>/', views.export_evaluation3_to_excel, name='export_evaluation3_to_excel'),
+    path('export/evaluation_page_4/<int:evaluation_id>/', views.export_evaluation_page_4_to_excel, name='export_evaluation_page_4_to_excel'),
+    path('export/evaluation_page_5/<int:evaluation_id>/', views.export_evaluation_page_5_to_excel, name='export_evaluation_page_5_to_excel'),
+    path('export/evaluation_page_6/', views.export_evaluation_page_6_to_excel, name='export_evaluation_page_6_to_excel'),
+
 
 
     path('evaluation/evaluation_page/<int:criteria_id>/upload2/', views.upload_evidence2, name='upload_evidence2'),

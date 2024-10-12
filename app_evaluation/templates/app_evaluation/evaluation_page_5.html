@@ -376,7 +376,7 @@
             </tr>
         </table>
     </div>
-    
+    <a href="{% url 'export_evaluation_page_5_to_excel' evaluation_id=evaluation_id %}" class="btn btn-success">ดาวน์โหลดเป็น Excel</a>
     <a href="{% url 'evaluation_page' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
 {% endblock %}
