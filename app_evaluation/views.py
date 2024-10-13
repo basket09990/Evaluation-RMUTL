@@ -31,7 +31,7 @@ from django.dispatch import receiver
 import openpyxl
 from django.template.loader import render_to_string
 from bs4 import BeautifulSoup
-from openpyxl.styles import Alignment, Border, Side
+from openpyxl.styles import Alignment, Border, Side, PatternFill, Font
 
 
 # สัญญาณที่จะถูกเรียกเมื่อ UserSelectedSubField ถูกลบ
@@ -3560,7 +3560,7 @@ def export_html_to_excel(request, evaluation_id):
         excel_file,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="evaluation_1.xlsx"'
     return response
 
 
@@ -3575,63 +3575,96 @@ def export_evaluation2_to_excel(request, evaluation_id):
     except user_evaluation.DoesNotExist:
         messages.error(request, "ไม่พบข้อมูลการประเมิน")
         return redirect('select_group')
-
+    
     # ดึง selected_group ที่สัมพันธ์กับ user ผ่าน user_evaluation_agreement
     try:
-        selected_group = user_evaluation_agreement.objects.get(user=user, evr_id=user_evaluation_obj.evr_id).g_id
+        user_evaluation_agreement_obj = user_evaluation_agreement.objects.get(user=user, evr_id=user_evaluation_obj.evr_id)
+        selected_group = user_evaluation_agreement_obj.g_id
     except user_evaluation_agreement.DoesNotExist:
         selected_group = None
 
-    # ดึงข้อมูล f_id ที่เชื่อมโยงกับ group_detail ของ selected_group
     if selected_group:
         fields = wl_field.objects.filter(group_detail__g_id=selected_group).distinct()
     else:
         fields = wl_field.objects.none()
 
-    # ดึงข้อมูล subfield ที่ผู้ใช้เลือก
+    # ดึงข้อมูลที่จำเป็นเช่น fields, subfields, และ workload_selections
     selected_subfields = UserSelectedSubField.objects.filter(evaluation=user_evaluation_obj)
-
-    # ดึงข้อมูล workload_selections
     workload_selections = UserWorkloadSelection.objects.filter(evaluation=user_evaluation_obj)
-    subfields = wl_subfield.objects.filter(f_id__in=fields)
 
     # ดึงค่า min_workload และ total_workload
-    min_workload = group.objects.filter(g_id=selected_group.g_id).values_list('g_max_workload', flat=True).first() or 35
-    total_workload = sum(selection.calculated_workload for selection in workload_selections) or 0
-
-    # คำนวณ achievement_work
-    max_workload = user_evaluation.objects.filter(evr_id=user_evaluation_obj.evr_id).aggregate(max_workload=Max('c_wl'))['max_workload'] or 0
-    workload_difference = max_workload - total_workload
-    workload_difference_score = workload_difference * (28 / 115)
-    achievement_work = 70 - workload_difference_score
+    min_workload = selected_group.g_max_workload if selected_group else 35
+    total_workload = sum(selection.calculated_workload for selection in workload_selections)
+    achievement_work = user_evaluation_obj.achievement_work or 0
 
     # สร้างไฟล์ Excel
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Evaluation Results"
+    ws.title = "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน"
 
-    # จัดรูปแบบ
-    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
+    # รูปแบบเส้นขอบและการจัดตำแหน่ง
+    thin_border = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
     center_alignment = Alignment(horizontal='center', vertical='center')
 
-    # หัวข้อและข้อมูลในตาราง
-    headers = ["Field", "Subfield", "Workload", "Achievement Work", "Total Workload", "Min Workload"]
+    # หัวตาราง
+    ws.merge_cells('A1:E1')
+    ws['A1'] = "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน"
+    ws['A1'].alignment = Alignment(horizontal='left')
+    ws['A1'].font = Font(bold=True)
+
+    # หัวข้อตาราง
+    headers = [ "ภาระงาน/กิจกรรม/โครงการ/งาน", "จำนวน", "ภาระงาน", "รวมภาระงาน", "หมายเหตุ"]
     ws.append(headers)
 
-    # เพิ่มข้อมูลลงในแถว
-    for field in fields:
-        for subfield in subfields:
-            ws.append([field.f_name, subfield.sf_name, total_workload, achievement_work, total_workload, min_workload])
-
-    # ใส่ข้อมูลอื่นๆ เช่น ผลสัมฤทธิ์ของงาน
-    ws.append(["Total Workload", total_workload])
-    ws.append(["Achievement Work", achievement_work])
-
-    # จัดการเส้นขอบและจัดตำแหน่ง
-    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(headers)):
-        for cell in row:
+    for col in ws.iter_cols(min_row=2, max_row=2, min_col=1, max_col=len(headers)):
+        for cell in col:
+            cell.fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
             cell.alignment = center_alignment
             cell.border = thin_border
+
+    # ตั้งค่าตัวนับลำดับ
+    field_counter = 0
+
+    # เพิ่มข้อมูลภาระงานและ Subfields
+    for field in fields:
+        field_counter += 1
+        total_for_field = 0  # ตัวแปรสะสมผลรวมของภาระงานสำหรับ field นั้นๆ
+        ws.append([f"{field_counter}. {field.f_name}", "", "", "", ""])
+        subfield_counter = 0  # เริ่มต้นตัวนับ subfield ที่ 0 ทุกครั้งเมื่อเริ่ม field ใหม่
+        for subfield in selected_subfields.filter(f_id=field):
+            subfield_counter += 1
+            ws.append([f"{field_counter}.{subfield_counter}. {subfield.sf_id.sf_name}", "", "", "", ""])
+            selection_counter = 0  # เริ่มต้นตัวนับ selection ที่ 0 ทุกครั้งเมื่อเริ่ม subfield ใหม่
+            for selection in workload_selections.filter(sf_id=subfield.sf_id):
+                selection_counter += 1
+                ws.append([
+                    f"{field_counter}.{subfield_counter}.{selection_counter}. {selection.selected_name}",
+                    selection.selected_num, selection.selected_workload, selection.calculated_workload, selection.notes
+                ])
+                # บวกภาระงานที่คำนวณได้เข้ากับ total_for_field
+                total_for_field += selection.calculated_workload
+        
+        # เพิ่มแถวแสดงผลรวมสำหรับ field นี้
+        ws.append([
+           "", "", f"รวมคะแนนสำหรับ {field.f_name}:",  total_for_field, ""
+        ])
+    
+    # เพิ่มแถวรวมคะแนน
+    ws.append(["", "", "รวมคะแนนสำหรับภาระงาน", total_workload, ""])
+
+    # เพิ่มผลลัพธ์สุดท้าย
+    ws.append(["", "", "คะแนนผลสัมฤทธิ์ของงาน",  achievement_work, ""])
+
+    # จัดการเส้นขอบและการจัดตำแหน่ง
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(headers)):
+        for cell in row:
+            cell.border = thin_border
+            cell.alignment = center_alignment
 
     # บันทึกข้อมูลลงใน BytesIO
     excel_file = BytesIO()
@@ -3640,7 +3673,7 @@ def export_evaluation2_to_excel(request, evaluation_id):
 
     # สร้าง response เพื่อดาวน์โหลดไฟล์ Excel
     response = HttpResponse(excel_file, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="evaluation_2.xlsx"'
     return response
 
 
@@ -3675,6 +3708,19 @@ def export_evaluation3_to_excel(request, evaluation_id):
     specific_scores = user_competency_councilde.objects.filter(evaluation=user_evaluation_obj)
     administrative_scores = user_competency_ceo.objects.filter(evaluation=user_evaluation_obj)
 
+    # คำนวณจำนวนสมรรถนะที่แสดงออกต่างๆ
+    count_3 = main_scores.filter(actual_score=3).count() + specific_scores.filter(actual_score=3).count()
+    count_2 = main_scores.filter(actual_score=2).count() + specific_scores.filter(actual_score=2).count()
+    count_1 = main_scores.filter(actual_score=1).count() + specific_scores.filter(actual_score=1).count()
+    count_0 = main_scores.filter(actual_score=0).count() + specific_scores.filter(actual_score=0).count()
+
+    # คำนวณคะแนน
+    score_3_total = count_3 * 3
+    score_2_total = count_2 * 2
+    score_1_total = count_1 * 1
+    score_0_total = count_0 * 0
+    total_score = score_3_total + score_2_total + score_1_total + score_0_total
+
     # สร้างไฟล์ Excel
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -3684,29 +3730,60 @@ def export_evaluation3_to_excel(request, evaluation_id):
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     center_alignment = Alignment(horizontal='center', vertical='center')
 
-    # หัวตาราง
-    headers = ["Competency", "Expected Level", "Actual Level", "Competency Type"]
-    ws.append(headers)
-
+    # เพิ่มหัวตาราง สมรรถนะหลัก
+    ws.append(["สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)"])
+    ws.append(["สมรรถนะ", "ระดับสมรรถนะที่คาดหวัง", "ระดับสมรรถนะที่แสดงออก"])
+    
     # ใส่ข้อมูล Main Competencies
     for score in main_scores:
-        ws.append([score.mc_id.mc_name, score.mc_id.mc_num, score.actual_score, "Main Competency"])
+        ws.append([score.mc_id.mc_name, score.mc_id.mc_num, score.actual_score])
+
+    # เพิ่มช่องว่าง
+    ws.append([])
+
+    # เพิ่มหัวตาราง สมรรถนะเฉพาะ
+    ws.append(["สมรรถนะเฉพาะ (ที่สภามหาวิทยาลัยกำหนด)"])
+    ws.append(["สมรรถนะ", "ระดับสมรรถนะที่คาดหวัง", "ระดับสมรรถนะที่แสดงออก"])
 
     # ใส่ข้อมูล Specific Competencies
     for score in specific_scores:
-        ws.append([score.sc_id.sc_name, score.sc_id.sc_num, score.actual_score, "Specific Competency"])
+        ws.append([score.sc_id.sc_name, score.sc_id.sc_num, score.actual_score])
+
+    # เพิ่มช่องว่าง
+    ws.append([])
 
     # ใส่ข้อมูล Administrative Competencies (ถ้ามี)
     if administrative_competencies:
+        ws.append(["สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด)"])
+        ws.append(["สมรรถนะ", "ระดับสมรรถนะที่คาดหวัง", "ระดับสมรรถนะที่แสดงออก"])
         for score in administrative_scores:
-            ws.append([score.adc_id.adc_name, score.uceo_num, score.actual_score, "Administrative Competency"])
+            ws.append([score.adc_id.adc_name, score.uceo_num, score.actual_score])
+
+    # เพิ่มช่องว่าง
+    ws.append([])
 
     # ใส่คะแนนรวมและคะแนนคำนวณ
-    ws.append(["", "", "", ""])  # เพิ่มช่องว่างระหว่างตารางและผลรวม
-    ws.append(["Total Score", user_evaluation_obj.mc_score])
+    ws.append(["การประเมิน"])
+    ws.append(["จำนวนสมรรถนะ", "คูณ (X)", "คะแนน"])
+    ws.append([count_3, 3, score_3_total])
+    ws.append([count_2, 2, score_2_total])
+    ws.append([count_1, 1, score_1_total])
+    ws.append([count_0, 0, score_0_total])
+
+    # ผลรวมคะแนน
+    ws.append(["ผลรวมคะแนน", "", total_score])
+
+    # เพิ่มหลักเกณฑ์การประเมิน
+    ws.append([])
+    ws.append(["หลักเกณฑ์การประเมิน"])
+    ws.append(["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน"])
+    ws.append(["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน"])
+    ws.append(["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน"])
+    ws.append(["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน"])
+
 
     # จัดการเส้นขอบและการจัดตำแหน่ง
-    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(headers)):
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=3):
         for cell in row:
             cell.alignment = center_alignment
             cell.border = thin_border
@@ -3718,8 +3795,10 @@ def export_evaluation3_to_excel(request, evaluation_id):
 
     # สร้าง response เพื่อดาวน์โหลดไฟล์ Excel
     response = HttpResponse(excel_file, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="evaluation_3.xlsx"'
     return response
+
+
 
 
 @login_required
@@ -3727,7 +3806,7 @@ def export_evaluation_page_4_to_excel(request, evaluation_id):
     # ดึงข้อมูลการประเมินจาก user_evaluation
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     user = request.user
-    
+
     # ดึงข้อมูลจาก Profile
     try:
         profile = Profile.objects.get(user=user)
@@ -3769,7 +3848,7 @@ def export_evaluation_page_4_to_excel(request, evaluation_id):
     ws.append([
         "องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน",
         70,
-        achievement_work,
+        f"{achievement_work:.2f}",
         evaluation.remark_achievement or ""
     ])
 
@@ -3777,7 +3856,7 @@ def export_evaluation_page_4_to_excel(request, evaluation_id):
     ws.append([
         "องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)",
         30,
-        mc_score,
+        f"{mc_score:.2f}",
         evaluation.remark_mc or ""
     ])
 
@@ -3793,12 +3872,18 @@ def export_evaluation_page_4_to_excel(request, evaluation_id):
     ws.append([
         "รวม",
         100,
-        total_score,
+        f"{total_score:.2f}",
         evaluation.remark_total or ""
     ])
 
     # ใส่ระดับผลการประเมิน
-    ws.append(["ระดับผลการประเมิน", "", "", level])
+    ws.append([])  # เว้นบรรทัด
+    ws.append(["ระดับผลการประเมิน"])
+    ws.append([f"ดีเด่น (90 - 100): {'✓' if total_score >= 90 else ''}"])
+    ws.append([f"ดีมาก (80 - 89.99): {'✓' if 80 <= total_score < 90 else ''}"])
+    ws.append([f"ดี (70 - 79.99): {'✓' if 70 <= total_score < 80 else ''}"])
+    ws.append([f"พอใช้ (60 - 69.99): {'✓' if 60 <= total_score < 70 else ''}"])
+    ws.append([f"ต้องปรับปรุง (ต่ำกว่า 60): {'✓' if total_score < 60 else ''}"])
 
     # จัดการเส้นขอบและการจัดตำแหน่ง
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=len(headers)):
@@ -3816,8 +3901,9 @@ def export_evaluation_page_4_to_excel(request, evaluation_id):
         excel_file,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename="evaluation_{evaluation_id}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="evaluation_4.xlsx"'
     return response
+
 
 
 @login_required
@@ -3836,9 +3922,13 @@ def export_evaluation_page_5_to_excel(request, evaluation_id):
     # จัดรูปแบบเซลล์
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     center_alignment = Alignment(horizontal='center', vertical='center')
+    left_alignment = Alignment(horizontal='left', vertical='center')
 
     # เพิ่มหัวตาราง
-    headers = ["ทักษะ/สมรรถนะ", "วิธีการพัฒนา", "ช่วงเวลา", "หมายเหตุ"]
+    ws.append(['แผนพัฒนาการปฏิบัติราชการรายบุคคล'])
+    ws.append([])  # เว้นบรรทัด
+
+    headers = ["ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา", "วิธีการพัฒนา", "ช่วงเวลาที่ต้องการพัฒนา"]
     ws.append(headers)
 
     # ใส่ข้อมูลลงใน Excel จาก PersonalDiagram
@@ -3846,21 +3936,30 @@ def export_evaluation_page_5_to_excel(request, evaluation_id):
         ws.append([
             diagram.skill_evol or "",
             diagram.dev or "",
-            diagram.dev_time or "",
-            ""
+            diagram.dev_time or ""
         ])
 
-    # เพิ่มข้อมูลส่วน "ความเห็นเพิ่มเติมของผู้ประเมิน" จากฟอร์ม UserEvaluation
+    # เพิ่มปุ่ม "เพิ่มข้อมูล"
     ws.append([])
+
+    # เพิ่มข้อมูลส่วน "ความเห็นเพิ่มเติมของผู้ประเมิน"
     ws.append(["ความเห็นเพิ่มเติมของผู้ประเมิน"])
-    ws.append(["จุดเด่น/สิ่งที่ควรปรับปรุง:", evaluation.improved or ""])
-    ws.append(["ข้อเสนอแนะในการพัฒนา:", evaluation.suggestions or ""])
+    ws.append(["1) จุดเด่น และ/หรือ สิ่งที่ควรปรับปรุง:"])
+    ws.append([evaluation.improved or ""])
+    ws.append(["2) ข้อเสนอแนะเกี่ยวกับวิธีส่งเสริมและพัฒนา:"])
+    ws.append([evaluation.suggestions or ""])
+    ws.append([])
+
+    # เพิ่มลายเซ็น
+    ws.append(['ลายมือชื่อ.................................................(ผู้ประเมิน)', 'ลายมือชื่อ.................................................(ผู้รับการประเมิน)'])
+    ws.append(['วันที่..........เดือน...................พ.ศ. ............', 'วันที่..........เดือน...................พ.ศ. ............'])
 
     # จัดการเส้นขอบและการจัดตำแหน่ง
-    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=4):
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=3):
         for cell in row:
-            cell.alignment = center_alignment
-            cell.border = thin_border
+            if cell.value:  # ให้จัดตำแหน่งและเพิ่มเส้นขอบเฉพาะเซลล์ที่มีค่า
+                cell.alignment = left_alignment
+                cell.border = thin_border
 
     # บันทึกข้อมูลลงใน BytesIO แทนที่จะเป็นไฟล์จริง
     excel_file = BytesIO()
@@ -3872,8 +3971,9 @@ def export_evaluation_page_5_to_excel(request, evaluation_id):
         excel_file,
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = f'attachment; filename="evaluation_page_5_{evaluation_id}.xlsx"'
+    response['Content-Disposition'] = f'attachment; filename="evaluation_page_5.xlsx"'
     return response
+
 
 
 @login_required
@@ -3886,49 +3986,67 @@ def export_evaluation_page_6_to_excel(request):
     # กำหนดรูปแบบสำหรับเซลล์
     thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
     center_alignment = Alignment(horizontal='center', vertical='center')
+    left_alignment = Alignment(horizontal='left', vertical='center')
 
     # เพิ่มส่วนที่ 5 การรับทราบผลการประเมิน
     ws.append(['ส่วนที่ 5 การรับทราบผลการประเมิน'])
+    ws.merge_cells('A1:B1')
+    ws['A1'].font = Font(bold=True)
+    ws['A1'].alignment = center_alignment
+
     ws.append(['ผู้รับการประเมิน :'])
-    ws.append(['ได้รับทราบผลการประเมินและแผนพัฒนา', 'ลงชื่อ..........................................................'])
+    ws.merge_cells('A2:B2')
+
+    ws.append(['☐ ได้รับทราบผลการประเมินและแผนพัฒนา', 'ลงชื่อ..........................................................'])
     ws.append(['การปฏิบัติราชการรายบุคคลแล้ว', 'ตำแหน่ง.....................................................'])
     ws.append(['', 'วันที่...........................................................'])
     ws.append([])  # เว้นบรรทัด
 
     ws.append(['ผู้ประเมิน :'])
-    ws.append(['ได้แจ้งผลการประเมินและผู้รับการประเมิน', 'ลงชื่อ..........................................................'])
+    ws.merge_cells('A7:B7')
+    ws.append(['☐ ได้แจ้งผลการประเมินและผู้รับการประเมิน', 'ลงชื่อ..........................................................'])
     ws.append(['ได้ลงนามรับทราบ', 'ตำแหน่ง...................................................'])
-    ws.append([])  # เว้นบรรทัด
+    ws.append(['', 'วันที่..........................................................'])  # เว้นบรรทัด
 
-    ws.append(['ได้แจ้งผลการประเมินเมื่อวันที่.................................................', 'วันที่..........................................................'])
+    ws.append(['☐ ได้แจ้งผลการประเมินเมื่อวันที่.................................................'])
     ws.append(['แต่ผู้รับการประเมินไม่ลงนามรับทราบผลการประเมิน'])
     ws.append(['โดยมี.......................................................................เป็นพยาน'])
     ws.append([])  # เว้นบรรทัด
 
     # เพิ่มส่วนที่ 6 ความเห็นของผู้บังคับบัญชาเหนือขึ้นไป
     ws.append(['ส่วนที่ 6 ความเห็นของผู้บังคับบัญชาเหนือขึ้นไป'])
+    ws.merge_cells('A14:B14')
+    ws['A14'].font = Font(bold=True)
+    ws['A14'].alignment = center_alignment
+
     ws.append(['ผู้บังคับบัญชาเหนือขึ้นไป :'])
-    ws.append(['เห็นด้วยกับผลการประเมิน', 'ลงชื่อ..........................................................'])
-    ws.append([])  # เว้นบรรทัด
-    ws.append(['มีความเห็นแตกต่าง ดังนี้'])
+    ws.merge_cells('A15:B15')
+
+    ws.append(['☐ เห็นด้วยกับผลการประเมิน', 'ลงชื่อ..........................................................'])
+    ws.append(['', 'ตำแหน่ง......................................................'])  # เว้นบรรทัด
+
+    ws.append(['☐ มีความเห็นแตกต่าง ดังนี้','วันที่............................................................'])
     ws.append(['.........................................................................................................'])
-    ws.append(['.........................................................................................................', 'ตำแหน่ง......................................................'])
-    ws.append(['วันที่............................................................'])
+    ws.append(['.........................................................................................................'])
+    ws.append([])
 
     # เพิ่มผู้บังคับบัญชาอีกชั้นหนึ่ง (ถ้ามี)
     ws.append([])  # เว้นบรรทัด
     ws.append(['ผู้บังคับบัญชาเหนือขึ้นไปอีกชั้นหนึ่ง (ถ้ามี) :'])
-    ws.append(['เห็นด้วยกับผลการประเมิน', 'ลงชื่อ..........................................................'])
-    ws.append([])  # เว้นบรรทัด
-    ws.append(['มีความเห็นแตกต่าง ดังนี้'])
+    ws.merge_cells('A21:B21')
+
+    ws.append(['☐ เห็นด้วยกับผลการประเมิน', 'ลงชื่อ..........................................................'])
+    ws.append(['', 'ตำแหน่ง......................................................'])  # เว้นบรรทัด
+
+    ws.append(['☐ มีความเห็นแตกต่าง ดังนี้','วันที่............................................................'])
     ws.append(['.........................................................................................................'])
-    ws.append(['.........................................................................................................', 'ตำแหน่ง......................................................'])
-    ws.append(['วันที่............................................................'])
+    ws.append(['.........................................................................................................'])
+    ws.append([])
 
     # จัดการเส้นขอบและการจัดตำแหน่งให้ทุกเซลล์ใน worksheet
     for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=2):
         for cell in row:
-            cell.alignment = center_alignment
+            cell.alignment = left_alignment  # ตั้งให้ชิดซ้ายตามที่คุณต้องการ
             cell.border = thin_border
 
     # บันทึกข้อมูลลงใน BytesIO แทนการบันทึกเป็นไฟล์จริง
