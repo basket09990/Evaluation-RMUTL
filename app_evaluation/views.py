@@ -3412,18 +3412,29 @@ def eval_5(request):
 @login_required
 def export_html_to_excel(request, evaluation_id):
     user = request.user
-    # ดึงข้อมูล evaluation
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
     profile = evaluation.user.profile
-    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
+    evr_round_obj = get_evr_round()
 
-    # ดึงข้อมูลของรอบที่ 1
-    round_1 = evr_round.objects.filter(
-        evr_round=1,
-        evr_year=(timezone.now().year - 1 if evr_round_obj.evr_round == 2 else timezone.now().year)
-    ).first()
+    try:
+        selected_group = user_evaluation_agreement.objects.get(user=user, evr_id=evaluation.evr_id).g_id
+    except user_evaluation_agreement.DoesNotExist:
+        selected_group = None
 
-    # ดึงข้อมูลการลาในรอบปัจจุบันและรอบที่ 1
+
+    # ตรวจสอบว่า profile.start_goverment มีข้อมูลหรือไม่
+    if profile.start_goverment:
+        try:
+            # สมมติว่า format ของวันที่ใน profile.start_goverment เป็น 'YYYY-MM-DD'
+            start_goverment_date = datetime.strptime(profile.start_goverment, '%Y-%m-%d')
+            start_goverment_thai = start_goverment_date.year + 543
+            start_goverment_str = start_goverment_date.strftime('%d/%m/') + str(start_goverment_thai)
+        except ValueError:
+            # กรณีที่รูปแบบวันที่ไม่ถูกต้อง
+            start_goverment_str = 'รูปแบบวันที่ไม่ถูกต้อง'
+    else:
+        start_goverment_str = 'ไม่มีข้อมูล'
+
     def get_or_create_leave(user, round_obj, leave_type):
         leave, created = WorkLeave.objects.get_or_create(
             user=user,
@@ -3433,135 +3444,123 @@ def export_html_to_excel(request, evaluation_id):
         )
         return leave
 
-    # สร้างหรือดึงข้อมูลการลาในแต่ละประเภทสำหรับรอบที่ 1 และรอบปัจจุบัน
-    sick_leave_round_1 = get_or_create_leave(user, round_1, 'SL') if round_1 else None
-    sick_leave_current = get_or_create_leave(user, evr_round_obj, 'SL')
+    leave_data = [
+        ("ลาป่วย", 'SL'),
+        ("ลากิจ", 'PL'),
+        ("มาสาย", 'LT'),
+        ("ลาคลอดบุตร", 'ML'),
+        ("ลาอุปสมบท", 'OL'),
+        ("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานาน", 'LSL'),
+        ("ขาดราชการ", 'AW'),
+    ]
 
-    personal_leave_round_1 = get_or_create_leave(user, round_1, 'PL') if round_1 else None
-    personal_leave_current = get_or_create_leave(user, evr_round_obj, 'PL')
+    leave_info = []
+    for name, code in leave_data:
+        round_1 = get_or_create_leave(user, evr_round.objects.filter(evr_round=1, evr_year=timezone.now().year - 1).first(), code) if evr_round_obj.evr_round == 2 else None
+        current_round = get_or_create_leave(user, evr_round_obj, code)
+        leave_info.append((name, round_1, current_round))
 
-    late_round_1 = get_or_create_leave(user, round_1, 'LT') if round_1 else None
-    late_current = get_or_create_leave(user, evr_round_obj, 'LT')
-
-    maternity_leave_round_1 = get_or_create_leave(user, round_1, 'ML') if round_1 else None
-    maternity_leave_current = get_or_create_leave(user, evr_round_obj, 'ML')
-
-    ordination_leave_round_1 = get_or_create_leave(user, round_1, 'OL') if round_1 else None
-    ordination_leave_current = get_or_create_leave(user, evr_round_obj, 'OL')
-
-    longsick_leave_round_1 = get_or_create_leave(user, round_1, 'LSL') if round_1 else None
-    longsick_leave_current = get_or_create_leave(user, evr_round_obj, 'LSL')
-
-    adsent_work_round_1 = get_or_create_leave(user, round_1, 'AW') if round_1 else None
-    adsent_work_current = get_or_create_leave(user, evr_round_obj, 'AW')
-
-
-    # สร้าง Workbook ใหม่
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "ข้อมูลการประเมิน"
-
-    # จัดรูปแบบสำหรับหัวตาราง
+    center_alignment = Alignment(horizontal='center', vertical='center')
     thin_border = Border(
         left=Side(style='thin'),
         right=Side(style='thin'),
         top=Side(style='thin'),
         bottom=Side(style='thin')
     )
-    center_alignment = Alignment(horizontal='center', vertical='center')
 
-    # ใส่ข้อมูลส่วนบุคคลในเซลล์ต่างๆ
-    ws.merge_cells('A1:B1')
-    ws['A1'] = "ชื่อ - สกุล"
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "ข้อมูลการประเมิน"
+
+    ws.merge_cells('A1:E1')
+    ws['A1'] = "ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ"
     ws['A1'].alignment = center_alignment
-    ws['A1'].border = thin_border
+    ws['A1'].font = Font(size=14, bold=True)
 
-    ws.merge_cells('C1:D1')
-    ws['C1'] = f"{profile.user.first_name} {profile.user.last_name}"
-    ws['C1'].alignment = center_alignment
-    ws['C1'].border = thin_border
+    ws.merge_cells('A2:E2')
+    ws['A2'] = "มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {}".format(evr_round_obj.evr_year + 543)
+    ws['A2'].alignment = center_alignment
+    ws['A2'].font = Font(size=12, bold=True)
 
-    ws['A2'] = "ตำแหน่งบริหาร"
-    ws.merge_cells('C2:D2')
-    ws['C2'] = profile.administrative_position or "-"
+    ws.merge_cells('A3:E3')
+    ws['A3'] = "หน่วยงาน: คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา"
+    ws['A3'].alignment = center_alignment
+    ws['A3'].font = Font(size=12, bold=True)
 
-    # ใส่ข้อมูลเงินเดือน
-    ws['A3'] = "เงินเดือน"
-    ws.merge_cells('B3:C3')
-    ws['B3'] = f"{profile.salary} บาท"
-    ws.merge_cells('D3:E3')
-    ws['D3'] = f"เลขที่ประจำตำแหน่ง {profile.position_number}"
+    ws.merge_cells('A4:F4')
 
-    # ใส่ข้อมูลสังกัด
-    ws['A4'] = "สังกัด"
-    ws.merge_cells('C4:E4')
-    ws['C4'] = profile.affiliation
+    if selected_group:
+        ws.merge_cells('A5:E5')
+        ws['A5'] = f"กลุ่มที่เลือก: {selected_group.g_field_name}"
+    else:
+        ws.merge_cells('A5:E5')
+        ws['A5'] = "ยังไม่มีข้อมูลกลุ่มที่เลือก"
+    ws['A5'].alignment = center_alignment
 
-    # ใส่ข้อมูลรวมเวลาราชการ
-    ws['A5'] = "รวมเวลาราชการ"
-    ws.merge_cells('C5:E5')
-    ws['C5'] = f"{profile.years_of_service} ปี {profile.months_of_service} เดือน {profile.days_of_service} วัน"
+    ws.merge_cells('A6:E6')
+    if evr_round_obj.evr_round == 1:
+        ws['A6'] = "ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)"
+    elif evr_round_obj.evr_round == 2:
+        ws['A6'] = "ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)"
+    else:
+        ws['A6'] = "ยังไม่มีข้อมูลรอบการประเมิน"
+    ws['A6'].alignment = center_alignment
 
-    # ใส่หัวตารางข้อมูลการลา
-    ws['A7'] = "บันทึกการลา"
-    ws.merge_cells('A7:E7')
-    ws['A7'].alignment = center_alignment
-    ws['A7'].border = thin_border
+    ws.merge_cells('A7:F7')
 
-    # สร้างตารางสำหรับข้อมูลการลา
-    ws['A8'] = "ประเภท"
-    ws['B8'] = "รอบที่ 1"
-    ws['C8'] = ""
-    ws['D8'] = "รอบที่ 2"
-    ws['E8'] = ""
-    ws.merge_cells('B8:C8')
-    ws.merge_cells('D8:E8')
-    ws['B8'].alignment = center_alignment
-    ws['D8'].alignment = center_alignment
+    ws.append(['ชื่อ - สกุล', profile.user.first_name + ' ' + profile.user.last_name,'ประเภทตำแหน่งวิชาการ', profile.ac_id.ac_name])
+    ws.append(['ตำแหน่งบริหาร',  profile.administrative_position or "-",'เงินเดือน',  f"{profile.salary} บาท"])
+    ws.append(['เลขที่ประจำตำแหน่ง', profile.position_number,'สังกัด', profile.affiliation])
+    ws.append(['มาช่วยราชการจากที่ใด (ถ้ามี)', profile.old_government, 'หน้าที่พิเศษ', profile.special_position])
+    ws.append(['เริ่มรับราชการเมื่อวันที่',  start_goverment_str,'รวมเวลาราชการ',  f"{profile.years_of_service} ปี {profile.months_of_service} เดือน {profile.days_of_service} วัน"])
 
-    ws['B9'] = "ครั้ง"
-    ws['C9'] = "วัน"
-    ws['D9'] = "ครั้ง"
-    ws['E9'] = "วัน"
+    ws.merge_cells('A13:F13')
+    ws.merge_cells('A14:E14')
+    ws['A14'] = "บันทึกการลา"
+    ws['A14'].alignment = center_alignment
 
-    # ใส่ข้อมูลการลาแต่ละประเภท
-    leave_types = [
-        ("ลาป่วย", sick_leave_round_1, sick_leave_current),
-        ("ลากิจ", personal_leave_round_1, personal_leave_current),
-        ("มาสาย", late_round_1, late_current),
-        ("ลาคลอดบุตร", maternity_leave_round_1, maternity_leave_current),
-        ("ลาอุปสมบท", ordination_leave_round_1, ordination_leave_current),
-        ("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานาน", longsick_leave_round_1, longsick_leave_current),
-        ("ขาดราชการ", adsent_work_round_1, adsent_work_current),
-    ]
+    # เพิ่มหัวข้อการลา
+    ws.append(["ประเภทการลา", "รอบที่ 1 (จำนวนครั้ง)", "รอบที่ 1 (จำนวนวัน)", "รอบที่ 2 (จำนวนครั้ง)", "รอบที่ 2 (จำนวนวัน)"])
+    
+    # ใส่ข้อมูลการลา
+    if evr_round_obj.evr_round == 1:
+        for leave_name, round_1, current_round in leave_info:
+            ws.append([
+                leave_name,
+                current_round.times if current_round and current_round.times is not None else "",
+                current_round.days if current_round and current_round.days is not None else "",
+                "0",
+                "0"
+            ])
 
-    row = 10
-    for leave_type, round_1, current_round in leave_types:
-        ws[f'A{row}'] = leave_type
-        ws[f'B{row}'] = round_1.times if round_1 else ""
-        ws[f'C{row}'] = round_1.days if round_1 else ""
-        ws[f'D{row}'] = current_round.times if current_round else ""
-        ws[f'E{row}'] = current_round.days if current_round else ""
-        row += 1
+    elif evr_round_obj.evr_round == 2:
+        for leave_name, round_1, current_round in leave_info:
+            ws.append([
+                leave_name,
+                round_1.times if round_1 and round_1.times is not None else "",
+                round_1.days if round_1 and round_1.days is not None else "",
+                current_round.times if current_round and current_round.times is not None else "",
+                current_round.days if current_round and current_round.days is not None else ""
+            ])
 
-    # จัดการเส้นขอบและการจัดตำแหน่ง
-    for row in ws.iter_rows(min_row=1, max_row=row, min_col=1, max_col=5):
+    # ตั้งเส้นขอบและจัดตำแหน่ง
+    for row in ws.iter_rows(min_row=1, max_row=ws.max_row, min_col=1, max_col=5):
         for cell in row:
             cell.alignment = center_alignment
             cell.border = thin_border
 
-    # บันทึกข้อมูลลงใน BytesIO แทนที่จะเป็นไฟล์จริง
+    # บันทึกเป็นไฟล์ Excel
     excel_file = BytesIO()
     wb.save(excel_file)
     excel_file.seek(0)
 
-    # สร้าง response สำหรับการดาวน์โหลดไฟล์ Excel
-    response = HttpResponse(
-        excel_file,
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    response = HttpResponse(excel_file, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = f'attachment; filename="evaluation_1.xlsx"'
     return response
+
+
+
+
 
 
 @login_required
