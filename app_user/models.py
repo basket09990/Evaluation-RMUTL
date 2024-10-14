@@ -279,8 +279,6 @@ class PersonalDiagram(models.Model):
     dev = models.TextField(default="", blank=True, null=True)
     dev_time = models.IntegerField(default=None, blank=True, null=True)
 
-
-
 class user_evaluation_score(models.Model):
     ues_id = models.AutoField(primary_key=True)
     uevr_id = models.ForeignKey(user_evaluation, on_delete=models.CASCADE)
@@ -398,7 +396,6 @@ class UserWorkloadSelection(models.Model):
 
         # เรียกใช้ฟังก์ชันบันทึกของแม่แบบ
         super().save(*args, **kwargs)
-
 
 class user_evident(models.Model):
     uevd_id = models.AutoField(primary_key=True)

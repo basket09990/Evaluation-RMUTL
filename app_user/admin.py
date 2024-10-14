@@ -63,6 +63,9 @@ class CustomUserAdmin(BaseUserAdmin):
 
         profile.save()
 
+    def has_add_permission(self, request):
+        return False
+
 
 # Unregister โมเดล User จาก admin site หากมีการลงทะเบียนแล้ว
 try:

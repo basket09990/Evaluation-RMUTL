@@ -16,5 +16,8 @@ class CustomAdminSite(AdminSite):
     site_header = _("ระบบประเมินบุคลากรสายวิชาการ คณะวิศวกรรมศาสตร์ สาขาวิศวกรรมไฟฟ้า")
     site_title = _("การจัดการไซต์")
     index_title = _("")
+    
 custom_admin_site = CustomAdminSite(name='management_admin')
+
+
 
