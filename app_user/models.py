@@ -18,6 +18,7 @@ class evr_round(models.Model):
     evr_year = models.IntegerField(default=datetime.now().year)
     evr_round = models.IntegerField(default="", blank=True, null=True)
     evr_status = models.BooleanField(default=False)
+    end_date = models.DateField() 
 
 class user_evaluation_agreement(models.Model):
     uevra_id = models.AutoField(primary_key=True)

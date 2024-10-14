@@ -434,26 +434,41 @@ def score0(request):
 
 # ฟังก์ชันเพื่อดึงข้อมูลรอบการประเมิน
 def get_evr_round():
-    current_month = timezone.now().month
-    current_year = timezone.now().year
+    current_date = timezone.now().date()
+    current_month = current_date.month
+    current_year = current_date.year
 
     if 10 <= current_month <= 12:
         # รอบแรก (ปลายปี)
         round_number = 1
         evr_year = current_year
+        start_date = date(current_year, 10, 1)  # 1 ตุลาคมของปีปัจจุบัน
+        end_date = date(current_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
     elif 1 <= current_month <= 3:
         # รอบแรก (ต้นปีถัดไป)
         round_number = 1
         evr_year = current_year - 1
+        start_date = date(current_year - 1, 10, 1)  # 1 ตุลาคมของปีที่ผ่านมา
+        end_date = date(current_year, 3, 31)  # 31 มีนาคมของปีปัจจุบัน
     else:
         # รอบสอง (กลางปี)
         round_number = 2
         evr_year = current_year
+        start_date = date(current_year, 4, 1)  # 1 เมษายน
+        end_date = date(current_year, 9, 30)  # 30 กันยายน
 
+    # อัปเดตหรือสร้างรอบการประเมิน
     evr_round_obj, created = evr_round.objects.get_or_create(
         evr_year=evr_year,
         evr_round=round_number,
+        defaults={'start_date': start_date, 'end_date': end_date}
     )
+
+    # อัปเดต end_date หากมีการเปลี่ยนแปลง (ถ้าเป็นการอัปเดตค่าเดิม)
+    if not created:
+        evr_round_obj.end_date = end_date
+        evr_round_obj.save()
+
     return evr_round_obj
 
 @login_required
@@ -477,9 +492,20 @@ def search_evaluation(request):
     if round:
         evaluations = evaluations.filter(evr_id__evr_round=round)
 
+    # ตรวจสอบวันที่ปัจจุบันกับ end_date ของ evr_round และอัพเดตสถานะ
+    current_date = timezone.now().date()
+    for evaluation in evaluations:
+        evr_round_obj = evaluation.evr_id
+        
+        # ถ้า end_date เกิน current_date ให้เปลี่ยนสถานะเป็น True
+        if evr_round_obj.end_date and current_date > evr_round_obj.end_date:
+            if not evr_round_obj.evr_status:  # ตรวจสอบสถานะก่อนว่าเป็น False อยู่หรือไม่
+                evr_round_obj.evr_status = True  # หมดเวลา: เปลี่ยนสถานะเป็น True
+                evr_round_obj.save()
+               
     # ดึงปีและรอบทั้งหมดเพื่อนำไปใช้ในตัวเลือก
-    years = user_evaluation.objects.filter(user=request.user).values_list('evr_id__evr_year', flat=True).distinct()
-    rounds = user_evaluation.objects.filter(user=request.user).values_list('evr_id__evr_round', flat=True).distinct()
+    years = evaluations.values_list('evr_id__evr_year', flat=True).distinct()
+    rounds = evaluations.values_list('evr_id__evr_round', flat=True).distinct()
 
     context = {
         'evaluations': evaluations,
@@ -487,6 +513,7 @@ def search_evaluation(request):
         'years': years,
         'rounds': rounds,
     }
+    
     return render(request, 'app_evaluation/search_evaluations.html', context)
 
 @login_required
@@ -938,7 +965,6 @@ def upload_evidence1(request, criteria_id):
         'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
     })
 
-
 @login_required
 def delete_evidence1(request, evidence_id):
     evidence = get_object_or_404(user_evident, uevd_id=evidence_id)
@@ -958,7 +984,6 @@ def delete_evidence1(request, evidence_id):
     # ใช้ `redirect` ให้ไปยัง `upload_evidence` โดยใช้ `criteria_id`
     return redirect('upload_evidence1', criteria_id=evidence.uwls_id.id)  # เปลี่ยน `evaluation_id` เป็น `criteria_id`
 
-
 def calculate_competency_score(actual_score, expected_score):
     # ตรวจสอบว่า actual_score และ expected_score ไม่ใช่ None
     if actual_score is None or expected_score is None:
@@ -975,7 +1000,6 @@ def calculate_competency_score(actual_score, expected_score):
         return 1  # คูณด้วย 1 คะแนน
     else:  # ต่ำกว่าคาดหวัง 3 ระดับหรือมากกว่า
         return 0  # คูณด้วย 0 คะแนน
-
 
 @login_required
 def evaluation_page3(request, evaluation_id):
@@ -1276,7 +1300,6 @@ def add_personal_diagram1(request, evaluation_id):
     }
     return render(request, 'app_evaluation/add_personal_diagram1.html', context)
 
-
 @login_required
 def edit_personal_diagram1(request, pd_id):
     # ดึงข้อมูล PersonalDiagram ที่ต้องการแก้ไข
@@ -1345,6 +1368,18 @@ def search_evaluations_2(request):
     if round:
         evaluations = evaluations.filter(evr_id__evr_round=round)
 
+    # ตรวจสอบวันที่ปัจจุบันกับ end_date ของ evr_round และอัพเดตสถานะ
+    current_date = timezone.now().date()
+    
+    for evaluation in evaluations:
+        evr_round_obj = evaluation.evr_id
+        
+        # ถ้า end_date เกิน current_date ให้เปลี่ยนสถานะเป็น True
+        if evr_round_obj.end_date and current_date > evr_round_obj.end_date:
+            if not evr_round_obj.evr_status:  # ตรวจสอบสถานะก่อนว่าเป็น False อยู่หรือไม่
+                evr_round_obj.evr_status = True  # หมดเวลา: เปลี่ยนสถานะเป็น True
+                evr_round_obj.save()
+    
     # เรียงข้อมูลให้ใหม่สุดอยู่ด้านบน โดยใช้ฟิลด์ created_at ในการจัดเรียง
     evaluations = evaluations.order_by('-created_at')  # เปลี่ยน 'created_at' เป็นฟิลด์เวลาที่เหมาะสม
 
@@ -1488,7 +1523,6 @@ def evaluation_page_from_1(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_from_1.html', context)
 
-
 @login_required
 def evaluation_page_from_2(request, evaluation_id):
     # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
@@ -1559,7 +1593,6 @@ def evaluation_page_from_2(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_from_2.html', context)
 
-
 @login_required
 def select_subfields3(request, f_id, evaluation_id):
     field = get_object_or_404(wl_field, pk=f_id)
@@ -1615,7 +1648,6 @@ def delete_selected_subfield3(request, sf_id):
         return redirect('evaluation_page_from_2', evaluation_id=evaluation_id)
 
     return redirect('evaluation_page_from_2', evaluation_id=evaluation_id)
-
 
 @login_required
 def select_workload_criteria3(request, evaluation_id, sf_id):
@@ -1778,7 +1810,6 @@ def upload_evidence2(request, criteria_id):
         'evaluation': evaluation,
         'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
     })
-
 
 @login_required
 def delete_evidence2(request, evidence_id):

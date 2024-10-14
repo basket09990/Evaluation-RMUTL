@@ -47,18 +47,18 @@
                 <td>{{ evaluation.user.last_name }}</td>
                 <td>
                     {% if evaluation.approve_status %}
-                        อนุมัติแล้ว
+                    ตรวจสอบแล้ว
                     {% else %}
-                        ยังไม่ได้อนุมัติ
+                    ยังไม่ได้ตรวจสอบ
                     {% endif %}
                 </td>
                 <td>{{ evaluation.evr_id.evr_year }}</td>
                 <td>{{ evaluation.evr_id.evr_round }}</td>
                 <td>
                     {% if evaluation.evr_id.evr_status %}
-                        ส่งแบบประเมินแล้ว
+                    อยู่นอกระยะเวลาการทำประเมิน
                     {% else %}
-                        ยังไม่ได้ส่งแบบประเมิน
+                    อยู่ในช่วงระยะเวลาการทำแบบประเมิน
                     {% endif %}
                 </td>     
                 <td>
