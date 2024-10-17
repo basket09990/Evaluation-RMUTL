@@ -373,6 +373,8 @@ class UserWorkloadSelection(models.Model):
     selected_unit = models.TextField(default="", blank=True, null=True)
     selected_workload = models.FloatField(default="0", blank=True, null=True)
     calculated_workload = models.FloatField(default="0")
+    selected_workload_edit = models.FloatField(default="0", blank=True, null=True)
+    selected_workload_edit_status = models.BooleanField(default=False)
     notes = models.TextField(blank=True, null=True)
 
     def __str__(self):

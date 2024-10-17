@@ -1,0 +1,93 @@
+
+/* Reset CSS */
+body, h1, p {
+    margin: 0;
+    padding: 0;
+    overflow-y: auto; /* ทำให้สามารถเลื่อน sidebar ได้ */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #F6F0E5;
+    overflow-y: auto; /* ทำให้สามารถเลื่อน sidebar ได้ */
+}
+
+.container {
+    text-align: center;
+}
+
+.title {
+    font-size: 1.5em;
+    color: #333333;
+    
+}
+
+.avatar-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto;
+    margin-bottom: -50px;
+    background-color: #FFD700;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    border: 5px solid #FFF;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-container img {
+    width: 100%;
+    height: auto;
+}
+
+.info-box {
+    margin-top: 60px;
+    padding: 30px;
+    border: 2px solid #FFB800;
+    border-radius: 10px;
+    background-color: #FFF;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    text-align: left;
+    text-decoration: none;
+}
+
+.role {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.button {
+    background-color: #FFB800;
+    color: #FFF;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.button:hover {
+    background-color: #FF9A00;
+}
+
+form {
+    margin: 0;
+}
+
+p {
+    margin: 10px 0;
+}

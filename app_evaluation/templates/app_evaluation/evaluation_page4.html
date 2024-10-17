@@ -100,8 +100,19 @@
         width: 100%;
         padding: 6px;
         box-sizing: border-box;
-        border: 1px solid #ccc;
         border-radius: 4px;
+        border: none;
+        outline: none;
+        background-color: transparent;
+    }
+
+    .form-table td select {
+        border: none;
+        outline: none;
+        background-color: transparent;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
     }
 
     button {
@@ -278,7 +289,13 @@
         padding: 2px 5px;
         border-radius: 3px;
     }
- 
+
+    textarea {
+        border: none; /* เอากรอบออก */
+        outline: none; /* เอาเส้นขอบตอนคลิกออก */
+        background-color: transparent; /* พื้นหลังโปร่งใส (หากต้องการ) */
+        resize: none; /* ปิดการปรับขนาด */
+    }
     
 </style>
 <div>
@@ -298,7 +315,7 @@
                 <tr>
                     <td>องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน</td>
                     <td style="text-align: center;">70</td>
-                    <td style="text-align: center;">{{ achievement_work|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ achievement_work|floatformat:1  }}</td>
                     <td style="text-align: center;">
                         <textarea name="remark_achievement" rows="2" cols="20">{{ remark_achievement|default_if_none:'' }}</textarea>
                     </td>
@@ -306,7 +323,7 @@
                 <tr>
                     <td>องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)</td>
                     <td style="text-align: center;">30</td>
-                    <td style="text-align: center;">{{ mc_score|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ mc_score|floatformat:1  }}</td>
                     <td>
                         <textarea name="remark_mc" rows="2" cols="20">{{ remark_mc|default_if_none:'' }}</textarea>
                     </td>
@@ -322,7 +339,7 @@
                 <tr>
                     <td>รวม</td>
                     <td style="text-align: center;">100</td>
-                    <td style="text-align: center;">{{ total_score|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ total_score|floatformat:1  }}</td>
                     <td style="text-align: center;">
                         <textarea name="remark_total" rows="2" cols="20">{{ remark_total|default_if_none:'' }}</textarea>
                     </td>
@@ -354,7 +371,6 @@
                 </div>
             </fieldset>
             
-            <button type="submit">บันทึก</button>
         </form>
         
     

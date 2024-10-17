@@ -347,7 +347,6 @@ class UserWorkloadSelectionForm(forms.ModelForm):
 
 class UserWorkloadSelectionForm1(forms.ModelForm):
 
-
     class Meta:
         model = UserWorkloadSelection
         fields = [ 'selected_name', 'selected_num', 'notes']
@@ -356,6 +355,13 @@ class UserWorkloadSelectionForm1(forms.ModelForm):
             'notes': 'หมายเหตุ',
         }
 
+class UserWorkloadSelectionForm2(forms.ModelForm):
+    class Meta:
+        model = UserWorkloadSelection
+        fields = ['selected_workload_edit']
+        labels = {
+            'selected_workload_edit': 'ภาระงานที่แก้ไข',
+        }
 
 class PersonalDiagramForm(forms.ModelForm):
     class Meta:

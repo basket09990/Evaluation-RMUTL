@@ -298,7 +298,7 @@
                 <tr>
                     <td>องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน</td>
                     <td style="text-align: center;">70</td>
-                    <td style="text-align: center;">{{ achievement_work|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ achievement_work|floatformat:1  }}</td>
                     <td style="text-align: center;">
                         <textarea name="remark_achievement" rows="2" cols="20">{{ remark_achievement|default_if_none:'' }}</textarea>
                     </td>
@@ -306,7 +306,7 @@
                 <tr>
                     <td>องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)</td>
                     <td style="text-align: center;">30</td>
-                    <td style="text-align: center;">{{ mc_score|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ mc_score|floatformat:1  }}</td>
                     <td>
                         <textarea name="remark_mc" rows="2" cols="20">{{ remark_mc|default_if_none:'' }}</textarea>
                     </td>
@@ -322,7 +322,7 @@
                 <tr>
                     <td>รวม</td>
                     <td style="text-align: center;">100</td>
-                    <td style="text-align: center;">{{ total_score|floatformat:2  }}</td>
+                    <td style="text-align: center;">{{ total_score|floatformat:1  }}</td>
                     <td style="text-align: center;">
                         <textarea name="remark_total" rows="2" cols="20">{{ remark_total|default_if_none:'' }}</textarea>
                     </td>
@@ -359,7 +359,7 @@
         
     
     <div>
-    <a href="{% url 'export_evaluation_page_4_to_excel' evaluation_id=evaluation_id %}" class="btn btn-success">ดาวน์โหลด Excel</a>
+    
     <a href="{% url 'evaluation_page'  evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
 </div>

@@ -142,7 +142,7 @@
         margin-top: 20px;
     }
 
-    .form-table3 th, .form-table td {
+    .form-table3 th, .form-table3 td {
         padding: 10px;
         border: 1px solid #ddd;
     }
@@ -157,9 +157,19 @@
         width: 100%;
         padding: 6px;
         box-sizing: border-box;
-        border: 1px solid #ccc;
         border-radius: 4px;
-        text-align: center;
+        border: none;
+        outline: none;
+        background-color: transparent;
+    }
+
+    .form-table3 td select {
+        border: none;
+        outline: none;
+        background-color: transparent;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
     }
 
 
@@ -322,10 +332,22 @@
     }
 
 
+    .input-style {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border-radius: 4px;
+        border: none;
+        outline: none;
+        background-color: transparent;
+    }
+
+
+
     
 </style>
 
-
+    {% if user.groups.all.0.name == "Staff"%}
     <div>
         <h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
         <h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {{ user_evaluation_agreement_year_thai}}</h1>
@@ -350,8 +372,10 @@
                                     <p>ยังไม่มีข้อมูลรอบการประเมิน</p>
                                 {% endif %}
                         </div>
-
+                        
                         <div >
+
+                            
                                 <table class="form-table">
                                     <tr>
                                         <td>{{ profile_form.first_name.label_tag }}</td>
@@ -398,8 +422,8 @@
 
                         {% if evr_round.evr_round == 1 %}
                    
-                        <div class="form-table">
-                            <table class="form-table3">
+                        <div>
+                            <table class="form-table">
                                 <h4>บันทึกการปฏิบัติงาน</h4>
                                 <thead>
                                     <tr>
@@ -469,8 +493,8 @@
                         </div>
                         
                         {% elif evr_round.evr_round == 2 %}
-                        <div class="form-table">
-                            <table class="form-table3">
+                        <div>
+                            <table class="form-table">
                                 <h4>บันทึกการปฏิบัติงาน</h4>
                                 <thead>
                                     <tr>
@@ -543,34 +567,526 @@
                         <div>
                             {{ work_form_current.as_p }}
                         </div>
-                        {% if user.groups.all.0.name == "Staff"%}
+        
+                
+                             
                         <button type="submit">บันทึก</button>
-                        {% endif %}
-                        {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                        <button type="submit">บันทึก</button>
-                        {% endif %}
-                    </form>
-                                            <div class="button-container">
-                                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
-                                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
-                                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
-                                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
-                                                <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+                               
+                        </form>
 
-                                            </div>
+                            <div class="button-container">
+                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
-                                    
-                                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
-                                                {% csrf_token %}
-                                                <button type="submit" class="btn btn-primary">
-                                                    ตรวจสอบการประเมินแล้ว
-                                                </button>
-                                            </form>
+                            </div>
+
+                    
+                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                        </div>
+                        {% elif user.groups.all.0.name == "Evaluator" %}
+
+                        <div>
+                            <h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
+                            <h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {{ user_evaluation_agreement_year_thai}}</h1>
+                                        <form action="{% url 'evaluation_page_from_1' evaluation_id %}"  method="POST">
+                                            {% csrf_token %}
+                                            {{ form.non_field_errors }}
                                             
+                                            <div>
+                                                <h1>หน่วยงาน  คณะวิศวกรรมศาสตร์  มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา</h1>
+                                            </div>
+                    
+                                            <div >
+                                                <h4>กลุ่มที่เลือก:   {{ selected_group.g_field_name }}</h4>
+                                            </div>
+                    
+                                            <div>
+                                                    {% if evr_round.evr_round == 1 %}
+                                                        <h4>ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)</h4>
+                                                    {% elif evr_round.evr_round == 2 %}
+                                                        <h4>ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)</h4>
+                                                    {% else %}
+                                                        <p>ยังไม่มีข้อมูลรอบการประเมิน</p>
+                                                    {% endif %}
+                                            </div>
+                                            
+                                            <div >
+                    
+                                                
+                                                    <table class="form-table3">
+                                                        <tr>
+                                                            <td>{{ profile_form.first_name.label_tag }}</td>
+                                                            <td>{{ profile_form.first_name }} {{ profile_form.first_name.errors }}</td>
+                                                            <td>{{ profile_form.last_name.label_tag }}</td>
+                                                            <td>{{ profile_form.last_name }} {{ profile_form.last_name.errors }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ในกรณีที่ไม่มีตำแหน่งบริหารให้ใช้เครื่องหมาย (-)</td>
+                                                            <td style="text-align: center; font-size:35px;"> - </td>
+                                                            <td>{{ extended_form.ac_id.label_tag }}</td>
+                                                            <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{{ extended_form.administrative_position.label_tag }}</td>
+                                                            <td>{{ extended_form.administrative_position }} {{ extended_form.administrative_position.errors }}</td>
+                                                            <td>{{ extended_form.salary.label_tag }}</td>
+                                                            <td>{{ extended_form.salary }} {{ extended_form.salary.errors }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{{ extended_form.position_number.label_tag }}</td>
+                                                            <td>{{ extended_form.position_number }} {{ extended_form.position_number.errors }}</td>
+                                                            <td>{{ extended_form.affiliation.label_tag }}</td>
+                                                            <td>{{ extended_form.affiliation }} {{ extended_form.affiliation.errors }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{{ extended_form.old_government.label_tag }}</td>
+                                                            <td>{{ extended_form.old_government }} {{ extended_form.old_government.errors }}</td>
+                                                            <td>{{ extended_form.special_position.label_tag }}</td>
+                                                            <td>{{ extended_form.special_position }} {{ extended_form.special_position.errors }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>{{ extended_form.start_goverment.label_tag }}</td>
+                                                            <td>{{ extended_form.start_goverment }} {{ extended_form.start_goverment.errors }}</td>
+                                                            <td>
+                                                                รวมเวลารับราชการ:
+                                                            </td>
+                                                            <td>
+                                                                {{ profile.years_of_service }} ปี  {{ profile.months_of_service }} เดือน  {{ profile.days_of_service }} วัน
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+                                            </div>
+                    
+                                            {% if evr_round.evr_round == 1 %}
+                                       
+                                            <div>
+                                                <table class="form-table3">
+                                                    <h4>บันทึกการปฏิบัติงาน</h4>
+                                                    <thead>
+                                                        <tr>
+                                                            <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                                            <th colspan="2" class="text-center">รอบที่ 1</th>
+                                                            <th colspan="2" class="text-center">รอบที่ 2</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <th class="text-center">(จำนวนครั้ง)</th>
+                                                            <th class="text-center">(จำนวนวัน)</th>
+                                                            <th class="text-center">(จำนวนครั้ง)</th>
+                                                            <th class="text-center">(จำนวนวัน)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>ลาป่วย</td>
+                                                            <td>{{ sick_leave_round_1_form.times }}</td>
+                                                            <td>{{ sick_leave_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลากิจ</td>
+                                                            <td>{{ personal_leave_round_1_form.times }}</td>
+                                                            <td>{{ personal_leave_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>มาสาย</td>
+                                                            <td>{{ late_round_1_form.times }}</td>
+                                                            <td>{{ late_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาคลอดบุตร</td>
+                                                            <td>{{ maternity_leave_round_1_form.times }}</td>
+                                                            <td>{{ maternity_leave_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาอุปสมบท</td>
+                                                            <td>{{ ordination_leave_round_1_form.times }}</td>
+                                                            <td>{{ ordination_leave_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                                            <td>{{ longsick_leave_round_1_form.times }}</td>
+                                                            <td>{{ longsick_leave_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ขาดราชการ</td>
+                                                            <td>{{ adsent_work_round_1_form.times }}</td>
+                                                            <td>{{ adsent_work_round_1_form.days }}</td>
+                                                            <td></td>
+                                                            <td></td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            
+                                            {% elif evr_round.evr_round == 2 %}
+                                            <div>
+                                                <table class="form-table3">
+                                                    <h4>บันทึกการปฏิบัติงาน</h4>
+                                                    <thead>
+                                                        <tr>
+                                                            <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                                            <th colspan="2" class="text-center">รอบที่ 1</th>
+                                                            <th colspan="2" class="text-center">รอบที่ 2</th>
+                                                        </tr>
+                                                        <tr>
+                                                            <th class="text-center">(จำนวนครั้ง)</th>
+                                                            <th class="text-center">(จำนวนวัน)</th>
+                                                            <th class="text-center">(จำนวนครั้ง)</th>
+                                                            <th class="text-center">(จำนวนวัน)</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>ลาป่วย</td>
+                                                            <td>{{ sick_leave_round_1_form.times }}</td>
+                                                            <td>{{ sick_leave_round_1_form.days }}</td>
+                                                            <td>{{ sick_leave_form.times }}</td>
+                                                            <td>{{ sick_leave_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลากิจ</td>
+                                                            <td>{{ personal_leave_round_1_form.times }}</td>
+                                                            <td>{{ personal_leave_round_1_form.days }}</td>
+                                                            <td>{{ personal_leave_form.times }}</td>
+                                                            <td>{{ personal_leave_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>มาสาย</td>
+                                                            <td>{{ late_round_1_form.times }}</td>
+                                                            <td>{{ late_round_1_form.days }}</td>
+                                                            <td>{{ late_form.times }}</td>
+                                                            <td>{{ late_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาคลอดบุตร</td>
+                                                            <td>{{ maternity_leave_round_1_form.times }}</td>
+                                                            <td>{{ maternity_leave_round_1_form.days }}</td>
+                                                            <td>{{ maternity_leave_form.times }}</td>
+                                                            <td>{{ maternity_leave_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาอุปสมบท</td>
+                                                            <td>{{ ordination_leave_round_1_form.times }}</td>
+                                                            <td>{{ ordination_leave_round_1_form.days }}</td>
+                                                            <td>{{ ordination_leave_form.times }}</td>
+                                                            <td>{{ ordination_leave_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                                            <td>{{ longsick_leave_round_1_form.times }}</td>
+                                                            <td>{{ longsick_leave_round_1_form.days }}</td>
+                                                            <td>{{ longsick_leave_form.times }}</td>
+                                                            <td>{{ longsick_leave_form.days }}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>ขาดราชการ</td>
+                                                            <td>{{ adsent_work_round_1_form.times }}</td>
+                                                            <td>{{ adsent_work_round_1_form.days }}</td>
+                                                            <td>{{ adsent_work_form.times }}</td>
+                                                            <td>{{ adsent_work_form.days }}</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                    
+                                            {% endif %}
+                                            <div class="input-style">
+                                                การกระทำผิดวินัย/การถูกลงโทษ:
+                                                <input type="text" name="{{ work_form_current.punishment.name }}" value="{{ work_form_current.punishment.value }}" class="input-style">
+                                            </div>
+                            
+                                    
+                                                    {% if user.groups.all.0.name == "Staff"%}
+                                                    <button type="submit">บันทึก</button>
+                                                    {% endif %}
+                                                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                                                    <button type="submit">บันทึก</button>
+                                                    {% endif %}
+                                                </form>
+                    
+                                                <div class="button-container">
+                                                    <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                                    <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                                    <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                                    <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                                    <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+                    
+                                                </div>
+                    
+                                        
+                                                <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-primary">
+                                                        ตรวจสอบการประเมินแล้ว
+                                                    </button>
+                                                </form>
+                                            </div>
+    {% endif %} 
 
+    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+    <div>
+        <h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
+        <h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {{ user_evaluation_agreement_year_thai}}</h1>
+                    <form action="{% url 'evaluation_page_from_1' evaluation_id %}"  method="POST">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+                        
+                        <div>
+                            <h1>หน่วยงาน  คณะวิศวกรรมศาสตร์  มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา</h1>
+                        </div>
 
-</div>
+                        <div >
+                            <h4>กลุ่มที่เลือก:   {{ selected_group.g_field_name }}</h4>
+                        </div>
 
+                        <div>
+                                {% if evr_round.evr_round == 1 %}
+                                    <h4>ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)</h4>
+                                {% elif evr_round.evr_round == 2 %}
+                                    <h4>ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)</h4>
+                                {% else %}
+                                    <p>ยังไม่มีข้อมูลรอบการประเมิน</p>
+                                {% endif %}
+                        </div>
+                        
+                        <div >
+
+                            
+                                <table class="form-table">
+                                    <tr>
+                                        <td>{{ profile_form.first_name.label_tag }}</td>
+                                        <td>{{ profile_form.first_name }} {{ profile_form.first_name.errors }}</td>
+                                        <td>{{ profile_form.last_name.label_tag }}</td>
+                                        <td>{{ profile_form.last_name }} {{ profile_form.last_name.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ในกรณีที่ไม่มีตำแหน่งบริหารให้ใช้เครื่องหมาย (-)</td>
+                                        <td style="text-align: center; font-size:35px;"> - </td>
+                                        <td>{{ extended_form.ac_id.label_tag }}</td>
+                                        <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.administrative_position.label_tag }}</td>
+                                        <td>{{ extended_form.administrative_position }} {{ extended_form.administrative_position.errors }}</td>
+                                        <td>{{ extended_form.salary.label_tag }}</td>
+                                        <td>{{ extended_form.salary }} {{ extended_form.salary.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.position_number.label_tag }}</td>
+                                        <td>{{ extended_form.position_number }} {{ extended_form.position_number.errors }}</td>
+                                        <td>{{ extended_form.affiliation.label_tag }}</td>
+                                        <td>{{ extended_form.affiliation }} {{ extended_form.affiliation.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.old_government.label_tag }}</td>
+                                        <td>{{ extended_form.old_government }} {{ extended_form.old_government.errors }}</td>
+                                        <td>{{ extended_form.special_position.label_tag }}</td>
+                                        <td>{{ extended_form.special_position }} {{ extended_form.special_position.errors }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>{{ extended_form.start_goverment.label_tag }}</td>
+                                        <td>{{ extended_form.start_goverment }} {{ extended_form.start_goverment.errors }}</td>
+                                        <td>
+                                            รวมเวลารับราชการ:
+                                        </td>
+                                        <td>
+                                            {{ profile.years_of_service }} ปี  {{ profile.months_of_service }} เดือน  {{ profile.days_of_service }} วัน
+                                        </td>
+                                    </tr>
+                                </table>
+                        </div>
+
+                        {% if evr_round.evr_round == 1 %}
+                   
+                        <div>
+                            <table class="form-table">
+                                <h4>บันทึกการปฏิบัติงาน</h4>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                        <th colspan="2" class="text-center">รอบที่ 1</th>
+                                        <th colspan="2" class="text-center">รอบที่ 2</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ลาป่วย</td>
+                                        <td>{{ sick_leave_round_1_form.times }}</td>
+                                        <td>{{ sick_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลากิจ</td>
+                                        <td>{{ personal_leave_round_1_form.times }}</td>
+                                        <td>{{ personal_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>มาสาย</td>
+                                        <td>{{ late_round_1_form.times }}</td>
+                                        <td>{{ late_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาคลอดบุตร</td>
+                                        <td>{{ maternity_leave_round_1_form.times }}</td>
+                                        <td>{{ maternity_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาอุปสมบท</td>
+                                        <td>{{ ordination_leave_round_1_form.times }}</td>
+                                        <td>{{ ordination_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                        <td>{{ longsick_leave_round_1_form.times }}</td>
+                                        <td>{{ longsick_leave_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ขาดราชการ</td>
+                                        <td>{{ adsent_work_round_1_form.times }}</td>
+                                        <td>{{ adsent_work_round_1_form.days }}</td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        {% elif evr_round.evr_round == 2 %}
+                        <div>
+                            <table class="form-table">
+                                <h4>บันทึกการปฏิบัติงาน</h4>
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" class="text-center">ประเภทการลา</th>
+                                        <th colspan="2" class="text-center">รอบที่ 1</th>
+                                        <th colspan="2" class="text-center">รอบที่ 2</th>
+                                    </tr>
+                                    <tr>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                        <th class="text-center">(จำนวนครั้ง)</th>
+                                        <th class="text-center">(จำนวนวัน)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>ลาป่วย</td>
+                                        <td>{{ sick_leave_round_1_form.times }}</td>
+                                        <td>{{ sick_leave_round_1_form.days }}</td>
+                                        <td>{{ sick_leave_form.times }}</td>
+                                        <td>{{ sick_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลากิจ</td>
+                                        <td>{{ personal_leave_round_1_form.times }}</td>
+                                        <td>{{ personal_leave_round_1_form.days }}</td>
+                                        <td>{{ personal_leave_form.times }}</td>
+                                        <td>{{ personal_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>มาสาย</td>
+                                        <td>{{ late_round_1_form.times }}</td>
+                                        <td>{{ late_round_1_form.days }}</td>
+                                        <td>{{ late_form.times }}</td>
+                                        <td>{{ late_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาคลอดบุตร</td>
+                                        <td>{{ maternity_leave_round_1_form.times }}</td>
+                                        <td>{{ maternity_leave_round_1_form.days }}</td>
+                                        <td>{{ maternity_leave_form.times }}</td>
+                                        <td>{{ maternity_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาอุปสมบท</td>
+                                        <td>{{ ordination_leave_round_1_form.times }}</td>
+                                        <td>{{ ordination_leave_round_1_form.days }}</td>
+                                        <td>{{ ordination_leave_form.times }}</td>
+                                        <td>{{ ordination_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน</td>
+                                        <td>{{ longsick_leave_round_1_form.times }}</td>
+                                        <td>{{ longsick_leave_round_1_form.days }}</td>
+                                        <td>{{ longsick_leave_form.times }}</td>
+                                        <td>{{ longsick_leave_form.days }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ขาดราชการ</td>
+                                        <td>{{ adsent_work_round_1_form.times }}</td>
+                                        <td>{{ adsent_work_round_1_form.days }}</td>
+                                        <td>{{ adsent_work_form.times }}</td>
+                                        <td>{{ adsent_work_form.days }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {% endif %}
+                        <div>
+                            {{ work_form_current.as_p }}
+                        </div>
+        
+                
+                             
+                        <button type="submit">บันทึก</button>
+                               
+                        </form>
+
+                            <div class="button-container">
+                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+
+                            </div>
+
+                    
+                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %} 
 
 
 

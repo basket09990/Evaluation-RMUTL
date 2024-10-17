@@ -120,10 +120,11 @@ urlpatterns = [
     path('evaluation_page_from_4/<int:evaluation_id>/', views.evaluation_page_from_4, name='evaluation_page_from_4'),
     path('evaluation_page_from_5/<int:evaluation_id>/', views.evaluation_page_from_5, name='evaluation_page_from_5'),
 
+    path('show_all_evidence/<int:selection_id>/', views.show_all_evidence, name='show_all_evidence'),
 
 
-
-
+    path('evaluation/<int:evaluation_id>/pdf/',  views.render_pdf_view, name='render_pdf_view'),
+    path('evaluation/<int:evaluation_id>/print_pdf/',  views.print_evaluation_pdf, name='print_evaluation_pdf'),
 
 
     path('evaluation/export/<int:evaluation_id>/', views.export_html_to_excel, name='export_html_to_excel'),

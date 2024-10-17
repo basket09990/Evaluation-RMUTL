@@ -45,6 +45,16 @@
        
     }
 
+    input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border-radius: 4px;
+        border: none;
+        outline: none;
+        background-color: transparent;
+    }
+
     .form-group1 {
         
         display: flex;
@@ -278,7 +288,7 @@
             </tfoot>
         </table>
         </table>
-        <h2>คะแนนที่ได้: {{ calculated_score|floatformat:2 }}</h2>
+        <h2>( ผลรวมคะแนน {{total_score}} / ผลรวมระดับสมรรถนะที่คาดหวัง {{total_max_num}} ) * 30 คะแนนที่ได้ : {{ calculated_score|floatformat:1 }}</h2>
 
     <table class="form-table">
         <tr>
@@ -298,7 +308,6 @@
         </tr>
     </table>
 
-    <button type="submit">ส่งข้อมูล</button>
     </form>
     <a href="{% url 'evaluation_page1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
