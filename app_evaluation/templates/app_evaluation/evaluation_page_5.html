@@ -104,8 +104,14 @@
         padding: 6px;
         resize: vertical; /* Allow vertical resizing */
         box-sizing: border-box; /* Ensure padding and borders don't affect size */
-        
+        border: none;
+        outline: none;
+        cursor: not-allowed;
+        pointer-events: none;
+        background-color: transparent;
     }
+
+    
     
     .action-buttons {
         white-space: nowrap; /* Prevent buttons from wrapping */
@@ -285,6 +291,8 @@
         text-align: left;
         padding: 10px;
     }
+
+    
     
 </style>
 <div>

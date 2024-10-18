@@ -3649,7 +3649,7 @@ def print_evaluation_pdf(request, evaluation_id):
     col2_x = 300  # ตำแหน่ง X ของคอลัมน์ขวา
     y_position = height - 210  # เริ่มต้นที่ความสูงนี้
     # คอลัมน์ซ้าย
-    p.drawString(col1_x, y_position, f"ชื่อ-นามสกุล: {evaluation.user.username}""   "f"{evaluation.user.last_name}")
+    p.drawString(col1_x, y_position, f"ชื่อ-นามสกุล: {evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
     p.drawString(col1_x, y_position - 20, f"ตำแหน่งบริหาร: {evaluation.administrative_position}")
     p.drawString(col1_x, y_position - 40, f"เลขที่ประจำตำแหน่ง: {profile.position_number}")
     p.drawString(col1_x, y_position - 60, f"มาช่วยราชการจากที่ใด (ถ้ามี): {profile.old_government}")
@@ -3657,17 +3657,17 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # คอลัมน์ขวา
     p.drawString(col2_x, y_position, f"ตำแหน่งวิชาการ: {evaluation.ac_id.ac_name}")
-    p.drawString(col2_x, y_position - 20, f"เงินเดือน: {profile.salary}")
-    p.drawString(col2_x, y_position - 40, f"เงินเดือน: {profile.affiliation}")
-    p.drawString(col2_x, y_position - 60, f"หน้าที่พิเศษ: {profile.special_position}")
-    p.drawString(col2_x, y_position - 80, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
+    p.drawString(col2_x, y_position - 40, f"เงินเดือน: {profile.salary}")
+    p.drawString(col2_x, y_position - 60, f"สังกัด: {profile.affiliation}")
+    p.drawString(col2_x, y_position - 80, f"หน้าที่พิเศษ: {profile.special_position}")
+    p.drawString(col1_x, y_position - 100, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
     styleN = styles['Normal']
     styleN.fontName = 'Sarabun'  # ใช้ฟอนต์ที่ลงทะเบียนไว้
     styleN.fontSize = 12  # กำหนดขนาดฟอนต์
-
+    p.drawString(col1_x, y_position - 140, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
     if round_1:
         data = [
@@ -3709,9 +3709,9 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # เพิ่มตารางใน PDF
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 550)  # ตำแหน่งของตารางในหน้า PDF
+    table.drawOn(p, 50, height - 590)  # ตำแหน่งของตารางในหน้า PDF
 
-    p.drawString(50, height - 580, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
+    p.drawString(50, height - 620, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
    
     p.showPage()
 
@@ -3803,7 +3803,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 35  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 30  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
@@ -4248,13 +4248,11 @@ def print_evaluation_pdf(request, evaluation_id):
     p.line(start_x , start_y-80, start_x + 480, start_y-80)
     start_y -= 2* line_height
 
-    
-
-
-
     p.save()
 
     return response
+
+
 
 
 

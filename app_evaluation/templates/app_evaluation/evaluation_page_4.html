@@ -278,7 +278,18 @@
         padding: 2px 5px;
         border-radius: 3px;
     }
- 
+    
+    /* ปรับ radio button ให้คงความเข้มแม้จะถูกจำกัดการคลิก */
+    input[type="radio"] {
+        pointer-events: none; /* ป้องกันการคลิก */
+        opacity: 1; /* ป้องกันการจาง */
+    }
+
+    /* ปรับสไตล์ของ label ให้คงสีเดิม */
+    input[type="radio"] + label {
+        color: black;
+        cursor: default;
+    }
     
 </style>
 <div>
