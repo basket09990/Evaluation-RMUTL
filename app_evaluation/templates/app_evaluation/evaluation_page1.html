@@ -131,9 +131,23 @@
         width: 100%;
         padding: 6px;
         box-sizing: border-box;
-        border: 1px solid #ccc;
         border-radius: 4px;
+        border: none;
+        outline: none;
+        background-color: transparent;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 
+    .form-table td select {
+        border: none;
+        outline: none;
+        background-color: transparent;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        cursor: not-allowed;
+        pointer-events: none;
     }
 
     .form-table3 {
@@ -163,6 +177,7 @@
         background-color: transparent;
         cursor: not-allowed;
         pointer-events: none;
+        text-align: center;
     }
 
     .form-table3 td select {
@@ -376,7 +391,7 @@
                         </div>
 
                         <div >
-                                <table class="form-table3">
+                                <table class="form-table">
                                     <tr>
                                         <td>{{ profile_form.first_name.label_tag }}</td>
                                         <td>{{ profile_form.first_name }} {{ profile_form.first_name.errors }}</td>

@@ -84,6 +84,12 @@
         border-collapse: collapse;
     }
     
+    .form-table {
+        width: 100%;
+        margin-top:50px;
+        border-collapse: collapse;
+    }
+    
     .form-table th {
         padding: 8px;
         text-align: center;
@@ -98,7 +104,35 @@
         vertical-align: middle;
     }
     
-    .form-table td input, .form-table td textarea {
+    .form-tabl td input, .form-table td textarea {
+        width: 100%;
+        height: 40px;
+        padding: 6px;
+        resize: vertical; /* Allow vertical resizing */
+        box-sizing: border-box; /* Ensure padding and borders don't affect size */
+    }
+
+    .form-table3 {
+        width: 100%;
+        margin-top:50px;
+        border-collapse: collapse;
+    }
+    
+    .form-table3 th {
+        padding: 8px;
+        text-align: center;
+        border: 1px solid #ddd;
+        vertical-align: middle;
+    }
+
+    .form-table3 td {
+        padding: 8px;
+        text-align: left;
+        border: 1px solid #ddd;
+        vertical-align: middle;
+    }
+    
+    .form-table3 td input, .form-table3 td textarea {
         width: 100%;
         height: 40px;
         padding: 6px;
@@ -298,7 +332,7 @@
             <h2>ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล</h2>
         
             <!-- Formset for PersonalDiagram -->
-            <table class="form-table">
+            <table class="form-table3">
                 <thead>
                     <tr>
                         <th>ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา</th>
