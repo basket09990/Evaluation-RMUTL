@@ -3650,24 +3650,22 @@ def print_evaluation_pdf(request, evaluation_id):
     y_position = height - 210  # เริ่มต้นที่ความสูงนี้
     # คอลัมน์ซ้าย
     p.drawString(col1_x, y_position, f"ชื่อ-นามสกุล: {evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
-    p.drawString(col1_x, y_position - 20, f"ตำแหน่งบริหาร: {evaluation.administrative_position}")
-    p.drawString(col1_x, y_position - 40, f"เลขที่ประจำตำแหน่ง: {profile.position_number}")
-    p.drawString(col1_x, y_position - 60, f"มาช่วยราชการจากที่ใด (ถ้ามี): {profile.old_government}")
-    p.drawString(col1_x, y_position - 80, f"เริ่มรับราชการเมื่อวันที่: {start_goverment_str}")
-
-    # คอลัมน์ขวา
-    p.drawString(col2_x, y_position, f"ตำแหน่งวิชาการ: {evaluation.ac_id.ac_name}")
-    p.drawString(col2_x, y_position - 40, f"เงินเดือน: {profile.salary}")
-    p.drawString(col2_x, y_position - 60, f"สังกัด: {profile.affiliation}")
-    p.drawString(col2_x, y_position - 80, f"หน้าที่พิเศษ: {profile.special_position}")
-    p.drawString(col1_x, y_position - 100, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
+    p.drawString(col1_x, y_position - 20, f"ตำแหน่งวิชาการ: {evaluation.ac_id.ac_name}")
+    p.drawString(col1_x, y_position - 45, f"ตำแหน่งบริหาร: {evaluation.administrative_position}")
+    p.drawString(col1_x, y_position - 70, f"เลขที่ประจำตำแหน่ง: {profile.position_number}")
+    p.drawString(col1_x, y_position - 95, f"เงินเดือน: {profile.salary}")
+    p.drawString(col1_x, y_position - 120, f"หน้าที่พิเศษ: {profile.special_position}")
+    p.drawString(col1_x, y_position - 145, f"สังกัด: {profile.affiliation}")
+    p.drawString(col1_x, y_position - 170, f"มาช่วยราชการจากที่ใด (ถ้ามี): {profile.old_government}")
+    p.drawString(col1_x, y_position - 195, f"เริ่มรับราชการเมื่อวันที่: {start_goverment_str}")
+    p.drawString(col1_x, y_position - 220, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
     styleN = styles['Normal']
     styleN.fontName = 'Sarabun'  # ใช้ฟอนต์ที่ลงทะเบียนไว้
     styleN.fontSize = 12  # กำหนดขนาดฟอนต์
-    p.drawString(col1_x, y_position - 140, "บันทึกการปฏิบัติงาน: ")
+    p.drawString(col1_x, y_position - 250, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
     if round_1:
         data = [
@@ -3709,9 +3707,9 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # เพิ่มตารางใน PDF
     table.wrapOn(p, width, height)
-    table.drawOn(p, 50, height - 590)  # ตำแหน่งของตารางในหน้า PDF
+    table.drawOn(p, 50, height - 700)  # ตำแหน่งของตารางในหน้า PDF
 
-    p.drawString(50, height - 620, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
+    p.drawString(50, height - 725, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
    
     p.showPage()
 

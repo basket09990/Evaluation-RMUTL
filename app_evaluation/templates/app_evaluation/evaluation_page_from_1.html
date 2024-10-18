@@ -677,7 +677,7 @@
                                             {% if evr_round.evr_round == 1 %}
                                        
                                             <div>
-                                                <table class="form-table3">
+                                                <table class="form-table">
                                                     <h4>บันทึกการปฏิบัติงาน</h4>
                                                     <thead>
                                                         <tr>
@@ -748,7 +748,7 @@
                                             
                                             {% elif evr_round.evr_round == 2 %}
                                             <div>
-                                                <table class="form-table3">
+                                                <table class="form-table">
                                                     <h4>บันทึกการปฏิบัติงาน</h4>
                                                     <thead>
                                                         <tr>
@@ -827,9 +827,9 @@
                                                     {% if user.groups.all.0.name == "Staff"%}
                                                     <button type="submit">บันทึก</button>
                                                     {% endif %}
-                                                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                                                    
                                                     <button type="submit">บันทึก</button>
-                                                    {% endif %}
+                                                    
                                                 </form>
                     
                                                 <div class="button-container">
@@ -847,6 +847,9 @@
                                                     <button type="submit" class="btn btn-primary">
                                                         ตรวจสอบการประเมินแล้ว
                                                     </button>
+                                                </form>
+                                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                                 </form>
                                             </div>
     {% endif %} 
