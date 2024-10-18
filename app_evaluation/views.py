@@ -3543,17 +3543,46 @@ def print_evaluation_pdf(request, evaluation_id):
     specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
     administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
 
-    # คำนวณจำนวนสมรรถนะที่แสดงออกต่างๆ
-    count_3 = main_scores.filter(actual_score=3).count() + specific_scores.filter(actual_score=3).count()
-    count_2 = main_scores.filter(actual_score=2).count() + specific_scores.filter(actual_score=2).count()
-    count_1 = main_scores.filter(actual_score=1).count() + specific_scores.filter(actual_score=1).count()
-    count_0 = main_scores.filter(actual_score=0).count() + specific_scores.filter(actual_score=0).count()
+    # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
+    score_count = {3: 0, 
+                   2: 0, 
+                   1: 0, 
+                   0: 0}
 
-    # คำนวณคะแนน
-    score_3_total = count_3 * 3
-    score_2_total = count_2 * 2
-    score_1_total = count_1 * 1
-    score_0_total = count_0 * 0
+    # คำนวณคะแนนสำหรับ main competencies
+    main_competency_total = 0
+    for score in main_scores:
+        calculated_score = calculate_competency_score(score.actual_score, score.mc_id.mc_num)  # ส่ง expected_score ด้วย
+        score_count[calculated_score] += 1
+        main_competency_total += calculated_score
+
+    # คำนวณคะแนนสำหรับ specific competencies
+    specific_competency_total = 0
+    for score in specific_scores:
+        calculated_score = calculate_competency_score(score.actual_score, score.sc_id.sc_num)  # ส่ง expected_score ด้วย
+        score_count[calculated_score] += 1
+        specific_competency_total += calculated_score
+
+    # คำนวณคะแนนสำหรับ administrative competencies (ถ้ามี)
+    administrative_competency_total = 0
+    if administrative_competencies is not None:
+        for score in administrative_scores:
+            calculated_score = calculate_competency_score(score.actual_score, score.uceo_num)
+            score_count[calculated_score] += 1
+            administrative_competency_total += calculated_score
+
+    # คำนวณคะแนนในแต่ละกรณี (คูณ 3, 2, 1 และ 0)
+    score_3_total = score_count[3] * 3
+    score_2_total = score_count[2] * 2
+    score_1_total = score_count[1] * 1
+    score_0_total = score_count[0] * 0
+
+    total_score = total_score if 'total_score' is locals() else 0.0
+    total_max_num = total_max_num if 'total_max_num' is locals() else 0.0
+
+    total_score = float(total_score) if total_score is not None else 0.0
+    total_max_num = float(total_max_num) if total_max_num is not None else 0.0
+
     total_score = score_3_total + score_2_total + score_1_total + score_0_total
 
     # คำนวณค่ารวมของคะแนนที่คาดหวังสำหรับแต่ละตาราง
@@ -3564,8 +3593,10 @@ def print_evaluation_pdf(request, evaluation_id):
     # คำนวณคะแนนจากสูตร
     total_max_num = main_max_num + specific_max_num + administrative_max_num
 
-    calculated_score = 0
-    if total_max_num > 0:
+    calculated_score = calculated_score if 'calculated_score' in locals() else 0.0
+
+    calculated_score = float(calculated_score) if calculated_score is not None else 0.0
+    if total_max_num > 0.0:
         calculated_score = (total_score / total_max_num) * 30
 
 
@@ -3583,7 +3614,17 @@ def print_evaluation_pdf(request, evaluation_id):
     pdfmetrics.registerFont(TTFont('Sarabun', 'static/fonts/THSarabunNew.ttf'))
     pdfmetrics.registerFont(TTFont('SarabunBold', 'static/fonts/THSarabunNew Bold.ttf'))
 
-    
+    # ตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
+    def check_and_create_new_page(p, current_y, required_height, bottom_margin):
+        if current_y - required_height < bottom_margin:
+            p.showPage()  # ขึ้นหน้าใหม่
+            current_y = height - 70  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
+        return current_y  # คืนค่า current_y ที่ถูกต้อง
+
+    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
+    start_x = 50
+    start_y = height - 70
+    line_height = 20
 
     # ใช้ฟอนต์ภาษาไทย
     p.setFont("SarabunBold", 24)
@@ -3672,11 +3713,8 @@ def print_evaluation_pdf(request, evaluation_id):
 
     p.drawString(50, height - 580, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
    
-    p.showPage() 
+    p.showPage()
 
-    # กำหนดฟอนต์ภาษาไทย
-    p.setFont("Sarabun", 12)
-    
     if selected_group:
         fields = wl_field.objects.filter(group_detail__g_id=selected_group).distinct()
     else:
@@ -3694,21 +3732,22 @@ def print_evaluation_pdf(request, evaluation_id):
     # ตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
     def check_and_create_new_page(p, current_y, required_height, bottom_margin):
         if current_y - required_height < bottom_margin:
-            p.showPage()  # ขึ้นหน้าใหม่
-            current_y = height - 70  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
+            p.showPage()  # ขึ้นหน้าใหม่ถ้าพื้นที่ไม่พอ
+            current_y = height - 100  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
         return current_y  # คืนค่า current_y ที่ถูกต้อง
-    
-    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
 
-    # กำหนดตำแหน่งเริ่มต้น
+    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
     start_x = 50
     start_y = height - 70
     line_height = 20
 
-    p.setFont("SarabunBold", 16)
-    # หัวตาราง
-    p.drawString(50, height - 50, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
+    # ตรวจสอบการขึ้นหน้าใหม่ก่อนแสดงหัวข้อ
+    start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
 
+    # แสดงหัวข้อ
+    p.setFont("SarabunBold", 16)
+    p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
+    start_y -= line_height  # ลดตำแหน่ง Y หลังจากวาดข้อความ
     # สร้างตาราง
     data = [["ภาระงาน/กิจกรรม/โครงการ/งาน", "จำนวน", "ภาระงาน", "รวมภาระงาน", "หมายเหตุ"]]
 
@@ -3716,53 +3755,62 @@ def print_evaluation_pdf(request, evaluation_id):
     for field in fields:
         field_counter += 1
         total_for_field = 0
-        data.append([Paragraph(f"{field_counter}.{field.f_name}", styleN), "", "", "", ""])
+        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleN), "", "", "", ""])
 
         subfield_counter = 0
         for subfield in subfields.filter(f_id=field):
             subfield_counter += 1
-            data.append([Paragraph(f"{field_counter}.{subfield_counter}.{subfield.sf_name}", styleN), "", "", "", ""])
+            data.append([Paragraph(f"{field_counter}.{subfield_counter}. {subfield.sf_name}", styleN), "", "", "", ""])
 
             selection_counter = 0
             for selection in workload_selections.filter(sf_id=subfield):
                 selection_counter += 1
                 data.append([
-                    Paragraph(f"{field_counter}.{subfield_counter}.{selection_counter}.{selection.selected_name}", styleN),
+                    Paragraph(f"{field_counter}.{subfield_counter}.{selection_counter}. {selection.selected_name}", styleN),
                     str(selection.selected_num),
-                    str(selection.selected_workload),
-                    str(selection.calculated_workload),
+                    f"{selection.selected_workload:.1f}",  # แสดงทศนิยม 1 ตำแหน่ง
+                    f"{selection.calculated_workload:.1f}",  # แสดงทศนิยม 1 ตำแหน่ง
                     selection.notes or ""
                 ])
                 total_for_field += selection.calculated_workload
+            
+    data.append(["รวมคะแนนสำหรับภาระงานทั้งหมด", "", "", f"{total_workload:.1f}", ""])  # แสดงทศนิยม 1 ตำแหน่ง
+    data.append(["คะแนนผลสัมฤทธิ์ของงาน", "", "", f"{achievement_work:.1f}", ""])  # แสดงทศนิยม 1 ตำแหน่ง
 
-        data.append(["", "", Paragraph(f"รวมคะแนน:", styleN), str(total_for_field), ""])
+    # ฟังก์ชันแบ่งข้อมูลเป็นชุด ๆ
+    def chunk_data(data, chunk_size):
+        """แบ่งข้อมูลออกเป็นชุด ๆ ตาม chunk_size"""
+        for i in range(0, len(data), chunk_size):
+            yield data[i:i + chunk_size]
 
-    data.append(["รวมคะแนนสำหรับภาระงาน", "", "", str(total_workload), ""])
-    data.append(["คะแนนผลสัมฤทธิ์ของงาน", "", "", str(achievement_work), ""])
+    # ฟังก์ชันสร้างตาราง
+    def draw_table(p, data, start_x, start_y, max_rows_per_page):
+        table_data = data[:max_rows_per_page]  # ดึงเฉพาะข้อมูลที่พอดีกับหน้า
+        table = Table(table_data, colWidths=[9.75 * cm, 1.75 * cm, 1.75 * cm, 1.75 * cm, 2 * cm])
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # จัดชิดซ้ายสำหรับคอลัมน์แรก
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONT', (0, 0), (-1, -1), 'Sarabun'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
 
-    # สร้างตารางใน PDF
-    table = Table(data, colWidths=[9 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # จัดชิดซ้ายสำหรับคอลัมน์แรก
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # จัดกึ่งกลางแนวตั้งข้อความทั้งหมด
-        ('FONT', (0, 0), (-1, -1), 'Sarabun'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-    ]))
+        # วาดตารางและลดตำแหน่ง Y
+        w, h = table.wrap(width, height)  # คำนวณขนาดตาราง
+        table.drawOn(p, start_x, start_y - h)  # วาดตารางที่ตำแหน่ง start_y ลดด้วย h
+        return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
-    # ตรวจสอบว่าตำแหน่ง y เพียงพอสำหรับวางตารางหรือไม่
-    w, h = table.wrap(width, height)
+    # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
+    max_rows_per_page = 35  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
-    # วางตารางส่วนแรกลงในหน้า
-    table.drawOn(p, start_x, start_y - h)
-    start_y -= h
+    # วาดตารางในแต่ละหน้า
+    for chunk in chunk_data(data, max_rows_per_page):
+        start_y = height - 100  # กำหนดจุดเริ่มต้นของหน้าใหม่
+        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
-  
-    
-
-    p.showPage()
 
     # ตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
     def check_and_create_new_page(p, current_y, required_height, bottom_margin):
@@ -3844,29 +3892,363 @@ def print_evaluation_pdf(request, evaluation_id):
     # เพิ่มช่องว่าง
     start_y -= 2 * line_height
     p.drawString(start_x, start_y,"การประเมิน")
-    # เพิ่มช่องว่าง
-    start_y -= 2 * line_height
-
+    start_y -= line_height
     # สร้างตารางการประเมินคะแนน
     data = [
         ["จำนวนสมรรถนะ", "คูณ (X)", "คะแนน"],
-        [str(count_3), "3", str(score_3_total)],
-        [str(count_2), "2", str(score_2_total)],
-        [str(count_1), "1", str(score_1_total)],
-        [str(count_0), "0", str(score_0_total)],
+        [str(score_count[3]), "3", str(score_3_total)],
+        [str(score_count[2]), "2", str(score_2_total)],
+        [str(score_count[1]), "1", str(score_1_total)],
+        [str(score_count[0]), "0", str(score_0_total)],
+        ["", "ผลรวมคะแนน", str(total_score)],
     ]
+
+    # ฟังก์ชันสำหรับสร้างตารางใน PDF
+    def draw_table(p, data, start_x, start_y):
+        table = Table(data, colWidths=[9 * cm, 4 * cm, 4 * cm])  # กำหนดขนาดคอลัมน์
+        table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONT', (0, 0), (-1, -1), 'Sarabun'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ]))
+
+        # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
+        w, h = table.wrap(width, height)
+        start_y = check_and_create_new_page(p, start_y, h, bottom_margin)
+
+        # วางตาราง
+        table.drawOn(p, start_x, start_y - h)
+        return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
 
     # วางตารางการประเมินคะแนน
     start_y = draw_table(p, data, start_x, start_y)
 
+        # เพิ่มช่องว่าง
+    start_y -= 2 * line_height
+    p.drawString(start_x, start_y, f"ผลรวมคะแนน {total_score:.1f} / ผลรวมระดับสมรรถนะที่คาดหวัง {total_max_num:.1f} * 30 คะแนนที่ได้: {calculated_score:.1f}")
+    start_y -= line_height
+    # สร้างตารางการประเมินคะแนน
+    data = [
+        ["หลักเกณฑ์การประเมิน"],
+        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน"],
+        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน"],
+        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน"],
+        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน"],
+    ]
+
+    # ฟังก์ชันสำหรับสร้างตารางใน PDF
+    def draw_table(p, data, start_x, start_y):
+        table = Table(data, colWidths=[17 * cm])  # กำหนดขนาดคอลัมน์
+        table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONT', (0, 0), (-1, -1), 'Sarabun'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ]))
+
+        # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
+        w, h = table.wrap(width, height)
+        start_y = check_and_create_new_page(p, start_y, h, bottom_margin)
+
+        # วางตาราง
+        table.drawOn(p, start_x, start_y - h)
+        return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
+
+    # วางตารางการประเมินคะแนน
+    start_y = draw_table(p, data, start_x, start_y)
+
+    p.showPage()
+
+     # คำนวณคะแนนต่าง ๆ
+    achievement_work = evaluation.achievement_work or 0
+    mc_score = evaluation.mc_score or 0
+    total_score = achievement_work + mc_score
+
+    # กำหนดระดับผลการประเมิน
+    if total_score >= 90:
+        level = 'ดีเด่น'
+    elif total_score >= 80:
+        level = 'ดีมาก'
+    elif total_score >= 70:
+        level = 'ดี'
+    elif total_score >= 60:
+        level = 'พอใช้'
+    else:
+        level = 'ต้องปรับปรุง'
+
+
+    # ตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
+    def check_and_create_new_page(p, current_y, required_height, bottom_margin):
+        if current_y - required_height < bottom_margin:
+            p.showPage()  # ขึ้นหน้าใหม่
+            current_y = height - 70  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
+        return current_y  # คืนค่า current_y ที่ถูกต้อง
+    
+    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
+    start_x = 50
+    start_y = height - 70
+    line_height = 20
+
+    p.setFont("SarabunBold", 16)
+    p.drawString(50, height - 50, "ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ")
+
+    data = [
+        ["องค์ประกอบการประเมิน","คะแนนเต็ม","คะแนนที่ได้","หมายเหตุ"],
+        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{achievement_work:.1f}", f"{evaluation.remark_achievement}"],
+        ["องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)", "30", f"{mc_score:.1f}", f"{evaluation.remark_mc}"],
+        ["องค์ประกอบอื่น ๆ (ถ้ามี)", "", "", f"{evaluation.remark_other}"],
+        ["รวม", "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
+    ]
+
+    # ฟังก์ชันสำหรับสร้างตารางใน PDF
+    def draw_table(p, data, start_x, start_y):
+        table = Table(data, colWidths=[8 * cm,2 * cm,2 * cm,5 * cm])  # กำหนดขนาดคอลัมน์
+        table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONT', (0, 0), (-1, -1), 'Sarabun'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ]))
+
+        # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
+        w, h = table.wrap(width, height)
+        start_y = check_and_create_new_page(p, start_y, h, bottom_margin)
+
+        # วางตาราง
+        table.drawOn(p, start_x, start_y - h)
+        return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
+
+    # วางตารางการประเมินคะแนน
+    start_y = draw_table(p, data, start_x, start_y)
+
+    # แสดงระดับผลการประเมินในแบบ radio button (เลือกแล้ว)
+    p.drawString(50, height - 200, "ระดับผลการประเมิน:")
+    
+    levels = [
+        ("ดีเด่น (90 - 100)", total_score >= 90),
+        ("ดีมาก (80 - 89.99)", 80 <= total_score < 90),
+        ("ดี (70 - 79.99)", 70 <= total_score < 80),
+        ("พอใช้ (60 - 69.99)", 60 <= total_score < 70),
+        ("ต้องปรับปรุง (ต่ำกว่า 60)", total_score < 60),
+    ]
+
+    # วาด radio button (ข้อความแสดงผลการประเมิน)
+    start_y = height - 230
+    for level_text, is_selected in levels:
+        p.circle(55, start_y, 5, fill=1 if is_selected else 0)  # วาดวงกลม
+        p.drawString(70, start_y - 5, level_text)  # วาดข้อความข้าง ๆ
+        start_y -= 20
+
+    p.showPage()
+
+    formset_data = PersonalDiagram.objects.filter(uevr_id=evaluation)
+
+    # ฟังก์ชันตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
+    def check_and_create_new_page(p, current_y, required_height, bottom_margin):
+        if current_y - required_height < bottom_margin:
+            p.showPage()  # ขึ้นหน้าใหม่
+            current_y = height - 70  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
+        return current_y  # คืนค่า current_y ที่ถูกต้อง
+
+    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
+    start_x = 50
+    start_y = height - 70
+    line_height = 20
+
+    p.setFont("SarabunBold", 16)
+
+    # แสดงหัวข้อ "ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล"
+    start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
+    p.drawString(start_x, start_y, "ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล")
+    start_y -= line_height
+
+    # สร้างตารางที่มีฟิลด์ข้อมูลจาก formset_data
+    data = [["ความรู้/ทักษะ/สมรรถนะ", "วิธีการพัฒนา", "ช่วงเวลาที่ต้องการพัฒนา"]]
+
+    for item in formset_data:
+        data.append([item.skill_evol, item.dev, item.dev_time])
+
+    table = Table(data, colWidths=[6 * cm, 6 * cm, 5 * cm])
+    table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ('FONT', (0, 0), (-1, -1), 'Sarabun'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+    ]))
+
+    # คำนวณความสูงของตารางและตรวจสอบว่ามีพื้นที่เพียงพอหรือไม่
+    table_width, table_height = table.wrap(width, height)
+    start_y = check_and_create_new_page(p, start_y, table_height, bottom_margin)
+    table.drawOn(p, start_x, start_y - table_height)
+    start_y -= table_height + line_height
+
+    start_y -= 2* line_height
+
+    # ความเห็นเพิ่มเติมของผู้ประเมิน
+    start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
+    p.drawString(start_x, start_y, "ความเห็นเพิ่มเติมของผู้ประเมิน")
+    start_y -= line_height
+
+    # ส่วนแสดงความคิดเห็น
+    p.drawString(start_x, start_y, "1) จุดเด่น และ/หรือ สิ่งที่ควรปรับปรุงแก้ไข")
+    start_y -= line_height
+    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.drawString(start_x + 5, start_y -20 , f"{evaluation.improved if evaluation.improved else ''}")
+    start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น
+
+    p.drawString(start_x, start_y, "2) ข้อเสนอแนะเกี่ยวกับวิธีส่งเสริมและพัฒนา")
+    start_y -= line_height
+    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.drawString(start_x + 5, start_y -20 , f"{evaluation.suggestions if evaluation.suggestions else ''}")
+    start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น
+
+    start_y -=  line_height
+
+    p.line(start_x , start_y+20, start_x + 500, start_y+20)
+    # ลายมือชื่อ
+    start_y = check_and_create_new_page(p, start_y, 60, bottom_margin)
+    p.drawString(start_x + 50, start_y, "ผู้ประเมินและผู้รับการประเมินได้ตกลงร่วมกันและเห็นพ้องกันแล้ว (ระบุข้อมูลให้ครบ)")
+    start_y -= line_height
+    p.drawString(start_x + 100, start_y, "จึงลงลายมือชื่อไว้เป็นหลักฐาน (ลงนามเมื่อจัดทำข้อตกลง)")
+    start_y -= 2* line_height
+
+    p.drawString(start_x+2, start_y, "ลายมือชื่อ.................................................(ผู้ประเมิน)")
+    p.drawString(start_x + 240, start_y, "ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    start_y -= line_height
+    
+    p.drawString(start_x + 25, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    p.line(start_x , start_y-20, start_x + 500, start_y-20)
+    p.line(start_x , start_y+50, start_x + 500, start_y+50)
+    p.line(start_x, start_y-20, start_x, start_y+100)
+    p.line(start_x+500, start_y-20, start_x+500, start_y+100)
+    p.line(start_x+236, start_y-20, start_x+236, start_y+50)
+
+    p.showPage()
+
+
+    # ฟังก์ชันตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่ (เช็คระยะท้ายกระดาษ)
+    def check_and_create_new_page(p, current_y, required_height, bottom_margin):
+        if current_y - required_height < bottom_margin:
+            p.showPage()  # ขึ้นหน้าใหม่
+            current_y = height - 70  # รีเซ็ตตำแหน่ง current_y สำหรับหน้าใหม่
+        return current_y  # คืนค่า current_y ที่ถูกต้อง
+
+    bottom_margin = 50  # ระยะห่างจากท้ายกระดาษ
+    start_x = 50
+    start_y = height - 70
+    line_height = 20
+
+    p.setFont("SarabunBold", 16)
+
+    start_y = check_and_create_new_page(p, start_y, 60, bottom_margin)
+
+    p.drawString(start_x, start_y, "ส่วนที่ 5 การรับทราบผลการประเมิน")
+    start_y -=2 * line_height
+    p.setFont("SarabunBold", 14)
+    p.line(start_x , start_y+15, start_x + 480, start_y+15)
+    p.drawString(start_x +5 , start_y, "ผู้รับการประเมิน :")
+    p.line(start_x , start_y-10, start_x + 480, start_y-10)
+    start_y -=2* line_height
+    p.setFont("Sarabun", 14)
+
+    p.drawString(start_x + 5, start_y-10, "☐ ได้รับทราบผลการประเมิน")
+    p.drawString(start_x + 20 , start_y-25, "และแผนพัฒนาการปฏิบัติราชการรายบุคคลแล้ว")
+
+    p.drawString(start_x + 300, start_y, "ลงชื่อ..........................................................")
+    p.drawString(start_x + 300, start_y-20, "ตำแหน่ง.....................................................")
+    p.drawString(start_x + 300, start_y-40, "วันที่...........................................................")
+    p.line(start_x , start_y+55, start_x, start_y-55)
+    p.line(start_x+280 , start_y+55, start_x + 280, start_y-55)
+    p.line(start_x+480 , start_y+55, start_x + 480, start_y-55)
+    p.line(start_x , start_y-55, start_x + 480, start_y-55)
+    start_y -= 2* line_height
+    start_y -= 2* line_height
+    start_y -=  line_height
+
+    p.setFont("SarabunBold", 14)
+    p.line(start_x , start_y+15, start_x + 480, start_y+15)
+    p.drawString(start_x +5 , start_y, "ผู้ประเมิน :")
+    p.line(start_x , start_y-10, start_x + 480, start_y-10)
+    start_y -=2* line_height
+    p.setFont("Sarabun", 14)
+
+    p.drawString(start_x + 5, start_y, "☐ ได้แจ้งผลการประเมินและผู้รับการประเมินได้ลงนามรับทราบ")
+    p.drawString(start_x + 5 , start_y-25, "☐ ได้แจ้งผลการประเมินเมื่อวันที่.................................................")
+    p.drawString(start_x + 20 , start_y-45, "แต่ผู้รับการประเมินไม่ลงนามรับทราบผลการประเมิน")
+    p.drawString(start_x + 20 , start_y-65, "โดยมี.......................................................................เป็นพยาน")
+
+    p.drawString(start_x + 300, start_y-10, "ลงชื่อ..........................................................")
+    p.drawString(start_x + 300, start_y-30, "ตำแหน่ง.....................................................")
+    p.drawString(start_x + 300, start_y-50, "วันที่...........................................................")
+    p.line(start_x , start_y+55, start_x, start_y-80)
+    p.line(start_x+280 , start_y+55, start_x + 280, start_y-80)
+    p.line(start_x+480 , start_y+55, start_x + 480, start_y-80)
+    p.line(start_x , start_y-80, start_x + 480, start_y-80)
+    start_y -= 2* line_height
+    start_y -= 2* line_height
+    start_y -= 2* line_height
+
+    p.setFont("SarabunBold", 16)
+
+    start_y = check_and_create_new_page(p, start_y, 60, bottom_margin)
+
+    p.drawString(start_x, start_y, "ส่วนที่ 6 ความเห็นของผู้บังคับบัญชาเหนือขึ้นไป")
+    start_y -= 2* line_height
+
+    p.setFont("SarabunBold", 14)
+    p.line(start_x , start_y+15, start_x + 480, start_y+15)
+    p.drawString(start_x +5 , start_y, "ผู้บังคับบัญชาเหนือขึ้นไป :")
+    p.line(start_x , start_y-10, start_x + 480, start_y-10)
+    start_y -=2* line_height
+    p.setFont("Sarabun", 14)
+
+    p.drawString(start_x + 5, start_y, "☐ เห็นด้วยกับผลการประเมิน")
+    p.drawString(start_x + 5 , start_y-25, "☐ มีความเห็นแตกต่าง ดังนี้")
+    p.drawString(start_x + 20 , start_y-45, ".........................................................................................................")
+    p.drawString(start_x + 20 , start_y-65, ".........................................................................................................")
+
+    p.drawString(start_x + 300, start_y-10, "ลงชื่อ..........................................................")
+    p.drawString(start_x + 300, start_y-30, "ตำแหน่ง.....................................................")
+    p.drawString(start_x + 300, start_y-50, "วันที่...........................................................")
+    p.line(start_x , start_y+55, start_x, start_y-80)
+    p.line(start_x+280 , start_y+55, start_x + 280, start_y-80)
+    p.line(start_x+480 , start_y+55, start_x + 480, start_y-80)
+    p.line(start_x , start_y-80, start_x + 480, start_y-80)
+    start_y -= 2* line_height
+    start_y -= 2* line_height
+    start_y -= 2* line_height
+
+    p.setFont("SarabunBold", 14)
+    p.line(start_x , start_y+15, start_x + 480, start_y+15)
+    p.drawString(start_x +5 , start_y, "ผู้บังคับบัญชาเหนือขึ้นไปอีกชั้นหนึ่ง (ถ้ามี) :")
+    p.line(start_x , start_y-10, start_x + 480, start_y-10)
+    start_y -=2* line_height
+    p.setFont("Sarabun", 14)
+
+    p.drawString(start_x + 5, start_y, "☐ เห็นด้วยกับผลการประเมิน")
+    p.drawString(start_x + 5 , start_y-25, "☐ มีความเห็นแตกต่าง ดังนี้")
+    p.drawString(start_x + 20 , start_y-45, ".........................................................................................................")
+    p.drawString(start_x + 20 , start_y-65, ".........................................................................................................")
+
+    p.drawString(start_x + 300, start_y-10, "ลงชื่อ..........................................................")
+    p.drawString(start_x + 300, start_y-30, "ตำแหน่ง.....................................................")
+    p.drawString(start_x + 300, start_y-50, "วันที่...........................................................")
+    p.line(start_x , start_y+55, start_x, start_y-80)
+    p.line(start_x+280 , start_y+55, start_x + 280, start_y-80)
+    p.line(start_x+480 , start_y+55, start_x + 480, start_y-80)
+    p.line(start_x , start_y-80, start_x + 480, start_y-80)
+    start_y -= 2* line_height
 
     
-
-    start_y -= line_height
-    p.drawString(start_x, start_y, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
-    start_y -= line_height
-
-
 
 
 

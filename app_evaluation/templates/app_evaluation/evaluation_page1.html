@@ -580,6 +580,9 @@
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
                                             </form>
                                             {% endif %}
+                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                                <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
+                                            </form>
 
 </div>
 
