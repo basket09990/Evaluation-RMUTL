@@ -202,6 +202,47 @@
         pointer-events: none;
     }
 
+    .form-table4 {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .form-table4 th, .form-table4 td {
+        padding: 10px;
+        border: 1px solid #ddd;
+    }
+
+    .form-table4 th {
+        background-color: #f0f0f0;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .form-table4 td input {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+        border-radius: 4px;
+        border: none;
+        outline: none;
+        background-color: transparent;
+        cursor: not-allowed;
+        pointer-events: none;
+        text-align: center;
+    }
+
+    .form-table4 td select {
+        border: none;
+        outline: none;
+        background-color: transparent;
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
 
 
 
@@ -622,9 +663,18 @@
                                     ตรวจสอบการประเมินแล้ว
                                 </button>
                             </form>
-                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
-                                <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
-                            </form>
+                            <table>
+                                <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
                         </div>
                         {% elif user.groups.all.0.name == "Evaluator" %}
 
@@ -702,8 +752,8 @@
                     
                                             {% if evr_round.evr_round == 1 %}
                                        
-                                            <div>
-                                                <table class="form-table2">
+                                            <div >
+                                                <table class="form-table4">
                                                     <h4>บันทึกการปฏิบัติงาน</h4>
                                                     <thead>
                                                         <tr>
@@ -774,7 +824,7 @@
                                             
                                             {% elif evr_round.evr_round == 2 %}
                                             <div>
-                                                <table class="form-table2">
+                                                <table class="form-table4">
                                                     <h4>บันทึกการปฏิบัติงาน</h4>
                                                     <thead>
                                                         <tr>
@@ -874,7 +924,7 @@
                                                         ตรวจสอบการประเมินแล้ว
                                                     </button>
                                                 </form>
-                                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
                                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                                 </form>
                                             </div>
@@ -1123,9 +1173,18 @@
                                     ตรวจสอบการประเมินแล้ว
                                 </button>
                             </form>
-                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
-                                <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
-                            </form>
+                            <table>
+                                <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
                         </div>
                         {% endif %} 
 

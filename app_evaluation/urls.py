@@ -125,6 +125,7 @@ urlpatterns = [
 
     path('evaluation/<int:evaluation_id>/pdf/',  views.render_pdf_view, name='render_pdf_view'),
     path('evaluation/<int:evaluation_id>/print_pdf/',  views.print_evaluation_pdf, name='print_evaluation_pdf'),
+    path('evaluation/<int:evaluation_id>/print_pdf_eva/',  views.print_evaluation_pdf_eva, name='print_evaluation_pdf_eva'),
 
 
     path('evaluation/export/<int:evaluation_id>/', views.export_html_to_excel, name='export_html_to_excel'),
@@ -157,6 +158,8 @@ urlpatterns = [
 
     path('get-subfields/<int:f_id>/', views.get_subfields, name='get_subfields'),
     path('get-criteria/<int:sf_id>/', views.get_criteria, name='get_criteria'),
+
+    path('auto-save-workload/', views.auto_save_workload, name='auto_save_workload'),
 
 
     path('eval_2/', views.eval_2, name='eval_2'),

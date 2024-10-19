@@ -277,7 +277,7 @@ class PersonalDiagram(models.Model):
     uevr_id = models.ForeignKey(user_evaluation, on_delete=models.CASCADE)
     skill_evol = models.TextField(default="", blank=True, null=True)
     dev = models.TextField(default="", blank=True, null=True)
-    dev_time = models.IntegerField(default=None, blank=True, null=True)
+    dev_time = models.TextField(default="", blank=True, null=True)
 
 class user_evaluation_score(models.Model):
     ues_id = models.AutoField(primary_key=True)
