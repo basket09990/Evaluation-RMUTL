@@ -312,7 +312,6 @@
             <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">จำนวน</th>
             <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">ภาระงาน</th>
             <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">รวมภาระงาน</th>
-            <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">ภาระงานที่แก้ไข</th>
             <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">หมายเหตุ</th>
             <th style="padding: 10px; border: 1px solid #ddd; background-color: #f0f0f0; font-weight: bold; color: #333;">หลักฐาน</th>
         </tr>
@@ -329,7 +328,6 @@
                 <td style="padding: 10px; border: 1px solid #ddd;">
                     <script>document.write(++fieldCounter);</script>. {{ field.f_name }}
                 </td>
-                <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
@@ -356,7 +354,6 @@
                         <td style="padding: 10px; border: 1px solid #ddd;"></td>
                         <td style="padding: 10px; border: 1px solid #ddd;"></td>
                         <td style="padding: 10px; border: 1px solid #ddd;"></td>
-                        <td style="padding: 10px; border: 1px solid #ddd;"></td>
                     </tr>
     
                     <script>selectionCounter = 0;</script>
@@ -374,11 +371,6 @@
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_num }}</td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_workload }}</td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.calculated_workload|floatformat:1 }}</td>
-                            <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">
-                                {% if selection.selected_workload_edit != 0 %}
-                                    {{ selection.selected_workload_edit }}
-                                {% endif %}
-                            </td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.notes }}</td>
                             <td  style="padding: 10px; border: 1px solid #ddd;">
                                 <ul style="list-style-type: none;">
@@ -413,7 +405,6 @@
                 </td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
-                <td style="padding: 10px; border: 1px solid #ddd;"></td>
             </tr>
         {% endfor %}
         
@@ -425,7 +416,6 @@
             <td id="overall-total" style="text-align: center; font-weight: bold; padding: 10px; border: 1px solid #ddd;">
                 0.00
             </td>
-            <td style="padding: 10px; border: 1px solid #ddd;"></td>
             <td style="padding: 10px; border: 1px solid #ddd;"></td>
             <td style="padding: 10px; border: 1px solid #ddd;"></td>
         </tr>
