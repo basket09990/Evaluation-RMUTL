@@ -770,7 +770,7 @@ def evaluation_page2(request, evaluation_id):
 
     # บันทึกค่าที่คำนวณใน evaluation
     evaluation.c_wl = total_workload
-    evaluation.achievement_work = round(achievement_work, 2)
+    evaluation.achievement_work = round(achievement_work, 1)
     evaluation.save()
 
 
@@ -1722,9 +1722,9 @@ def evaluation_page_from_2(request, evaluation_id):
 
     # บันทึกค่าที่คำนวณใน evaluation
     evaluation.c_wl = total_workload
-    evaluation.achievement_work = round(achievement_work, 2)
+    evaluation.achievement_work = round(achievement_work, 1)
     evaluation.c_gtt = total_workload_edit
-    evaluation.c_sumwl = round(c_sumwl, 2)
+    evaluation.c_sumwl = round(c_sumwl, 1)
     evaluation.save()
 
 

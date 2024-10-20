@@ -815,45 +815,48 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const fieldTotals = {};  // เก็บผลรวมของ calculated_workload
-        const fieldEditedTotals = {};  // เก็บผลรวมของ edited_workload
-        let overallTotal = 0;  // ผลรวมของ calculated_workload ทั้งหมด
-        let overallEditedTotal = 0;  // ผลรวมของ edited_workload ทั้งหมด
-    
-        // รวมค่า calculated_workload และ edited_workload สำหรับแต่ละ field
+        const fieldTotals = {};
+        let overallTotal = 0;
+
+        // รวมค่า calculated_workload สำหรับแต่ละ field
         document.querySelectorAll('.selection-row').forEach(row => {
             const fieldId = row.getAttribute('data-field-id');
             const calculatedWorkload = parseFloat(row.getAttribute('data-calculated-workload')) || 0;
-            const editedWorkload = parseFloat(row.getAttribute('data-edited-workload')) || 0;
-    
+
             // สะสมคะแนนรวมในแต่ละ field
             if (!fieldTotals[fieldId]) {
                 fieldTotals[fieldId] = 0;
-                fieldEditedTotals[fieldId] = 0;
             }
-    
+
             fieldTotals[fieldId] += calculatedWorkload;
-            fieldEditedTotals[fieldId] += editedWorkload;
-            overallTotal += calculatedWorkload;  // สะสมคะแนนรวมทั้งหมดของ calculated_workload
-            overallEditedTotal += editedWorkload;  // สะสมคะแนนรวมทั้งหมดของ edited_workload
+            overallTotal += calculatedWorkload; // สะสมคะแนนรวมทั้งหมด
         });
-    
+
+        // แสดงผลรวมในแต่ละ field
         Object.keys(fieldTotals).forEach(fieldId => {
             const totalCell = document.querySelector(`.field-total-row[data-field-id="${fieldId}"] .field-total`);
-            const editedTotalCell = document.querySelector(`.field-total-row[data-field-id="${fieldId}"] .field-edited-total`);
             if (totalCell) {
-                totalCell.textContent = fieldTotals[fieldId].toFixed(2);  // แสดงผลรวมของ calculated_workload
-            }
-            if (editedTotalCell) {
-                editedTotalCell.textContent = fieldEditedTotals[fieldId].toFixed(2);  // แสดงผลรวมของ edited_workload
+                totalCell.textContent = fieldTotals[fieldId].toFixed(2);
             }
         });
-        
+
         // แสดงคะแนนรวมทั้งหมด
-        document.getElementById('overall-total').textContent = overallTotal.toFixed(2);  // ผลรวมทั้งหมดของ calculated_workload
-        document.getElementById('overall-edited-total').textContent = overallEditedTotal.toFixed(2);  // ผลรวมทั้งหมดของ edited_workload
+        document.getElementById('overall-total').textContent = overallTotal.toFixed(2);
     });
+    function openPopup(url) {
+        // ขนาดของ pop-up window
+        const width = 800;
+        const height = 600;
+        
+        // กำหนดตำแหน่งตรงกลางของหน้าจอ
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
     
+        // เปิดหน้าต่าง pop-up
+        window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
+    }
+
+
 </script>
 
 {% endblock %}
