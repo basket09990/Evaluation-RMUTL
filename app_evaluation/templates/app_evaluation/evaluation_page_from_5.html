@@ -404,17 +404,26 @@
             </tr>
             <tr>
                 <td style="text-align: center; padding-top:10px;">
-                    ลายมือชื่อ.................................................(ผู้ประเมิน)
+                    ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">&nbsp;</span>(ผู้ประเมิน)
                     <div class="date-container" style="text-align: center;">
-                        วันที่..........เดือน...................พ.ศ. ............
+                        วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">&nbsp;</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">&nbsp;</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">&nbsp;</span>
                     </div>
                 </td>
-                <td style="text-align: center; padding-top:10px;">
-                    ลายมือชื่อ.................................................(ผู้รับการประเมิน)
-                    <div class="date-container" style="text-align: center;" padding-top:10px;>
-                        วันที่..........เดือน...................พ.ศ. ............
-                    </div>
-                </td>
+                {% if evaluation.full_name is None %}
+                    <td style="text-align: center; padding-top:10px;">
+                        ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">&nbsp;</span>(ผู้รับการประเมิน)
+                        <div class="date-container" style="text-align: center;" padding-top:10px;>
+                            วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">&nbsp;</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">&nbsp;</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">&nbsp;</span>
+                        </div>
+                    </td>
+                {% else %}
+                    <td style="text-align: center; padding-top:10px;">
+                        ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">{{ evaluation.full_name }}</span>(ผู้รับการประเมิน)
+                        <div class="date-container" style="text-align: center;" padding-top:10px;>
+                            วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">{{ evaluation.start_day }}</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">{{ evaluation.start_month }}</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">{{ evaluation.start_year }}</span>
+                        </div>
+                    </td>
+                {% endif %}
             </tr>
         </table>
         

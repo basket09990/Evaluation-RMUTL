@@ -133,6 +133,11 @@ class GroupSelectionForm(forms.ModelForm):
         
 
 class UserEvaluationForm(forms.ModelForm):
+    full_name = forms.CharField(label="ชื่อ-นามสกุล", max_length=255)
+    day = forms.IntegerField(label="วัน", min_value=1, max_value=31)
+    month = forms.IntegerField(label="เดือน", min_value=1, max_value=12)
+    year = forms.IntegerField(label="ปี", min_value=1900, max_value=2100)
+
     class Meta:
         model = user_evaluation
         fields = [
@@ -156,6 +161,22 @@ class UserEvaluationForm(forms.ModelForm):
             'improved': forms.Textarea(attrs={'placeholder': 'ระบุจุดเด่น หรือสิ่งที่ควรปรับปรุงแก้ไข'}),
             'suggestions': forms.Textarea(attrs={'placeholder': 'ระบุข้อเสนอแนะเกี่ยวกับการส่งเสริมและพัฒนา'}),
         }
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # บันทึกข้อมูล "ชื่อ-นามสกุล" และวันที่ใน instance
+        full_name = self.cleaned_data['full_name']
+        day = self.cleaned_data['day']
+        month = self.cleaned_data['month']
+        year = self.cleaned_data['year']
+        instance.full_name = full_name
+        instance.start_day = day
+        instance.start_month = month
+        instance.start_year = year
+        
+        if commit:
+            instance.save()
+        return instance
 
 class UserEvidentForm(forms.ModelForm):
     class Meta:

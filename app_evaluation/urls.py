@@ -52,6 +52,7 @@ urlpatterns = [
 
     path('search_evaluations/', views.search_evaluation, name='search_evaluations'),
     path('search_evaluations_2/', views.search_evaluations_2, name='search_evaluations_2'),
+    path('search_evaluations_3/', views.search_evaluations_3, name='search_evaluations_3'),
     path('evaluation/<int:uevr_id>/', views.view_evaluation, name='view_evaluation'),
 
 
@@ -161,6 +162,7 @@ urlpatterns = [
 
     path('auto-save-workload/', views.auto_save_workload, name='auto_save_workload'),
 
+    path('save_full_name_and_current_date/<int:evaluation_id>/', views.save_full_name_and_current_date, name='save_full_name_and_current_date'),
 
     path('eval_2/', views.eval_2, name='eval_2'),
     path('eval_3/', views.eval_3, name='eval_3'),

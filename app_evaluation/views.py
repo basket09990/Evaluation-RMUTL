@@ -49,6 +49,7 @@ from reportlab.platypus import Paragraph,Table, TableStyle
 from reportlab.lib.enums import TA_CENTER
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.utils import timezone
 
 
 
@@ -1313,6 +1314,7 @@ def evaluation_page5(request, evaluation_id):
         'evaluation_id': evaluation_id,
         'profile': profile,
         'selected_group': selected_group,
+        'evaluation':evaluation,
     }
 
     return render(request, 'app_evaluation/evaluation_page5.html', context)
@@ -1437,6 +1439,58 @@ def search_evaluations_2(request):
     }
 
     return render(request, 'app_evaluation/search_evaluations_2.html', context)
+
+@login_required
+def search_evaluations_3(request):
+    query = request.GET.get('q')  # รับค่าค้นหาจาก URL เช่น ?q=คำค้นหา
+    year = request.GET.get('year')  # รับค่าปีจาก URL
+    round = request.GET.get('round')  # รับค่ารอบจาก URL
+    
+    evaluations = user_evaluation.objects.exclude(full_name__isnull=True).exclude(full_name__exact='')
+
+    # ตรวจสอบว่ามีการค้นหาหรือไม่
+    if query:
+        evaluations = evaluations.filter(
+            user__first_name__icontains=query
+        ) | evaluations.filter(
+            user__last_name__icontains=query
+        )
+    
+    # ตรวจสอบว่ามีการกรองตามปีหรือไม่
+    if year:
+        evaluations = evaluations.filter(evr_id__evr_year=year)
+    
+    # ตรวจสอบว่ามีการกรองตามรอบหรือไม่
+    if round:
+        evaluations = evaluations.filter(evr_id__evr_round=round)
+
+    # ตรวจสอบวันที่ปัจจุบันกับ end_date ของ evr_round และอัพเดตสถานะ
+    current_date = timezone.now().date()
+    
+    for evaluation in evaluations:
+        evr_round_obj = evaluation.evr_id
+        
+        # ถ้า end_date เกิน current_date ให้เปลี่ยนสถานะเป็น True
+        if evr_round_obj.end_date and current_date > evr_round_obj.end_date:
+            if not evr_round_obj.evr_status:  # ตรวจสอบสถานะก่อนว่าเป็น False อยู่หรือไม่
+                evr_round_obj.evr_status = True  # หมดเวลา: เปลี่ยนสถานะเป็น True
+                evr_round_obj.save()
+    
+    # เรียงข้อมูลให้ใหม่สุดอยู่ด้านบน โดยใช้ฟิลด์ created_at ในการจัดเรียง
+    evaluations = evaluations.order_by('-created_at')  # เปลี่ยน 'created_at' เป็นฟิลด์เวลาที่เหมาะสม
+
+    # ดึงข้อมูลปีและรอบทั้งหมดเพื่อนำไปแสดงในฟอร์มค้นหา
+    years = user_evaluation.objects.values_list('evr_id__evr_year', flat=True).distinct()
+    rounds = user_evaluation.objects.values_list('evr_id__evr_round', flat=True).distinct()
+
+    context = {
+        'evaluations': evaluations,
+        'query': query,
+        'years': years,
+        'rounds': rounds,
+    }
+
+    return render(request, 'app_evaluation/search_evaluations_3.html', context)
 
 @login_required
 def evaluation_page_from_1(request, evaluation_id):
@@ -2198,6 +2252,7 @@ def evaluation_page_from_5(request, evaluation_id):
         'evaluation_id': evaluation_id,
         'profile': profile,
         'selected_group': selected_group,
+        'evaluation':evaluation,
     }
 
     return render(request, 'app_evaluation/evaluation_page_from_5.html', context)
@@ -3369,9 +3424,42 @@ def evaluation_page_5(request, evaluation_id):
         'form': form,
         'formset': formset,
         'evaluation_id': evaluation_id,
+        'evaluation':evaluation,
     }
     return render(request, 'app_evaluation/evaluation_page_5.html', context)
 
+@login_required
+def save_full_name_and_current_date(request, evaluation_id):
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id, user=request.user)
+    if request.method == 'POST':
+        # ดึงข้อมูลชื่อ-นามสกุลจาก evaluation
+        full_name = f"{evaluation.user.first_name} {evaluation.user.last_name}"
+        
+        # ใช้ timezone.now() เพื่อดึงวันที่ปัจจุบันที่รองรับ timezone
+        current_date = timezone.now()
+
+        # แปลงปีเป็น พ.ศ.
+        thai_year = current_date.year + 543
+
+        # บันทึกค่าลงในฟิลด์ที่แยกเป็น วัน เดือน ปี
+        evaluation.start_day = current_date.day
+        evaluation.start_month = current_date.month
+        evaluation.start_year = thai_year  # บันทึกปีเป็น พ.ศ.
+
+        # บันทึกชื่อเต็มลงในฟิลด์ full_name
+        evaluation.full_name = full_name
+        
+        # บันทึกวันที่ลงใน evaluation (ถ้าอยากบันทึกใน created_at ต้องเปลี่ยนฟิลด์นี้เป็น null=True, blank=True)
+        evaluation.created_at = current_date
+        evaluation.save()
+
+        # แปลงวันที่เป็นรูปแบบไทย (เช่น วัน/เดือน/ปี)
+        thai_date_str = f"{current_date.day}/{current_date.month}/{thai_year}"
+
+        # ส่งข้อความสำเร็จพร้อมแสดงวันที่ในรูปแบบไทย
+        messages.success(request, f"บันทึกชื่อ-นามสกุล: {full_name} และวันที่ {thai_date_str} เรียบร้อยแล้ว")
+        
+        return redirect('evaluation_page_5', evaluation_id=evaluation_id)
 
 @login_required
 def add_personal_diagram(request, evaluation_id):
@@ -4188,11 +4276,21 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y -= 2* line_height
 
     p.drawString(start_x+2, start_y, "ลายมือชื่อ.................................................(ผู้ประเมิน)")
-    p.drawString(start_x + 240, start_y, "ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    if evaluation.full_name is None:
+        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    else:
+        p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
+        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
     start_y -= line_height
     
     p.drawString(start_x + 25, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    if evaluation.full_name is None:
+        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    else:
+        p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
+        p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
+        p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
+        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
     p.line(start_x , start_y-20, start_x + 500, start_y-20)
     p.line(start_x , start_y+50, start_x + 500, start_y+50)
     p.line(start_x, start_y-20, start_x, start_y+100)
@@ -5008,11 +5106,21 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y -= 2* line_height
 
     p.drawString(start_x+2, start_y, "ลายมือชื่อ.................................................(ผู้ประเมิน)")
-    p.drawString(start_x + 240, start_y, "ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    if evaluation.full_name is None:
+        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    else:
+        p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
+        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
     start_y -= line_height
     
     p.drawString(start_x + 25, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    if evaluation.full_name is None:
+        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    else:
+        p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
+        p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
+        p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
+        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
     p.line(start_x , start_y-20, start_x + 500, start_y-20)
     p.line(start_x , start_y+50, start_x + 500, start_y+50)
     p.line(start_x, start_y-20, start_x, start_y+100)

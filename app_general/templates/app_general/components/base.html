@@ -18,23 +18,23 @@
                     <li><a href="{% url 'home' %}" title="HOME"><img src="{% static 'app_general/home.png' %}" alt="home"></a></li>
                     <li><a href="{% url 'profile' %}" title="ข้อมูลผู้ใช้"><img src="{% static 'app_general/profile.png' %}" alt="profile"></a></li>
                     {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหา"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'search' %}" title="ค้นหา"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search' %}" title="ค้นหาผู้ใช้งาน"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
                         <li><a href="{% url 'score' %}" title="เปลี่ยนน้ำหนักงาน"><img src="{% static 'app_general/wight_change.png' %}" alt="wight_change"></a></li>
                         <li><a href="{% url 'admin:index' %}" title="จัดการผู้ใช้"><img src="{% static 'app_general/manageuser.png' %}" alt="profile"></a></li>
                     {% endif %}
                     {% if user.groups.all.0.name == "Staff" %}
-                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหา"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'search' %}" title="ค้นหา"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search' %}" title="ค้นหาผู้ใช้งาน"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
                         <li><a href="{% url 'score' %}" title="เปลี่ยนน้ำหนักงาน"><img src="{% static 'app_general/wight_change.png' %}" alt="wight_change"></a></li>
                         <li><a href="{% url 'admin:index' %}" title="จัดการผู้ใช้"><img src="{% static 'app_general/manageuser.png' %}" alt="profile"></a></li>
                     {% endif %}
                     {% if user.groups.all.0.name == "Assessor" %}
-                        <li><a href="{% url 'search_evaluations' %}" title="ค้นหา"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search_evaluations' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
                         <li><a href="{% url 'select_group' %}" title="สร้างแบบประเมิน"><img src="{% static 'app_general/create_eval.png' %}" alt="create_eval"></a></li>
                     {% endif %}
                     {% if user.groups.all.0.name == "Evaluator" %}
-                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหา"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
+                        <li><a href="{% url 'search_evaluations_3' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
                     {% endif %}
                     <li><a href="{% url 'password_change' %}" title="เปลี่ยนรหัสผ่าน"><img src="{% static 'app_general/change.png' %}" alt="เปลี่ยนรหัสผ่าน"></a></li>
                     <li>

@@ -222,6 +222,12 @@ class user_evaluation(models.Model):
     remark_other = models.TextField(default="", blank=True, null=True, )
     remark_total = models.TextField(default="", blank=True, null=True, )
     created_at = models.DateTimeField(auto_now_add=True) 
+    
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    # ฟิลด์สำหรับเก็บวัน เดือน ปี
+    start_day = models.IntegerField(blank=True, null=True)
+    start_month = models.IntegerField(blank=True, null=True)
+    start_year = models.IntegerField(blank=True, null=True)
 
 class main_competency(models.Model):
     mc_id = models.AutoField(primary_key=True)

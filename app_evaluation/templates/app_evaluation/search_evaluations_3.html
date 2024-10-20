@@ -1,0 +1,66 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+{% block title %}ค้นหาแบบประเมินทั้งหมด{% endblock %}
+
+{% block content %}
+<section>
+<div class="info-box">
+    <form method="GET" action="{% url 'search_evaluations_3' %}">
+        <input type="text" name="q" value="{{ request.GET.q|default_if_none:'' }}" placeholder="ค้นหาชื่อหรือนามสกุล">
+        
+        <!-- เพิ่มฟิลด์ค้นหาปี -->
+        <select name="year">
+            <option value="">เลือกปี</option>
+            {% for year in years %}
+                <option value="{{ year }}" {% if year == request.GET.year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+        
+        <!-- เพิ่มฟิลด์ค้นหารอบ -->
+        <select name="round">
+            <option value="">เลือกรอบการประเมิน</option>
+            {% for round in rounds %}
+                <option value="{{ round }}" {% if round == request.GET.round %}selected{% endif %}>รอบ {{ round }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">ค้นหา</button>
+    </form>
+    
+    <h2>ผลการค้นหา</h2>
+    {% if evaluations %}
+        <table class="table1">
+            <thead>
+                <tr>
+                    <th>ชื่อจริง</th>
+                    <th>นามสกุล</th>
+                    <th>สถานะการอนุมัติ</th>
+                    <th>ปี</th>
+                    <th>รอบการประเมิน</th>
+                    <th>สถานะการประเมิน</th>
+                    <th>การกระทำ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for evaluation in evaluations %}
+                <tr>
+                    <td>{{ evaluation.user.first_name }}</td>  <!-- ดึงจาก User โดยตรง -->
+                    <td>{{ evaluation.user.last_name }}</td>  <!-- ดึงจาก User โดยตรง -->
+                    <td>{{ evaluation.approve_status|yesno:"ตรวจสอบแล้ว,ยังไม่ได้ตรวจสอบ" }}</td>
+                    <td>{{ evaluation.evr_id.evr_year }}</td>
+                    <td>{{ evaluation.evr_id.evr_round }}</td>
+                    <td>{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}</td>
+                    <td>
+                    <a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">ไปยังการประเมิน</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>ไม่พบข้อมูลการประเมินที่ค้นหา</p>
+    {% endif %}
+</div>
+</section>
+
+{% endblock %}
