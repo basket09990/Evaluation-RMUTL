@@ -131,12 +131,11 @@ class GroupSelectionForm(forms.ModelForm):
         model = user_evaluation_agreement
         fields = ['g_name']
         
-
 class UserEvaluationForm(forms.ModelForm):
-    full_name = forms.CharField(label="ชื่อ-นามสกุล", max_length=255)
-    day = forms.IntegerField(label="วัน", min_value=1, max_value=31)
-    month = forms.IntegerField(label="เดือน", min_value=1, max_value=12)
-    year = forms.IntegerField(label="ปี", min_value=1900, max_value=2100)
+    full_name = forms.CharField(label="ชื่อ-นามสกุล", max_length=255, required=False)
+    day = forms.IntegerField(label="วัน", min_value=1, max_value=31, required=False)
+    month = forms.IntegerField(label="เดือน", min_value=1, max_value=12, required=False)
+    year = forms.IntegerField(label="ปี", min_value=1900, max_value=2100, required=False)
 
     class Meta:
         model = user_evaluation
@@ -165,15 +164,18 @@ class UserEvaluationForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
         # บันทึกข้อมูล "ชื่อ-นามสกุล" และวันที่ใน instance
-        full_name = self.cleaned_data['full_name']
-        day = self.cleaned_data['day']
-        month = self.cleaned_data['month']
-        year = self.cleaned_data['year']
-        instance.full_name = full_name
-        instance.start_day = day
-        instance.start_month = month
-        instance.start_year = year
-        
+        full_name = self.cleaned_data.get('full_name', None)
+        day = self.cleaned_data.get('day', None)
+        month = self.cleaned_data.get('month', None)
+        year = self.cleaned_data.get('year', None)
+
+        if full_name:
+            instance.full_name = full_name
+        if day and month and year:
+            instance.start_day = day
+            instance.start_month = month
+            instance.start_year = year
+
         if commit:
             instance.save()
         return instance
@@ -391,7 +393,7 @@ class PersonalDiagramForm(forms.ModelForm):
         widgets = {
             'skill_evol': forms.TextInput(attrs={'placeholder': 'ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา '}),
             'dev': forms.TextInput(attrs={'placeholder': 'วิธีการพัฒนา'}),
-            'dev_time': forms.NumberInput(attrs={'placeholder': 'ช่วงเวลาที่ต้องการพัฒนา'}),
+            'dev_time': forms.TextInput(attrs={'placeholder': 'ช่วงเวลาที่ต้องการพัฒนา'}),
         }
 
 class UserSearchForm(forms.Form):

@@ -2227,24 +2227,14 @@ def evaluation_page_from_5(request, evaluation_id):
 
     # จัดการการบันทึกข้อมูลฟอร์ม
     if request.method == 'POST':
-        if 'save_form' in request.POST:
-            # ตรวจสอบฟอร์ม UserEvaluationForm
-            form = UserEvaluationForm(request.POST, instance=evaluation)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "บันทึกข้อมูลการประเมินสำเร็จ!")
-            else:
-                messages.error(request, "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบข้อมูลที่กรอก")
-        
-        elif 'save_formset' in request.POST:
-            # ตรวจสอบฟอร์ม PersonalDiagramFormset
-            formset = PersonalDiagramFormset(request.POST)
-            if formset.is_valid():
-                formset.save()
-                messages.success(request, "บันทึกข้อมูลฟอร์มสำเร็จ!")
-            else:
-                messages.error(request, "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบข้อมูลที่กรอก")
-
+        form = UserEvaluationForm(request.POST, instance=evaluation)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "บันทึกข้อมูลการประเมินสำเร็จ!")
+        else:
+            print(form.errors)  # แสดงข้อผิดพลาดของฟอร์มใน console/log เพื่อช่วยดีบัก
+            messages.error(request, "เกิดข้อผิดพลาดในการบันทึกข้อมูล กรุณาตรวจสอบข้อมูลที่กรอก")
+    
     # เตรียม context เพื่อส่งไปยัง template
     context = {
         'form': form,
@@ -2252,10 +2242,43 @@ def evaluation_page_from_5(request, evaluation_id):
         'evaluation_id': evaluation_id,
         'profile': profile,
         'selected_group': selected_group,
-        'evaluation':evaluation,
+        'evaluation': evaluation,
     }
 
     return render(request, 'app_evaluation/evaluation_page_from_5.html', context)
+
+@login_required
+def save_full_name_and_current_date2(request, evaluation_id):
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+    if request.method == 'POST':
+        # ดึงข้อมูลชื่อ-นามสกุลจาก evaluation
+        full_name = f"{evaluation.user.first_name} {evaluation.user.last_name}"
+        
+        # ใช้ timezone.now() เพื่อดึงวันที่ปัจจุบันที่รองรับ timezone
+        current_date = timezone.now()
+
+        # แปลงปีเป็น พ.ศ.
+        thai_year = current_date.year + 543
+
+        # บันทึกค่าลงในฟิลด์ที่แยกเป็น วัน เดือน ปี
+        evaluation.start_day = current_date.day
+        evaluation.start_month = current_date.month
+        evaluation.start_year = thai_year  # บันทึกปีเป็น พ.ศ.
+
+        # บันทึกชื่อเต็มลงในฟิลด์ full_name
+        evaluation.full_name = full_name
+        
+        # บันทึกวันที่ลงใน evaluation (ถ้าอยากบันทึกใน created_at ต้องเปลี่ยนฟิลด์นี้เป็น null=True, blank=True)
+        evaluation.created_at = current_date
+        evaluation.save()
+
+        # แปลงวันที่เป็นรูปแบบไทย (เช่น วัน/เดือน/ปี)
+        thai_date_str = f"{current_date.day}/{current_date.month}/{thai_year}"
+
+        # ส่งข้อความสำเร็จพร้อมแสดงวันที่ในรูปแบบไทย
+        messages.success(request, f"บันทึกชื่อ-นามสกุล: {full_name} และวันที่ {thai_date_str} เรียบร้อยแล้ว")
+        
+        return redirect('evaluation_page_from_5', evaluation_id=evaluation_id)
 
 @login_required
 def add_personal_diagram2(request, evaluation_id):
@@ -2281,7 +2304,6 @@ def add_personal_diagram2(request, evaluation_id):
         'evaluation_id': evaluation_id,
     }
     return render(request, 'app_evaluation/add_personal_diagram2.html', context)
-
 
 @login_required
 def edit_personal_diagram2(request, pd_id):
@@ -2321,10 +2343,6 @@ def delete_personal_diagram2(request, pd_id):
 
     # ในกรณีที่ไม่ใช่ POST ให้กลับไปที่ evaluation_page_5
     return redirect('evaluation_page_from_5', evaluation_id=personal_diagram.uevr_id.uevr_id)
-
-
-
-
 
 @login_required
 def view_evaluation(request, uevr_id):
@@ -2403,9 +2421,6 @@ def edit_evaluation(request, evaluation_id):
     }
 
     return render(request, 'app_evaluation/evaluation_page.html', context)
-
-
-
 
 @login_required
 def select_group(request):
@@ -2542,8 +2557,6 @@ def select_group(request):
         'selected_round': selected_round
     })
 
-
-
 @login_required
 def create_evaluation(request):
     evr_round_obj = get_evr_round()  # ใช้ฟังก์ชันเพื่อดึงรอบการประเมินที่ถูกต้อง
@@ -2559,8 +2572,6 @@ def create_evaluation(request):
         form = UserEvaluationForm()
 
     return render(request, 'app_evaluation/create_evaluation.html', {'form': form, 'evr_round': evr_round_obj})
-
-
 
 # ฟังก์ชันหน้าแบบประเมิน
 @login_required

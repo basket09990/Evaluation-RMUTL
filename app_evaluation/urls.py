@@ -163,6 +163,7 @@ urlpatterns = [
     path('auto-save-workload/', views.auto_save_workload, name='auto_save_workload'),
 
     path('save_full_name_and_current_date/<int:evaluation_id>/', views.save_full_name_and_current_date, name='save_full_name_and_current_date'),
+    path('save_full_name_and_current_date2/<int:evaluation_id>/', views.save_full_name_and_current_date2, name='save_full_name_and_current_date2'),
 
     path('eval_2/', views.eval_2, name='eval_2'),
     path('eval_3/', views.eval_3, name='eval_3'),
