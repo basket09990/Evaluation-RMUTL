@@ -1742,7 +1742,6 @@ def evaluation_page_from_2(request, evaluation_id):
         'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543 if user_evaluation_agreement_obj else None,
         'forms': forms,  # ส่งฟอร์มไปยังเทมเพลต
         'forms_dict': forms_dict,
-
     }
 
     return render(request, 'app_evaluation/evaluation_page_from_2.html', context)

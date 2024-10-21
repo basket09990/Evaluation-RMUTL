@@ -456,6 +456,7 @@
     <h2><strong>ผลรวมของคะแนนภาระงาน:</strong> {{ total_workload|floatformat:1 }}</h2>
     
     <h2><strong>คะแนนผลสัมฤทธิ์ของงาน:</strong> {{ achievement_work|floatformat:1 }}</h2>
+    <h2><strong>คะแนนผลสัมฤทธิ์ของงานที่แก้ไข:</strong> {{ user_evaluation.c_sumwl|floatformat:1 }}</h2>
 </div>
 
 
@@ -627,6 +628,7 @@
     <h2><strong>ผลรวมของคะแนนภาระงาน:</strong> {{ total_workload|floatformat:1 }}</h2>
     
     <h2><strong>คะแนนผลสัมฤทธิ์ของงาน:</strong> {{ achievement_work|floatformat:1 }}</h2>
+    <h2><strong>คะแนนผลสัมฤทธิ์ของงานที่แก้ไข:</strong> {{ user_evaluation.c_sumwl|floatformat:1 }}</h2>
 </div>
 
 
@@ -801,6 +803,7 @@
     <h2><strong>ผลรวมของคะแนนภาระงาน:</strong> {{ total_workload|floatformat:1 }}</h2>
     
     <h2><strong>คะแนนผลสัมฤทธิ์ของงาน:</strong> {{ achievement_work|floatformat:1 }}</h2>
+    <h2><strong>คะแนนผลสัมฤทธิ์ของงานที่แก้ไข:</strong> {{ user_evaluation.c_sumwl|floatformat:1 }}</h2>
 </div>
 
 
@@ -842,6 +845,36 @@
 
         // แสดงคะแนนรวมทั้งหมด
         document.getElementById('overall-total').textContent = overallTotal.toFixed(2);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const fieldTotals = {};
+        let overallEditedTotal = 0;
+    
+        // รวมค่า selected_workload_edit สำหรับแต่ละ field
+        document.querySelectorAll('.selection-row').forEach(row => {
+            const fieldId = row.getAttribute('data-field-id');
+            const editedWorkload = parseFloat(row.getAttribute('data-edited-workload')) || 0;
+    
+            // สะสมคะแนนรวมในแต่ละ field
+            if (!fieldTotals[fieldId]) {
+                fieldTotals[fieldId] = 0;
+            }
+    
+            fieldTotals[fieldId] += editedWorkload;
+            overallEditedTotal += editedWorkload; // สะสมคะแนนรวมทั้งหมดของ edited_workload
+        });
+    
+        // แสดงผลรวมในแต่ละ field
+        Object.keys(fieldTotals).forEach(fieldId => {
+            const editedTotalCell = document.querySelector(`.field-total-row[data-field-id="${fieldId}"] .field-edited-total`);
+            if (editedTotalCell) {
+                editedTotalCell.textContent = fieldTotals[fieldId].toFixed(2);
+            }
+        });
+    
+        // แสดงคะแนนรวมทั้งหมดสำหรับ selected_workload_edit
+        document.getElementById('overall-edited-total').textContent = overallEditedTotal.toFixed(2);
     });
     function openPopup(url) {
         // ขนาดของ pop-up window
