@@ -547,23 +547,11 @@
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_workload }}</td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.calculated_workload|floatformat:1 }}</td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">
-                                    <form method="post">
-                                        {% csrf_token %}
-                                        {% if selection.selected_workload_edit == 0 %}
-                                            <!-- ถ้า selected_workload_edit เป็น 0 ให้แสดงค่า calculated_workload -->
-                                            <input type="text" 
-                                                   name="selected_workload_edit_{{ selection.id }}" 
-                                                   value="{{ selection.calculated_workload }}"
-                                                   onchange="autoSave('{{ selection.id }}', this.value)">
-                                        {% else %}
-                                            <!-- ถ้า selected_workload_edit ไม่เป็น 0 ให้แสดงค่า selected_workload_edit -->
-                                            <input type="text" 
-                                                   name="selected_workload_edit_{{ selection.id }}" 
-                                                   value="{{ selection.selected_workload_edit }}"
-                                                   onchange="autoSave('{{ selection.id }}', this.value)">
-                                        {% endif %}
+                                    
+                                                   {{ selection.selected_workload_edit }}
+                                                  
                                         
-                                    </form>
+                                 
                             </td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.notes }}</td>
                             <td  style="padding: 10px; border: 1px solid #ddd;">

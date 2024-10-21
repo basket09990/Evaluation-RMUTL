@@ -21,6 +21,9 @@ class GroupForm(forms.ModelForm):
             'g_max_workload': 'ภาระงานขั้นต่ำ',
 
         }
+        widgets = {
+            'g_name': forms.NumberInput(attrs={'class': 'form-control'}),
+        }
 
 class GroupDetailForm(forms.ModelForm):
     f_id = forms.ModelChoiceField(
