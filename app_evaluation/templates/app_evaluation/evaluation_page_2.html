@@ -343,7 +343,7 @@
                             <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_name }}
                             <div>
                                 {% if subfield.sf_id %}
-                                <a href="{% url 'select_workload_criteria' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                                <a href="{% url 'select_workload_criteria' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?')">เลือกเกณฑ์ภาระงาน</a>
                                 {% else %}
                                     <span>ไม่มี Subfield</span>
                                 {% endif %}
@@ -362,8 +362,8 @@
                         <tr class="selection-row" data-field-id="{{ field.f_id }}" data-calculated-workload="{{ selection.calculated_workload }}">
                             <td style="padding: 10px; border: 1px solid #ddd;">
                                 <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.selected_name }}
-                                <a href="{% url 'edit_workload_selection' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
-                                <form action="{% url 'delete_workload_selection' selection.id %}" method="post" style="display:inline;">
+                                <a href="{% url 'edit_workload_selection' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">แก้ไข</a>
+                                <form action="{% url 'delete_workload_selection' selection.id %}" method="post" style="display:inline;" onsubmit="saveScrollPosition()">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
                                 </form>
@@ -387,7 +387,7 @@
                                         </li>
                                     {% endfor %}
                                 </ul>
-                                <a href="{% url 'upload_evidence' selection.id %}" class="btn btn-primary btn-small">หลักฐาน</a>
+                                <a href="{% url 'upload_evidence' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">หลักฐาน</a>
                             </td>
                         </tr>
                     {% endif %}
@@ -509,6 +509,24 @@
         // เปิดหน้าต่าง pop-up
         window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
     }
+
+    // ฟังก์ชันสำหรับบันทึกตำแหน่งการเลื่อนหน้าจอ
+    function saveScrollPosition() {
+        localStorage.setItem('scrollPosition', window.scrollY);  // บันทึกตำแหน่งเลื่อนหน้าจอใน localStorage
+    }
+
+    // ฟังก์ชันสำหรับกู้คืนตำแหน่งการเลื่อนหน้าจอ
+    function restoreScrollPosition() {
+        const scrollPosition = localStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            window.scrollTo(0, parseInt(scrollPosition));  // เลื่อนหน้าจอไปยังตำแหน่งที่บันทึกไว้
+        }
+    }
+
+    // เรียกฟังก์ชัน restoreScrollPosition เมื่อหน้าเว็บถูกโหลด
+    document.addEventListener('DOMContentLoaded', function() {
+        restoreScrollPosition();
+    });
 
 </script>
 

@@ -372,7 +372,7 @@ class UserWorkloadSelection(models.Model):
     sf_id = models.ForeignKey(wl_subfield, on_delete=models.CASCADE)
     selected_id = models.ForeignKey(WorkloadCriteria, on_delete=models.PROTECT)
     selected_name = models.TextField(default="", blank=True, null=True)
-    selected_num = models.FloatField(default="0", blank=True, null=True)
+    selected_num = models.FloatField(default="1", blank=True, null=True)
 
     # ใช้ FloatField แทน choices เพื่อดึงข้อมูลโดยตรงจาก selected_id
     selected_maxnum = models.FloatField(default="0", blank=True, null=True)

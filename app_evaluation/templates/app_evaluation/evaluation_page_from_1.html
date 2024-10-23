@@ -643,7 +643,7 @@
         
                 
                              
-                        <button type="submit">บันทึก</button>
+                        <button type="submit" onclick="showAlert()">บันทึก</button>
                                
                         </form>
 
@@ -901,7 +901,7 @@
                             
                                     
                                                     {% if user.groups.all.0.name == "Staff"%}
-                                                    <button type="submit">บันทึก</button>
+                                                    <button type="submit" onclick="showAlert()">บันทึก</button>
                                                     {% endif %}
                                                     
                                                    
@@ -1153,7 +1153,7 @@
         
                 
                              
-                        <button type="submit">บันทึก</button>
+                        <button type="submit" onclick="showAlert()">บันทึก</button>
                                
                         </form>
 
@@ -1188,6 +1188,14 @@
                         </div>
                         {% endif %} 
 
-
+                        <script>
+    
+                            function showAlert() {
+                                alert('บันทึกข้อมูลเรียบร้อย');
+                            }
+                        
+                        
+                        </script>
+                        
 
 {% endblock %}

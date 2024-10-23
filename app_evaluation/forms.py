@@ -393,6 +393,11 @@ class PersonalDiagramForm(forms.ModelForm):
     class Meta:
         model = PersonalDiagram
         fields = ['skill_evol', 'dev', 'dev_time']
+        labels = {
+            'skill_evol': 'ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา ',
+            'dev':'วิธีการพัฒนา',
+            'dev_time':'ช่วงเวลาที่ต้องการพัฒนา'
+        }
         widgets = {
             'skill_evol': forms.TextInput(attrs={'placeholder': 'ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา '}),
             'dev': forms.TextInput(attrs={'placeholder': 'วิธีการพัฒนา'}),

@@ -544,7 +544,7 @@
                             {{ work_form_current.as_p }}
                         </div>
                         
-                        <button type="submit">บันทึก</button>
+                        <button type="submit" onclick="showAlert()">บันทึก</button>
                     </form>
                                             <div class="button-container">
                                                 <a href="{% url 'evaluation_page_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
@@ -566,6 +566,14 @@
                                             
 
 </div>
+<script>
+    
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
+
+
+</script>
 
 
 

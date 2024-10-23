@@ -124,18 +124,9 @@ urlpatterns = [
     path('show_all_evidence/<int:selection_id>/', views.show_all_evidence, name='show_all_evidence'),
 
 
-    path('evaluation/<int:evaluation_id>/pdf/',  views.render_pdf_view, name='render_pdf_view'),
+
     path('evaluation/<int:evaluation_id>/print_pdf/',  views.print_evaluation_pdf, name='print_evaluation_pdf'),
     path('evaluation/<int:evaluation_id>/print_pdf_eva/',  views.print_evaluation_pdf_eva, name='print_evaluation_pdf_eva'),
-
-
-    path('evaluation/export/<int:evaluation_id>/', views.export_html_to_excel, name='export_html_to_excel'),
-    path('export/evaluation2/<int:evaluation_id>/', views.export_evaluation2_to_excel, name='export_evaluation2_to_excel'),
-    path('export/evaluation3/<int:evaluation_id>/', views.export_evaluation3_to_excel, name='export_evaluation3_to_excel'),
-    path('export/evaluation_page_4/<int:evaluation_id>/', views.export_evaluation_page_4_to_excel, name='export_evaluation_page_4_to_excel'),
-    path('export/evaluation_page_5/<int:evaluation_id>/', views.export_evaluation_page_5_to_excel, name='export_evaluation_page_5_to_excel'),
-    path('export/evaluation_page_6/', views.export_evaluation_page_6_to_excel, name='export_evaluation_page_6_to_excel'),
-
 
 
     path('evaluation/evaluation_page/<int:criteria_id>/upload2/', views.upload_evidence2, name='upload_evidence2'),
@@ -164,6 +155,7 @@ urlpatterns = [
 
     path('save_full_name_and_current_date/<int:evaluation_id>/', views.save_full_name_and_current_date, name='save_full_name_and_current_date'),
     path('save_full_name_and_current_date2/<int:evaluation_id>/', views.save_full_name_and_current_date2, name='save_full_name_and_current_date2'),
+
 
     path('eval_2/', views.eval_2, name='eval_2'),
     path('eval_3/', views.eval_3, name='eval_3'),

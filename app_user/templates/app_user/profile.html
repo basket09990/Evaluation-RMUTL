@@ -53,7 +53,7 @@
                 </tr>
             </table>
             <p>
-                <button class="button button-primary" type="submit">บันทึก</button>
+                <button class="button button-primary" type="submit" onclick="showAlert()" >บันทึก</button>
             </p>
         </form>
 
@@ -62,6 +62,11 @@
 </div>
 
 <script>
+
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
+
     function openPopup(message) {
         document.getElementById('popup-message').innerText = message;
         document.getElementById('popup-overlay').style.display = 'block';
