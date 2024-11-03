@@ -10,48 +10,114 @@
     <link rel="stylesheet" href="{% static 'app_general/indexs.css' %}">
 
 </head>
+<style>
+    /* เมนูด้านซ้าย */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 60px;
+        height: 100vh;
+        background-color: #F9AA3D;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 20px;
+        transition: width 0.3s;
+    }
+
+    .sidebar:hover {
+        width: 200px; /* ขยายเมื่อโฮเวอร์ */
+    }
+
+    .sidebar ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+    }
+
+    .sidebar ul li {
+        width: 100%;
+    }
+
+    .sidebar ul li a {
+        display: flex;
+        align-items: center;
+        color: black;
+        text-decoration: none;
+        padding: 10px;
+        transition: background-color 0.3s;
+    }
+
+    .sidebar ul li a:hover {
+        background-color: #444;
+    }
+
+    .sidebar ul li img {
+        width: 30px;
+        height: 30px;
+        margin-right: 10px;
+    }
+
+    .sidebar ul li span {
+        display: none;
+        white-space: nowrap;
+        font-size: 14px;
+        transition: opacity 0.3s;
+    }
+
+    .sidebar:hover ul li span {
+        display: inline;
+        opacity: 1;
+    }
+
+</style>
+</head>
 <body>
-    <div class="site-header">
-        <div>
-            <nav class="menu">
-                <ul>
-                    <li><a href="{% url 'home' %}" title="HOME"><img src="{% static 'app_general/home.png' %}" alt="home"></a></li>
-                    <li><a href="{% url 'profile' %}" title="ข้อมูลผู้ใช้"><img src="{% static 'app_general/profile.png' %}" alt="profile"></a></li>
-                    {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'search' %}" title="ค้นหาผู้ใช้งาน"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'score' %}" title="เปลี่ยนน้ำหนักงาน"><img src="{% static 'app_general/wight_change.png' %}" alt="wight_change"></a></li>
-                        <li><a href="{% url 'admin:index' %}" title="จัดการผู้ใช้"><img src="{% static 'app_general/manageuser.png' %}" alt="profile"></a></li>
-                    {% endif %}
-                    {% if user.groups.all.0.name == "Staff" %}
-                        <li><a href="{% url 'search_evaluations_2' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'search' %}" title="ค้นหาผู้ใช้งาน"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'score' %}" title="เปลี่ยนน้ำหนักงาน"><img src="{% static 'app_general/wight_change.png' %}" alt="wight_change"></a></li>
-                        <li><a href="{% url 'admin:index' %}" title="จัดการผู้ใช้"><img src="{% static 'app_general/manageuser.png' %}" alt="profile"></a></li>
-                    {% endif %}
-                    {% if user.groups.all.0.name == "Assessor" %}
-                        <li><a href="{% url 'search_evaluations' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                        <li><a href="{% url 'select_group' %}" title="สร้างแบบประเมิน"><img src="{% static 'app_general/create_eval.png' %}" alt="create_eval"></a></li>
-                    {% endif %}
-                    {% if user.groups.all.0.name == "Evaluator" %}
-                        <li><a href="{% url 'search_evaluations_3' %}" title="ค้นหาแบบประเมิน"><img src="{% static 'app_general/search.png' %}" alt="profile"></a></li>
-                    {% endif %}
-                    <li><a href="{% url 'password_change' %}" title="เปลี่ยนรหัสผ่าน"><img src="{% static 'app_general/change.png' %}" alt="เปลี่ยนรหัสผ่าน"></a></li>
-                    <li>
-                        <form action="{% url 'logout' %}" method="post" id="logout-form" style="display: none;">
-                            {% csrf_token %}
-                        </form>
-                        <a href="#" title="ออกจากระบบ" onclick="document.getElementById('logout-form').submit(); return false;">
-                            <img src="{% static 'app_general/logout.png' %}" alt="ออกจากระบบ">
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </div>
-    <div class= "content">
-        {% block content %}
-        {% endblock %}
-    </div>
+<div class="sidebar">
+    <nav>
+        <ul>
+            <li><a href="{% url 'home' %}"><img src="{% static 'app_general/home.png' %}" alt="home"><span>หน้าแรก</span></a></li>
+            <li><a href="{% url 'profile' %}"><img src="{% static 'app_general/profile.png' %}" alt="profile"><span>ข้อมูลผู้ใช้</span></a></li>
+            
+            {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
+                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+                <li><a href="{% url 'search' %}"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="search users"><span>ค้นหาผู้ใช้งาน</span></a></li>
+                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>เปลี่ยนน้ำหนักงาน</span></a></li>
+                <li><a href="{% url 'admin:index' %}"><img src="{% static 'app_general/manageuser.png' %}" alt="manage users"><span>จัดการผู้ใช้</span></a></li>
+            {% endif %}
+            
+            {% if user.groups.all.0.name == "Staff" %}
+                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+                <li><a href="{% url 'search' %}"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="search users"><span>ค้นหาผู้ใช้งาน</span></a></li>
+                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>เปลี่ยนน้ำหนักงาน</span></a></li>
+                <li><a href="{% url 'admin:index' %}"><img src="{% static 'app_general/manageuser.png' %}" alt="manage users"><span>จัดการผู้ใช้</span></a></li>
+            {% endif %}
+            
+            {% if user.groups.all.0.name == "Assessor" %}
+                <li><a href="{% url 'search_evaluations' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+                <li><a href="{% url 'select_group' %}"><img src="{% static 'app_general/create_eval.png' %}" alt="create eval"><span>สร้างแบบประเมิน</span></a></li>
+            {% endif %}
+            
+            {% if user.groups.all.0.name == "Evaluator" %}
+                <li><a href="{% url 'search_evaluations_3' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+            {% endif %}
+            
+            <li><a href="{% url 'password_change' %}"><img src="{% static 'app_general/change.png' %}" alt="change password"><span>เปลี่ยนรหัสผ่าน</span></a></li>
+            <li>
+                <form action="{% url 'logout' %}" method="post" id="logout-form" style="display: none;">
+                    {% csrf_token %}
+                </form>
+                <a href="#" onclick="document.getElementById('logout-form').submit(); return false;"><img src="{% static 'app_general/logout.png' %}" alt="logout"><span>ออกจากระบบ</span></a>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+<div class="content">
+    {% block content %}
+    {% endblock %}
+</div>
 </body>
 </html>

@@ -365,7 +365,7 @@
                 </div>
             </fieldset>
             
-            <button type="submit">บันทึก</button>
+            <button type="submit" onclick="showAlert()">บันทึก</button>
         </form>
         
     
@@ -374,4 +374,12 @@
     <a href="{% url 'evaluation_page'  evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
 </div>
+<script>
+    
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
+
+
+</script>
 {% endblock %}

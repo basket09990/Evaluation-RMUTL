@@ -1609,7 +1609,6 @@ def evaluation_page_from_1(request, evaluation_id):
 
     return render(request, 'app_evaluation/evaluation_page_from_1.html', context)
 
-
 @login_required
 def evaluation_page_from_2(request, evaluation_id):
     # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
@@ -1992,7 +1991,7 @@ def delete_workload_selection3(request, selection_id):
 
 @login_required
 def upload_evidence2(request, criteria_id):
-    # ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
+# ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
@@ -2049,7 +2048,8 @@ def upload_evidence2(request, criteria_id):
     return render(request, 'app_evaluation/upload_evidence2.html', {
         'form': form,
         'evaluation': evaluation,
-        'evidences': evidences  # ส่งรายการไฟล์/รูปภาพไปยัง template
+        'evidences': evidences,  # ส่งรายการไฟล์/รูปภาพไปยัง template
+        'criteria_id': criteria_id,
     })
 
 @login_required

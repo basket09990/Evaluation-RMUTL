@@ -377,7 +377,9 @@
                                     {% for evidence in selection.user_evident_set.all|slice:":1" %}
                                         <li style="margin-bottom: 10px;">
                                             {% if evidence.file %}
-                                                <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')"  target="_blank">{{ evidence.filename|slice:"-10:" }}</a>
+                                            <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
+                                                <img class="thumbnail" src="{% static 'app_general/documents.png' %}">
+                                            </a>
                                             {% endif %}
                                             {% if evidence.picture %}
                                             <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">

@@ -396,7 +396,7 @@
     <form method="post" action="{% url 'save_full_name_and_current_date' evaluation_id=evaluation_id %}">
         {% csrf_token %}
         <!-- ปุ่มบันทึกชื่อ-นามสกุล -->
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" onclick="showAlert()">
             บันทึกชื่อ-นามสกุล
         </button>
     </form>
@@ -404,5 +404,12 @@
     
 </div>
 
+<script>
+    
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
 
+
+</script>
 {% endblock %}

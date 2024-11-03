@@ -373,7 +373,7 @@
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_workload }}</td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.calculated_workload|floatformat:1 }}</td>
                                 <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">
-                                    <form method="post">
+                                    <form method="post" >
                                         {% csrf_token %}
                                         {% if selection.selected_workload_edit == 0 %}
                                             <!-- ถ้า selected_workload_edit เป็น 0 ให้แสดงค่า calculated_workload -->
@@ -389,7 +389,7 @@
                                                    onchange="autoSave('{{ selection.id }}', this.value)">
                                         {% endif %}
                                         <div>
-                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}">บันทึก</button>
+                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}" onclick="saveScrollPosition()">บันทึก</button>
                                         </div>
                                     </form>
                             </td>
@@ -399,7 +399,9 @@
                                     {% for evidence in selection.user_evident_set.all|slice:":1" %}
                                         <li style="margin-bottom: 10px;">
                                             {% if evidence.file %}
-                                                <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')"  target="_blank">{{ evidence.filename|slice:"-10:" }}</a>
+                                            <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
+                                                <img class="thumbnail" src="{% static 'app_general/documents.png' %}">
+                                            </a>
                                             {% endif %}
                                             {% if evidence.picture %}
                                             <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
@@ -517,7 +519,7 @@
                             <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_name }}
                             <div>
                                 {% if subfield.sf_id %}
-                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">เลือกเกณฑ์ภาระงาน</a>
                                 {% else %}
                                     <span>ไม่มี Subfield</span>
                                 {% endif %}
@@ -537,8 +539,8 @@
                         <tr class="selection-row" data-field-id="{{ field.f_id }}" data-calculated-workload="{{ selection.calculated_workload }}" data-edited-workload="{{ selection.selected_workload_edit }}">
                                 <td style="padding: 10px; border: 1px solid #ddd;">
                                     <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.selected_name }}
-                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
-                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
+                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">แก้ไข</a>
+                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;" onsubmit="saveScrollPosition()">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
                                     </form>
@@ -559,7 +561,9 @@
                                     {% for evidence in selection.user_evident_set.all|slice:":1" %}
                                         <li style="margin-bottom: 10px;">
                                             {% if evidence.file %}
-                                                <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')"  target="_blank">{{ evidence.filename|slice:"-10:" }}</a>
+                                            <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
+                                                <img class="thumbnail" src="{% static 'app_general/documents.png' %}">
+                                            </a>
                                             {% endif %}
                                             {% if evidence.picture %}
                                             <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
@@ -569,7 +573,7 @@
                                         </li>
                                     {% endfor %}
                                 </ul>
-                                <a href="{% url 'upload_evidence2' selection.id %}" class="btn btn-primary btn-small">หลักฐาน</a>
+                                <a href="{% url 'upload_evidence2' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">หลักฐาน</a>
                             </td>
                         </tr>
                     {% endif %}
@@ -678,7 +682,7 @@
                             <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_name }}
                             <div>
                                 {% if subfield.sf_id %}
-                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small">เลือกเกณฑ์ภาระงาน</a>
+                                <a href="{% url 'select_workload_criteria3' user_evaluation.uevr_id subfield.sf_id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">เลือกเกณฑ์ภาระงาน</a>
                                 {% else %}
                                     <span>ไม่มี Subfield</span>
                                 {% endif %}
@@ -698,8 +702,8 @@
                         <tr class="selection-row" data-field-id="{{ field.f_id }}" data-calculated-workload="{{ selection.calculated_workload }}" data-edited-workload="{{ selection.selected_workload_edit }}">
                                 <td style="padding: 10px; border: 1px solid #ddd;">
                                     <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.selected_name }}
-                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small">แก้ไข</a>
-                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;">
+                                    <a href="{% url 'edit_workload_selection3' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">แก้ไข</a>
+                                    <form action="{% url 'delete_workload_selection3' selection.id %}" method="post" style="display:inline;" onsubmit="saveScrollPosition()">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
                                     </form>
@@ -724,7 +728,7 @@
                                                    onchange="autoSave('{{ selection.id }}', this.value)">
                                         {% endif %}
                                         <div>
-                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}">บันทึก</button>
+                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}" onclick="saveScrollPosition()">บันทึก</button>
                                         </div>
                                     </form>
                             </td>
@@ -734,7 +738,9 @@
                                     {% for evidence in selection.user_evident_set.all|slice:":1" %}
                                         <li style="margin-bottom: 10px;">
                                             {% if evidence.file %}
-                                                <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')"  target="_blank">{{ evidence.filename|slice:"-10:" }}</a>
+                                            <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
+                                                <img class="thumbnail" src="{% static 'app_general/documents.png' %}">
+                                            </a>
                                             {% endif %}
                                             {% if evidence.picture %}
                                             <a onclick="openPopup('{% url 'show_all_evidence' selection.id %}')" target="_blank">
@@ -744,7 +750,7 @@
                                         </li>
                                     {% endfor %}
                                 </ul>
-                                <a href="{% url 'upload_evidence2' selection.id %}" class="btn btn-primary btn-small">หลักฐาน</a>
+                                <a href="{% url 'upload_evidence2' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">หลักฐาน</a>
                             </td>
                         </tr>
                     {% endif %}
@@ -869,6 +875,7 @@
         // แสดงคะแนนรวมทั้งหมดสำหรับ selected_workload_edit
         document.getElementById('overall-edited-total').textContent = overallEditedTotal.toFixed(2);
     });
+
     function openPopup(url) {
         // ขนาดของ pop-up window
         const width = 800;
@@ -882,6 +889,23 @@
         window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
     }
 
+    // ฟังก์ชันสำหรับบันทึกตำแหน่งการเลื่อนหน้าจอ
+    function saveScrollPosition() {
+        localStorage.setItem('scrollPosition', window.scrollY);  // บันทึกตำแหน่งเลื่อนหน้าจอใน localStorage
+    }
+
+    // ฟังก์ชันสำหรับกู้คืนตำแหน่งการเลื่อนหน้าจอ
+    function restoreScrollPosition() {
+        const scrollPosition = localStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            window.scrollTo(0, parseInt(scrollPosition));  // เลื่อนหน้าจอไปยังตำแหน่งที่บันทึกไว้
+        }
+    }
+
+    // เรียกฟังก์ชัน restoreScrollPosition เมื่อหน้าเว็บถูกโหลด
+    document.addEventListener('DOMContentLoaded', function() {
+        restoreScrollPosition();
+    });
 
 </script>
 

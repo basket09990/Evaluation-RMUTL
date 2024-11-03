@@ -298,8 +298,16 @@
         </tr>
     </table>
 
-    <button class="btn btn-primary " type="submit">บันทึก</button>
+    <button class="btn btn-primary " type="submit" onclick="showAlert()">บันทึก</button>
     </form>
     <a href="{% url 'evaluation_page' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
+<script>
+    
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
+
+
+</script>
 {% endblock %}

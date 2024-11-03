@@ -391,7 +391,7 @@
             </table>
         
             <!-- Submit Button -->
-            <button type="submit" value="form">บันทึกข้อมูลการประเมิน</button>
+            <button type="submit" value="form" onclick="showAlert()">บันทึกข้อมูลการประเมิน</button>
         </form>
         <table class="form-table">
             <tr>
@@ -432,11 +432,20 @@
     <form method="post" action="{% url 'save_full_name_and_current_date2' evaluation_id=evaluation_id %}">
         {% csrf_token %}
         <!-- ปุ่มบันทึกชื่อ-นามสกุล -->
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary" onclick="showAlert()">
             บันทึกชื่อ-นามสกุล
         </button>
     </form>
     {% endif %}
     <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
+
+<script>
+    
+    function showAlert() {
+        alert('บันทึกข้อมูลเรียบร้อย');
+    }
+
+
+</script>
 {% endblock %}
