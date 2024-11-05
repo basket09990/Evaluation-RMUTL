@@ -72,6 +72,17 @@
         opacity: 1;
     }
 
+    .content {
+        justify-content: center; /* จัดให้อยู่ตรงกลางแนวนอน */
+        background-color: #F6F0E5; /* สีพื้นหลังของเนื้อหา */
+        margin-left: 60px; /* ปรับให้มีที่ว่างสำหรับ sidebar */
+        transition: margin-left 0.3s;
+    }
+      
+    .sidebar:hover ~ .content {
+        margin-left: 200px; /* ขยับเมื่อ sidebar ขยาย */
+    }    
+
 </style>
 </head>
 <body>

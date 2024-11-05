@@ -188,16 +188,6 @@ li a img:hover {
   transform: scale(1.1); /* เพิ่มเอฟเฟ็กต์ขยายเมื่อ hover */
 }
 
-.content {
-  justify-content: center; /* จัดให้อยู่ตรงกลางแนวนอน */
-  background-color: #F6F0E5; /* สีพื้นหลังของเนื้อหา */
-  margin-left: 60px; /* ปรับให้มีที่ว่างสำหรับ sidebar */
-  transition: margin-left 0.3s;
-}
-
-.sidebar:hover ~ .content {
-  margin-left: 200px; /* ขยับเมื่อ sidebar ขยาย */
-}
 .pdf-viewer {
   width: 120vh; /* ปรับความกว้างให้เหมาะสม */
   height: calc(100vh - 100px); /* ปรับความสูงตาม Header */
