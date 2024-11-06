@@ -13,7 +13,9 @@ from django.contrib import messages
 from django.db.models import Q
 from django.views.decorators.csrf import csrf_exempt
 from django.core.paginator import Paginator
-
+from django.conf import settings
+from .forms import PDFUploadForm
+import os
 
 
 
@@ -41,6 +43,32 @@ def home(request):
             Group(name="Evaluator"),
             Group(name="Staff"),
         ])
+
+
+    pdf_path = os.path.join(settings.MEDIA_ROOT, 'uploaded_files', 'latest.pdf')
+    
+    # Handle file upload
+    if request.method == 'POST':
+        form = PDFUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Delete the old PDF file if it exists
+            if os.path.exists(pdf_path):
+                os.remove(pdf_path)
+
+            # Save new PDF file
+            pdf_file = request.FILES['pdf_file']
+            with open(pdf_path, 'wb+') as destination:
+                for chunk in pdf_file.chunks():
+                    destination.write(chunk)
+
+            return redirect('upload_pdf_view')
+    else:
+        form = PDFUploadForm()
+
+    context = {
+        'form': form,
+        'pdf_url': os.path.join(settings.MEDIA_URL, 'uploaded_files', 'latest.pdf') if os.path.exists(pdf_path) else None,
+    }
 
     return render(request, 'app_general/home.html')
 

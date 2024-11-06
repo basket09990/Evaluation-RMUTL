@@ -340,15 +340,16 @@ class WorkloadCriteriaSelectionForm(forms.ModelForm):
 
 class UserWorkloadSelectionForm(forms.ModelForm):
     selected_id = forms.ModelChoiceField(
-        queryset=WorkloadCriteria.objects.none(),  # เริ่มต้นด้วย queryset ว่าง
-        label="เลือกเกณฑ์ภาระงาน",
-        required=True,
-        widget=forms.Select(attrs={'class': 'form-control'})
+    queryset=WorkloadCriteria.objects.none(),
+    label="เลือกเกณฑ์ภาระงาน",
+    required=True,
+    widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_selected_id'})
     )
-    selected_unit = forms.FloatField(
-        label="จำนวน",
-        required=False,  # กำหนดเป็น False เพื่อไม่ให้ฟอร์มบังคับฟิลด์นี้เสมอ
-        widget=forms.NumberInput(attrs={'class': 'form-control'})
+
+    selected_unit = forms.CharField(
+    label="จำนวน",
+    required=False,
+    widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_selected_unit'})
     )
 
     class Meta:

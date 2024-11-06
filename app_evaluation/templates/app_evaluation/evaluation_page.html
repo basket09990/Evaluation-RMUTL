@@ -321,8 +321,44 @@
         padding: 10px;
     }
 
+    /* ปรับปุ่มทางขวา */
+    .sidebar-right {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        width: 50px;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 8px 0 0 8px;
+        transition: background-color 0.3s;
+        z-index: 1; /* วางปุ่มทางขวาให้อยู่บน Sidebar */
+    }
 
-    
+    .sidebar-right:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-right .button {
+        width: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-right .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
+
 </style>
 
 
@@ -563,6 +599,16 @@
                                             <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                             </form>
+
+
+                                            <div class="sidebar-right">
+                                                <button class="button" onclick="window.location.href='{% url 'evaluation_page_2' evaluation_id %}'">ถัดไป</button>
+                                            </div>
+                                            
+
+
+
+                                            
                                             
 
 </div>
@@ -572,6 +618,23 @@
         alert('บันทึกข้อมูลเรียบร้อย');
     }
 
+    let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active-slide'));
+            slides[index].classList.add('active-slide');
+        }
+
+        function showNextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+
+        function showPreviousSlide() {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(currentSlide);
+        }
 </script>
 
 

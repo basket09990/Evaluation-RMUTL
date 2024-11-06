@@ -39,3 +39,6 @@ class EditUserGroupsForm(forms.ModelForm):
 
 class SearchForm(forms.Form):
     query = forms.CharField(label='ค้นหา', max_length=100, required=False)
+
+class PDFUploadForm(forms.Form):
+    pdf_file = forms.FileField(label='Select a PDF file')

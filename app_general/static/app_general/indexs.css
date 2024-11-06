@@ -188,13 +188,22 @@ li a img:hover {
   transform: scale(1.1); /* เพิ่มเอฟเฟ็กต์ขยายเมื่อ hover */
 }
 
+.pdf-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .pdf-viewer {
-  width: 120vh; /* ปรับความกว้างให้เหมาะสม */
+  width: 100%; /* ปรับความกว้างให้เหมาะสม */
   height: calc(100vh - 100px); /* ปรับความสูงตาม Header */
   border: none;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.upload-form {
+  margin-top: 20px;
+}
 
 .role {
   margin-bottom: 15px;
@@ -320,32 +329,54 @@ li a img:hover {
 
 .table1 {
   width: 100%;
-  border-collapse: collapse; /* ลบเส้นที่ซ้ำซ้อนระหว่างเซลล์ */
+  border-collapse: collapse;
   margin-top: 20px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* เพิ่มเงาเพื่อให้ดูเด่น */
-  border-radius: 8px; /* มุมโค้ง */
-  overflow: hidden; /* จัดการ overflow เพื่อความสวยงาม */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.table1 {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .table1 th, .table1 td {
-  padding: 12px; /* ระยะห่างระหว่างขอบเซลล์และข้อความ */
-  text-align: center; /* จัดข้อความชิดซ้าย */
-  border: 1px solid #ddd; /* เส้นขอบบางๆ */
+  padding: 12px;
+  text-align: center;
+  border: 1px solid #ddd;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow-wrap: break-word; /* ตัดคำยาว ๆ ให้ขึ้นบรรทัดใหม่ */
+  max-width: 200px; /* กำหนดความกว้างสูงสุดเพื่อไม่ให้ข้อความยาวเกินไป */
 }
 
 .table1 th {
-  background-color: #343a40; /* สีพื้นหลังหัวตาราง */
-  color: white; /* สีข้อความหัวตาราง */
-  font-weight: bold; /* เน้นตัวอักษรหัวตาราง */
-  text-transform: uppercase; /* เปลี่ยนข้อความหัวตารางให้เป็นตัวพิมพ์ใหญ่ */
+  background-color: #343a40;
+  color: white;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.table1 td {
+  vertical-align: middle; /* จัดข้อความให้อยู่กึ่งกลางแนวตั้ง */
+}
+
+.table1 td.text-center {
+  text-align: center; /* จัดข้อความให้อยู่กึ่งกลางแนวนอน */
+  vertical-align: middle; /* จัดข้อความให้อยู่กึ่งกลางแนวตั้ง */
 }
 
 .table1 tr:nth-child(even) {
-  background-color: #f9f9f9; /* สีพื้นหลังของแถวคู่ */
+  background-color: #f9f9f9;
 }
 
 .table1 tr:hover {
-  background-color: #f1f1f1; /* สีพื้นหลังเมื่อวางเมาส์ */
+  background-color: #f1f1f1;
 }
 
 .table1 a.btn {
@@ -382,11 +413,11 @@ li a img:hover {
 }
 
 .table1 a.btn-success {
-  background-color: #060935;
+  background-color: #007bff;
 }
 
 .table1 a.btn-success:hover {
-  background-color: #150c99;
+  background-color: #0056b3;
 }
 
 .table1 a.btn-secondary {
@@ -395,22 +426,6 @@ li a img:hover {
 
 .table1 a.btn-secondary:hover {
   background-color: #5a6268;
-}
-
-.table1 a.btn-primary {
-  background-color: #007bff;
-}
-
-.table1 a.btn-primary:hover {
-  background-color: #0056b3;
-}
-
-.table1 a.btn-success {
-  background-color: #007bff;
-}
-
-.table1 a.btn-success:hover {
-  background-color: #0056b3;
 }
 
 .table1 a.btn-primary {
@@ -425,14 +440,22 @@ li a img:hover {
   background-color: #0056b3; /* เปลี่ยนสีเมื่อโฮเวอร์ */
 }
 
+/* ปุ่มอื่น ๆ */
 .table1 a.btn-warning,
 .table1 a.btn-danger,
-.table1 a.btn-info
+.table1 a.btn-info,
 .table1 a.btn-success {
   border-radius: 5px; /* ปรับโค้งมุมให้ปุ่ม */
   color: white; /* เปลี่ยนสีฟอนต์เป็นสีขาวเพื่อความชัดเจน */
   padding: 8px 16px; /* เพิ่ม padding เพื่อขยายขนาดปุ่ม */
   text-decoration: none; /* เอาเส้นใต้ที่ลิงค์ออก */
+}
+
+.text-center input {
+  margin-top: -20px;
+  width: 100%;
+  box-sizing: border-box;
+  vertical-align: middle;
 }
 
 .edit-icon {
@@ -602,4 +625,16 @@ li a img:hover {
   border-radius: 4px !important;
   border: 1px solid #ddd !important;
   padding: 10px !important;
+}
+
+.alert {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
 }

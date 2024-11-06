@@ -295,7 +295,86 @@
         
     }
  
-    
+    /* โครงสร้างปุ่มทางซ้าย */
+    .sidebar-left {
+        position: fixed;
+        top: 50%;
+        left: 60px; /* ตำแหน่งเริ่มต้นจากด้านซ้าย */
+        transform: translateY(-50%);
+        width: 50px;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 0 8px 8px 0;
+        transition: background-color 0.3s, left 0.3s; /* เพิ่มการเลื่อน left เมื่อ Sidebar ขยาย */
+        z-index: 3; /* วางปุ่มทางซ้ายให้อยู่บน Sidebar */
+    }
+
+    .sidebar:hover ~ .content .sidebar-left {
+        left: 200px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    .sidebar-left .button {
+        width: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-left:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-left .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
+
+    /* ปรับปุ่มทางขวา */
+    .sidebar-right {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        width: 50px;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 8px 0 0 8px;
+        transition: background-color 0.3s;
+        z-index: 1; /* วางปุ่มทางขวาให้อยู่บน Sidebar */
+    }
+
+    .sidebar-right:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-right .button {
+        width: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-right .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
+
 </style>
 
 <div>
@@ -325,7 +404,7 @@
     
         {% for field in fields %}
             <tr class="field-row" data-field-id="{{ field.f_id }}">
-                <td style="padding: 10px; border: 1px solid #ddd;">
+                <td style="padding: 10px; border: 1px solid #ddd; overflow-wrap: break-word; max-width: 100vh;">
                     <script>document.write(++fieldCounter);</script>. {{ field.f_name }}
                 </td>
                 <td style="padding: 10px; border: 1px solid #ddd;"></td>
@@ -339,7 +418,7 @@
             {% for subfield in subfields %}
                 {% if subfield.f_id == field %}
                     <tr class="subfield-row" data-field-id="{{ field.f_id }}">
-                        <td style="padding: 10px; border: 1px solid #ddd;">
+                        <td style="padding: 10px; border: 1px solid #ddd; overflow-wrap: break-word; max-width: 100vh;">
                             <script>document.write(fieldCounter + '.' + (++subfieldCounter));</script>. {{ subfield.sf_name }}
                             <div>
                                 {% if subfield.sf_id %}
@@ -360,13 +439,15 @@
                     {% for selection in workload_selections %}
                     {% if selection.sf_id == subfield %}
                         <tr class="selection-row" data-field-id="{{ field.f_id }}" data-calculated-workload="{{ selection.calculated_workload }}">
-                            <td style="padding: 10px; border: 1px solid #ddd;">
+                            <td style="padding: 10px; border: 1px solid #ddd; overflow-wrap: break-word; max-width: 100vh;">
                                 <script>document.write(fieldCounter + '.' + subfieldCounter + '.' + (++selectionCounter));</script>. {{ selection.selected_name }}
+                                <div>
                                 <a href="{% url 'edit_workload_selection' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">แก้ไข</a>
                                 <form action="{% url 'delete_workload_selection' selection.id %}" method="post" style="display:inline;" onsubmit="saveScrollPosition()">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
                                 </form>
+                                </div>
                             </td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_num }}</td>
                             <td style="text-align: center; padding: 10px; border: 1px solid #ddd;">{{ selection.selected_workload }}</td>
@@ -399,7 +480,7 @@
             
             <!-- เพิ่มแถวแสดงผลรวมสำหรับแต่ละ field -->
             <tr class="field-total-row" data-field-id="{{ field.f_id }}">
-                <td colspan="3" style="text-align: right; font-weight: bold; padding: 10px; border: 1px solid #ddd;">
+                <td colspan="3" style="text-align: right; font-weight: bold; padding: 10px; border: 1px solid #ddd; overflow-wrap: break-word; max-width: 100vh;">
                     รวมคะแนนสำหรับ {{ field.f_name }}:
                 </td>
                 <td class="field-total" style="text-align: center; font-weight: bold; padding: 10px; border: 1px solid #ddd;">
@@ -437,6 +518,12 @@
     <a href="{% url 'evaluation_page' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
 </div>
 </div>
+</div>
+<div class="sidebar-left">
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page' evaluation_id=evaluation.uevr_id %}'">ย้อนกลับ</button>
+</div>
+<div class="sidebar-right">
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page_3' evaluation_id %}'">ถัดไป</button>
 </div>
 
 <script>

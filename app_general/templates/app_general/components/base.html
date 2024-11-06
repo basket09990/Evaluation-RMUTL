@@ -24,6 +24,7 @@
         align-items: center;
         padding-top: 20px;
         transition: width 0.3s;
+        z-index: 1; /* อยู่ในเลเยอร์ต่ำกว่า */
     }
 
     .sidebar:hover {
@@ -73,16 +74,17 @@
     }
 
     .content {
-        justify-content: center; /* จัดให้อยู่ตรงกลางแนวนอน */
-        background-color: #F6F0E5; /* สีพื้นหลังของเนื้อหา */
-        margin-left: 60px; /* ปรับให้มีที่ว่างสำหรับ sidebar */
+        justify-content: center;
+        background-color: #F6F0E5;
+        margin-left: 60px;
         transition: margin-left 0.3s;
     }
-      
-    .sidebar:hover ~ .content {
-        margin-left: 200px; /* ขยับเมื่อ sidebar ขยาย */
-    }    
 
+    .sidebar:hover ~ .content {
+        margin-left: 200px;
+    }
+
+    
 </style>
 </head>
 <body>

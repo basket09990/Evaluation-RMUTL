@@ -16,9 +16,13 @@ class group(models.Model):
 class evr_round(models.Model):
     evr_id = models.AutoField(primary_key=True)
     evr_year = models.IntegerField(default=datetime.now().year)
-    evr_round = models.IntegerField(default="", blank=True, null=True)
+    evr_round = models.IntegerField(default="1", blank=True, null=True)
     evr_status = models.BooleanField(default=False)
-    end_date = models.DateField(default=timezone.now) 
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.evr_year} รอบที่ {self.evr_round}"
 
 class user_evaluation_agreement(models.Model):
     uevra_id = models.AutoField(primary_key=True)
@@ -132,7 +136,7 @@ class WorkloadCriteria(models.Model):
     c_num = models.FloatField(default="0", blank=True, null=True)
     c_unit = models.TextField(default="", blank=True, null=True)
     c_maxnum = models.FloatField(default="0", blank=True, null=True)
-    c_workload = models.FloatField(default="0", blank=True, null=True)
+    c_workload = models.FloatField(default="1", blank=True, null=True)
     f_id = models.ForeignKey(wl_field, on_delete=models.CASCADE, blank=True, null=True)
     sf_id = models.ForeignKey(wl_subfield, on_delete=models.CASCADE)
 
@@ -373,7 +377,7 @@ class UserWorkloadSelection(models.Model):
     selected_id = models.ForeignKey(WorkloadCriteria, on_delete=models.PROTECT)
     selected_name = models.TextField(default="", blank=True, null=True)
     selected_num = models.FloatField(default="1", blank=True, null=True)
-
+    
     # ใช้ FloatField แทน choices เพื่อดึงข้อมูลโดยตรงจาก selected_id
     selected_maxnum = models.FloatField(default="0", blank=True, null=True)
     selected_unit = models.TextField(default="", blank=True, null=True)

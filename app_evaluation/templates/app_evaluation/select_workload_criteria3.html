@@ -27,51 +27,72 @@
         color: white;
         border-color: #28a745;
     }
-    
-    </style>
 
-<div>
+    .text-center input {
+        margin-top: -20px;
+        width: 100%;
+        box-sizing: border-box;
+        vertical-align: middle;
+    }
     
-    <h2>เลือกภาระงานที่เกี่ยวข้องกับ {{ subfield.sf_name }}</h2>
+</style>
 
-    <form method="POST">
-        {% csrf_token %}
+    <div>
+        <h2>เลือกภาระงานที่เกี่ยวข้องกับ {{ subfield.sf_name }}</h2>
     
-        <h3>หรือเพิ่มภาระงานใหม่</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <h3>หรือเพิ่มภาระงานใหม่</h3>
     
-        <table class="table1">
-            <thead>
-                <tr>
-                    <th>ชื่อภาระงาน</th>
-                    <th>จำนวน</th>
-               
-                    <th>เลือกคะแนนภาระงาน</th>
-                    <th>หมายเหตุ</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <!-- แสดงฟิลด์ selected_id ซึ่งเป็น dropdown ให้เลือกชื่อภาระงาน -->
-                    <td>{{ criteria_form.selected_name }}</td>
-                    <!-- ฟิลด์สำหรับจำนวน -->
-                    <td>{{ criteria_form.selected_num }}</td>
-
-                    <!-- ฟิลด์สำหรับคะแนนภาระงาน -->
-                    <td>
-                        {{ criteria_form.selected_id }}
-                    </td>
-                    <!-- ฟิลด์สำหรับหมายเหตุ -->
-                    <td>{{ criteria_form.notes }}</td>
-                </tr>
-            </tbody>
-        </table>
+            <table class="table1">
+                <thead>
+                    <tr>
+                        <th>ชื่อภาระงาน</th>
+                        <th>จำนวน</th>
+                        <th>หน่วย</th>
+                        <th>เลือกคะแนนภาระงาน</th>
+                        <th>หมายเหตุ</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ criteria_form.selected_name }}</td>
+                        <td>{{ criteria_form.selected_num }}</td>
+                        <td class="text-center">
+                            <input type="text" id="id_selected_unit" name="selected_unit" readonly>
+                        </td>
+                        <td>{{ criteria_form.selected_id }}</td>
+                        <td>{{ criteria_form.notes }}</td>
+                    </tr>
+                </tbody>
+            </table>
     
-        <button type="submit" class="btn btn-success">เพิ่มภาระงานใหม่</button>
-        <a href="{% url 'evaluation_page_from_2' evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
-    </form>
+            <button type="submit" class="btn btn-success">เพิ่มภาระงานใหม่</button>
+            <a href="{% url 'evaluation_page_from_2' evaluation.uevr_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+        </form>
+    </div>
     
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectedIdField = document.getElementById('id_selected_id');
+            const selectedUnitField = document.getElementById('id_selected_unit');
+        
+            selectedIdField.addEventListener('change', function() {
+                const selectedId = this.value;
+        
+                if (selectedId) {
+                    fetch("{% url 'get_c_unit' %}?selected_id=" + selectedId)
+                        .then(response => response.json())
+                        .then(data => {
+                            selectedUnitField.value = data.c_unit || '-'; // กำหนดเป็น "-" ถ้าไม่มีข้อมูล
+                        })
+                        .catch(error => console.error('Error:', error));
+                } else {
+                    selectedUnitField.value = ''; // เคลียร์ฟิลด์เมื่อไม่มี selected_id
+                }
+            });
+        });
+    </script>
     
-</div>
-
 
 {% endblock %}

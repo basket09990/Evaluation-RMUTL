@@ -12,6 +12,7 @@
                 <tr>
                     <th>ชื่อภาระงาน</th>
                     <th>จำนวน</th>
+                    <th>หน่วย</th>
                     <th>หมายเหตุ</th>
                 </tr>
             </thead>
@@ -22,6 +23,9 @@
                     <!-- ฟิลด์สำหรับหน่วย -->
                     <td>
                         {{ form.selected_num }}
+                    </td>
+                    <td class="text-center">
+                        {{ selection.selected_unit }}
                     </td>
                     <!-- ฟิลด์สำหรับหมายเหตุ -->
                     <td>{{ form.notes }}</td>

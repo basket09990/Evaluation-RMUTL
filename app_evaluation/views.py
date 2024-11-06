@@ -80,6 +80,8 @@ def auto_save_workload(request):
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+
+
 # Views สำหรับจัดการ Group
 def group_list(request):
     groups = group.objects.all()
@@ -488,7 +490,7 @@ def get_evr_round():
     else:
         # รอบสอง (กลางปี)
         round_number = 2
-        evr_year = current_year
+        evr_year = current_year - 1
         start_date = date(current_year, 4, 1)  # 1 เมษายน
         end_date = date(current_year, 9, 30)  # 30 กันยายน
 
@@ -3118,6 +3120,8 @@ def select_workload_criteria(request, evaluation_id, sf_id):
                 print(f"ValueError: {e}")
                 messages.error(request, 'ไม่สามารถคำนวณค่าได้ โปรดตรวจสอบข้อมูลที่กรอก.')
 
+    print(criteria_form.errors)
+
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'evaluation': evaluation,
@@ -3765,8 +3769,20 @@ def eval_5(request):
     return render(request,'app_evaluation/evaluation5.html')
 
 
-
-
+from django.views.decorators.http import require_GET
+@require_GET
+def get_c_unit(request):
+    selected_id = request.GET.get('selected_id')
+    data = {}
+    if selected_id:
+        try:
+            workload_criteria = WorkloadCriteria.objects.get(pk=selected_id)
+            data['c_unit'] = workload_criteria.c_unit or '-'
+        except WorkloadCriteria.DoesNotExist:
+            data['error'] = "Workload criteria not found."
+    else:
+        data['error'] = "No selected_id provided."
+    return JsonResponse(data)
 
 
 

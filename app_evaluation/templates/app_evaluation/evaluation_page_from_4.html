@@ -290,6 +290,86 @@
         color: black;
         cursor: default;
     }
+
+    /* โครงสร้างปุ่มทางซ้าย */
+    .sidebar-left {
+        position: fixed;
+        top: 50%;
+        left: 60px; /* ตำแหน่งเริ่มต้นจากด้านซ้าย */
+        transform: translateY(-50%);
+        width: 50px;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 0 8px 8px 0;
+        transition: background-color 0.3s, left 0.3s; /* เพิ่มการเลื่อน left เมื่อ Sidebar ขยาย */
+        z-index: 3; /* วางปุ่มทางซ้ายให้อยู่บน Sidebar */
+    }
+
+    .sidebar:hover ~ .content .sidebar-left {
+        left: 200px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    .sidebar-left .button {
+        width: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-left:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-left .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
+
+    /* ปรับปุ่มทางขวา */
+    .sidebar-right {
+        position: fixed;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        width: 50px;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 8px 0 0 8px;
+        transition: background-color 0.3s;
+        z-index: 1; /* วางปุ่มทางขวาให้อยู่บน Sidebar */
+    }
+
+    .sidebar-right:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-right .button {
+        width: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-right .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
     
 </style>
 <div>
@@ -318,7 +398,7 @@
                     <td>องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)</td>
                     <td style="text-align: center;">30</td>
                     <td style="text-align: center;">{{ mc_score|floatformat:1  }}</td>
-                    <td>
+                    <td style="text-align: center;">
                         <textarea name="remark_mc" rows="2" cols="20">{{ remark_mc|default_if_none:'' }}</textarea>
                     </td>
                 </tr>
@@ -375,6 +455,14 @@
     <a href="{% url 'evaluation_page_from_1'  evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </div>
 </div>
+
+<div class="sidebar-left">
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page_from_3' evaluation_id %}'">ย้อนกลับ</button>
+</div>
+<div class="sidebar-right">
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page_from_5' evaluation_id %}'">ถัดไป</button>
+</div>
+
 <script>
     
     function showAlert() {
