@@ -340,17 +340,17 @@ class WorkloadCriteriaSelectionForm(forms.ModelForm):
 
 class UserWorkloadSelectionForm(forms.ModelForm):
     selected_id = forms.ModelChoiceField(
-    queryset=WorkloadCriteria.objects.none(),
-    label="เลือกเกณฑ์ภาระงาน",
-    required=True,
-    widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_selected_id'})
-    )
+        queryset=WorkloadCriteria.objects.none(),
+        label="เลือกเกณฑ์ภาระงาน",
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_selected_id', 'style': 'max-width: 200px; white-space: normal;'})
+        )
 
     selected_unit = forms.CharField(
-    label="จำนวน",
-    required=False,
-    widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_selected_unit'})
-    )
+        label="จำนวน",
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_selected_unit'})
+        )
 
     class Meta:
         model = UserWorkloadSelection

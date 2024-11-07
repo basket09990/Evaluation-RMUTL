@@ -34,6 +34,18 @@
         box-sizing: border-box;
         vertical-align: middle;
     }
+
+    select {
+        max-width: 200px; /* กำหนดความกว้างสูงสุด */
+        white-space: normal;
+        word-wrap: break-word;
+    }
+    
+    option {
+        white-space: normal; /* อนุญาตให้ขึ้นบรรทัดใหม่ */
+        word-wrap: break-word;
+        max-width: 200px;
+    }
     
 </style>
 
@@ -74,10 +86,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             const selectedIdField = document.getElementById('id_selected_id');
             const selectedUnitField = document.getElementById('id_selected_unit');
-        
+    
+            // ฟังก์ชันเพื่อเพิ่ม tooltip สำหรับ option ยาวเกิน 30 ตัวอักษร
+            function addTooltipToOptions() {
+                Array.from(selectedIdField.options).forEach(option => {
+                    if (option.text.length > 30) {  // ตัวเลขนี้สามารถปรับได้ตามความยาวที่ต้องการ
+                        option.title = option.text; // เพิ่ม tooltip
+                    }
+                });
+            }
+    
+            // เรียกใช้ฟังก์ชัน tooltip เมื่อต้องการ
+            addTooltipToOptions();
+    
+            // อัปเดต selected_unit เมื่อเปลี่ยน selected_id
             selectedIdField.addEventListener('change', function() {
                 const selectedId = this.value;
-        
+    
                 if (selectedId) {
                     fetch("{% url 'get_c_unit' %}?selected_id=" + selectedId)
                         .then(response => response.json())
@@ -91,6 +116,7 @@
             });
         });
     </script>
+    
     
 
 {% endblock %}
