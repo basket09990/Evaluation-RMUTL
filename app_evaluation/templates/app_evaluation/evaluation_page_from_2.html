@@ -114,7 +114,6 @@
         border-radius: 4px;
         cursor: pointer;
         margin-top: 20px;
-        width: 50px;
         margin-botton: 20px;
     }
 
@@ -302,6 +301,14 @@
         align-items: center;
     }
  
+    .content2 {
+        justify-content: center;
+        background-color: #F6F0E5;
+        margin-left: 60px;
+        margin-right: 60px;
+        transition: margin-left 0.3s;
+    }
+
     /* โครงสร้างปุ่มทางซ้าย */
     .sidebar-left {
         position: fixed;
@@ -309,6 +316,7 @@
         left: 60px; /* ตำแหน่งเริ่มต้นจากด้านซ้าย */
         transform: translateY(-50%);
         width: 50px;
+        height: 100%;
         background-color: rgba(52, 58, 64, 0.5);
         padding: 10px;
         box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
@@ -324,6 +332,7 @@
 
     .sidebar-left .button {
         width: 100%;
+        height: 100%;
         padding: 15px 0;
         background-color: #007bff;
         color: white;
@@ -351,6 +360,7 @@
         right: 0;
         transform: translateY(-50%);
         width: 50px;
+        height: 100%;
         background-color: rgba(52, 58, 64, 0.5);
         padding: 10px;
         box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
@@ -366,6 +376,7 @@
 
     .sidebar-right .button {
         width: 100%;
+        height: 100%;
         padding: 15px 0;
         background-color: #007bff;
         color: white;
@@ -381,13 +392,70 @@
         background-color: #0056b3;
         opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
     }
+
+    /* ปุ่มแสดงเมนู */
+    .menu-toggle {
+        position: fixed;
+        top: 0%;
+        left: 140px;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        width: 200px;
+    }
+
+    .sidebar:hover ~ .content .menu-toggle {
+        left: 280px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    /* ซ่อนเมนูเริ่มต้น */
+    .centered-menu {
+        display: none;
+        gap: 10px;
+        padding: 10px;
+        position: fixed;
+        top: 0;
+        background-color: #F6F0E5;
+        flex-wrap: wrap; 
+    }
+
+    .centered-menu a,
+    .centered-menu button {
+        padding: 10px 15px;
+        font-size: 14px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+
+    .centered-menu .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 1px solid #6c757d;
+    }
+
+    .centered-menu .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+    }
+
+    .centered-menu .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+    }
+
+    .centered-menu .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
     
 </style>
 
 
 {% if user.groups.all.0.name == "Evaluator" %}
 
-<div>
+<div class="content2">
 <div>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -544,7 +612,30 @@
 
 
 <div>
-    <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+
+    <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+                        <div class="centered-menu" id="centeredMenu">
+                                <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                <a href="{% url 'evaluation_page_from_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+
+                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                            <table>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
+                        </div>
+
 </div>
 </div>
 </div>
@@ -553,7 +644,7 @@
 
 {% if user.groups.all.0.name == "Staff"%}
 
-<div>
+<div class="content2">
 <div>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -708,7 +799,35 @@
 
 
 <div>
-    <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+
+                    <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+                        <div class="centered-menu" id="centeredMenu">
+                                <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
+                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                <a href="{% url 'evaluation_page_from_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+
+                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                            <table>
+                                <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
+                        </div>
 </div>
 </div>
 </div>
@@ -718,7 +837,7 @@
 
 {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
 
-<div>
+<div class="content2">
 <div>
 
 <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -887,7 +1006,36 @@
 
 
 <div>
-    <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+    
+    <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+                        <div class="centered-menu" id="centeredMenu">
+                                <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
+                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
+                                <a href="{% url 'evaluation_page_from_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+
+                            <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                            <table>
+                                <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
+                        </div>
+
 </div>
 </div>
 </div>
@@ -996,6 +1144,25 @@
     // เรียกฟังก์ชัน restoreScrollPosition เมื่อหน้าเว็บถูกโหลด
     document.addEventListener('DOMContentLoaded', function() {
         restoreScrollPosition();
+    });
+
+    // ฟังก์ชันเพื่อแสดง/ซ่อนเมนูเมื่อคลิกปุ่ม
+    function toggleMenu() {
+        const menu = document.getElementById('centeredMenu');
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'flex';
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+
+    // ซ่อนเมนูเมื่อคลิกภายนอกเมนู
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('centeredMenu');
+        const toggleButton = document.querySelector('.menu-toggle');
+        if (!menu.contains(event.target) && event.target !== toggleButton) {
+            menu.style.display = 'none';
+        }
     });
 
 </script>

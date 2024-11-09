@@ -14,10 +14,7 @@
             {% for subfield in subfields %}
             <tr>
                 <td style="text-align: left;">{{ subfield.sf_name }}</td>
-                <td>
-                    <a href="{% url 'wl_subfield_edit' subfield.pk %}" class="btn btn-warning">แก้ไข</a>
-                    <a href="{% url 'wl_subfield_delete' subfield.pk %}" class="btn btn-danger">ลบ</a>
-                    <a href="{% url 'workload_criteria_list' subfield.sf_id %}" class="btn btn-info">ดูเกณฑ์ภาระงาน</a>
+                <td><a href="{% url 'wl_subfield_edit' subfield.pk %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'wl_subfield_delete' subfield.pk %}" class="btn btn-danger">ลบ</a> <a href="{% url 'workload_criteria_list' subfield.sf_id %}" class="btn btn-info">ดูเกณฑ์ภาระงาน</a>
                 </td>
             </tr>
             {% endfor %}

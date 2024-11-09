@@ -370,7 +370,7 @@
         background-color: #0056b3;
         opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
     }
-    
+
     /* ปุ่มแสดงเมนู */
     .menu-toggle {
         position: fixed;
@@ -549,30 +549,53 @@
 </div>
 </div>
 <div>
+    {% if user.groups.all.0.name == "Assessor" %}
+    
+    {% endif %}
+    
+    <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+                        <div class="centered-menu" id="centeredMenu">
+                                <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
+                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                                <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                                <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                                <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
 
-
-    <div>
-        <button class="menu-toggle" onclick="toggleMenu()">เมนู</button>
-            <div>
-                <div class="centered-menu" id="centeredMenu">
-                    <a href="{% url 'evaluation_page' evaluation_id=evaluation.uevr_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
-                    <a href="{% url 'evaluation_page_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
-                    <a href="{% url 'evaluation_page_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
-                    <a href="{% url 'evaluation_page_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
-                    <a href="{% url 'evaluation_page_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
-            
-                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
-                    <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
-                </form>
-                </div>
-            </div>
-    </div>
-
+                            <form action="{% url 'toggle_approve_status' evaluation_id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary">
+                                    ตรวจสอบการประเมินแล้ว
+                                </button>
+                            </form>
+                            {% if user.groups.all.0.name == "Evaluator" %}
+                            <table>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
+                                </form>
+                            </td>
+                            </table>
+                            
+                            {% elif user.groups.all.0.name != "Evaluator" %}
+                            <table>
+                                <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
+                                </form>
+                            </td>
+                            <td>
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                    <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
+                                </form>
+                            </td>
+                            </table>
+                            {% endif %}
+                        </div>
 </div>
 </div>
 
 <div class="sidebar-left">
-    <button class="button" onclick="window.location.href='{% url 'evaluation_page_5' evaluation_id %}'">ย้อนกลับ</button>
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page_from_5' evaluation_id %}'">ย้อนกลับ</button>
 </div>
 
 <script>
@@ -601,4 +624,5 @@
     });
 
 </script>
+
 {% endblock %}

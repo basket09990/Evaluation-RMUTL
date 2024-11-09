@@ -1,34 +1,100 @@
 {% extends 'app_general/components/base.html' %}
 {% load static %}
 {% block content %}
-<div class="form-group">
+<style>
+    /* ซ่อน Radio button */
+    input[type="checkbox"] {
+        display: none;
+    }
+
+    /* รูปแบบปุ่ม */
+    label {
+        display: inline-block;
+        padding: 10px 20px;
+        margin: 5px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    
+    /* รูปแบบเมื่อคลิกปุ่ม */
+    input[type="checkbox"]:checked + label {
+        background-color: #28a745;
+        color: white;
+        border-color: #28a745;
+    }
+
+    .text-center input {
+        margin-top: -20px;
+        width: 100%;
+        box-sizing: border-box;
+        vertical-align: middle;
+    }
+
+    .form-table5 {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    .form-table5 th {
+        padding: 10px;
+        text-align: left;
+        vertical-align: middle;
+    }
+    
+    .form-table5 td {
+        padding: 10px;
+        vertical-align: middle;
+    }
+    
+    .form-table5 input[type="text"],input[type="number"] {
+        width: 100%; /* กำหนดให้ช่อง input ครอบคลุมความกว้างของคอลัมน์ขวา */
+        padding: 6px;
+        box-sizing: border-box;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 6px;
+        box-sizing: border-box;
+    }
+
+</style>
+<div>
     <form method="post" action="{% url 'edit_workload_selection3' selection.id %}">
         {% csrf_token %}
     
-        <h3>แก้ไขภาระงานใหม่</h3>
+        <h3>แก้ไขภาระงานของ {{ selection.selected_id }}</h3>
     
-        <table class="table1">
-            <thead>
+        <table class="form-table5">
+
                 <tr>
                     <th>ชื่อภาระงาน</th>
+                </tr>
+                <tr>
+                    <td>{{ form.selected_name }}</td>
+                </tr>
+                <tr>
                     <th>จำนวน</th>
+                </tr>
+                <tr>
+                    <td>{{ form.selected_num }}</td>
+                </tr>
+                <tr>
                     <th>หน่วย</th>
+                </tr>
+                <tr>
+                    <td class="text-center">{{ selection.selected_unit }}</td>
+                </tr>
+                <tr>
                     <th>หมายเหตุ</th>
                 </tr>
-            </thead>
-            <tbody>
                 <tr>
-                    <!-- แสดงฟิลด์ selected_id ซึ่งเป็น dropdown ให้เลือกชื่อภาระงาน -->
-                    <td>{{ form.selected_name }}</td>
-                    <!-- ฟิลด์สำหรับหน่วย -->
-                    <td>{{ form.selected_num }}
-                    </td>
-                    <td class="text-center">{{ selection.selected_unit }}
-                    </td>
-                    <!-- ฟิลด์สำหรับหมายเหตุ -->
                     <td>{{ form.notes }}</td>
                 </tr>
-            </tbody>
         </table>
     
         <button type="submit" class="btn btn-success">บันทึก</button>

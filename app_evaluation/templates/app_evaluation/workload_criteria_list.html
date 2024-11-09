@@ -22,9 +22,7 @@
                 <td>{{ criterion.c_maxnum }}</td>
                 <td>{{ criterion.c_unit }}</td>
                 <td>{{ criterion.c_workload }}</td>
-                <td>
-                    <a href="{% url 'workload_criteria_edit' criterion.pk %}" class="btn btn-warning">แก้ไข</a>
-                    <a href="{% url 'workload_criteria_delete' criterion.pk %}" class="btn btn-danger">ลบ</a>
+                <td><a href="{% url 'workload_criteria_edit' criterion.pk %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'workload_criteria_delete' criterion.pk %}" class="btn btn-danger">ลบ</a>
                 </td>
             </tr>
             {% endfor %}

@@ -1,7 +1,7 @@
 {% extends 'app_general/components/base.html' %}
 {% block content %}
 <div>
-    <h2>รายละเอียดของกลุ่ม: {{ group.g_name }}</h2>
+    <h2>รายละเอียดของกลุ่ม: {{ group.g_field_name }}</h2>
     <a href="{% url 'group_detail_add' group.g_id %}" class="btn btn-primary">เพิ่มรายละเอียดกลุ่ม</a>
     <table class="table1">
         <thead>
@@ -16,9 +16,7 @@
             <tr>
                 <td style="text-align: left;">{{ detail.f_id.f_name }}</td>
                 <td>{{ detail.gd_workload }}</td>
-                <td>
-                    <a href="{% url 'group_detail_edit' detail.gd_id %}" class="btn btn-warning">แก้ไข</a>
-                    <a href="{% url 'group_detail_delete' detail.gd_id %}" class="btn btn-danger">ลบ</a>
+                <td><a href="{% url 'group_detail_edit' detail.gd_id %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'group_detail_delete' detail.gd_id %}" class="btn btn-danger">ลบ</a>
                 </td>
             </tr>
             {% endfor %}

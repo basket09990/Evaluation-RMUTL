@@ -8,9 +8,10 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+        <a href="{% url 'evaluation_page5' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
     </form>
     
     <!-- ปุ่มย้อนกลับไปยัง evaluation_page_5 -->
-    <a href="{% url 'evaluation_page5' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
+    
 </div>
 {% endblock %}

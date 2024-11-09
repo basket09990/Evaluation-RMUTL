@@ -7,7 +7,8 @@
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit" class="btn btn-success">บันทึกการแก้ไข</button>
+        <a href="{% url 'list_administrative_competency' %}" class="btn btn-secondary">ยกเลิก</a> 
     </form>
-    <a href="{% url 'list_administrative_competency' %}" class="btn btn-secondary">กลับ</a>    
+       
 </div>
 {% endblock %}

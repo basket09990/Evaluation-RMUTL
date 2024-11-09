@@ -23,6 +23,7 @@ class GroupForm(forms.ModelForm):
         }
         widgets = {
             'g_name': forms.NumberInput(attrs={'class': 'form-control'}),
+            'g_field_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class GroupDetailForm(forms.ModelForm):
@@ -38,7 +39,6 @@ class GroupDetailForm(forms.ModelForm):
         fields = ['f_id', 'gd_workload']
         labels = {
             'gd_workload': 'น้ำหนักภาระงาน',
-
         }
 
 class WlFieldForm(forms.ModelForm):
@@ -47,7 +47,9 @@ class WlFieldForm(forms.ModelForm):
         fields = ['f_name']
         labels = {
             'f_name': 'ชื่อภาระงาน',
-
+        }
+        widgets = {
+            'f_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class WlSubfieldForm(forms.ModelForm):
@@ -56,7 +58,9 @@ class WlSubfieldForm(forms.ModelForm):
         fields = ['sf_name']
         labels = {
             'sf_name': 'ชื่อกลุ่มย่อยภาระงาน',
-
+        }
+        widgets = {
+            'sf_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class WorkloadCriteriaForm(forms.ModelForm):
@@ -69,6 +73,10 @@ class WorkloadCriteriaForm(forms.ModelForm):
             'c_maxnum': 'จำนวนสูงสุด',
             'c_unit': 'หน่วย',
             'c_workload': 'ภาระงาน',
+        }
+        widgets = {
+            'c_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'c_unit': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class MainCompetencyForm(forms.ModelForm):
@@ -89,6 +97,9 @@ class MainCompetencyForm(forms.ModelForm):
             'mc_type': 'ประเภทตำแหน่งวิชาการ',
             'mc_num': 'ระดับสมรรถนะที่คาดหวัง',
         }
+        widgets = {
+            'mc_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 class SpecificCompetencyForm(forms.ModelForm):
     # ดึงข้อมูล ac_name ของ academic_type มาใช้ใน sc_type
@@ -108,18 +119,20 @@ class SpecificCompetencyForm(forms.ModelForm):
             'sc_type': 'ประเภทตำแหน่งวิชาการ',
             'sc_num': 'ระดับสมรรถนะที่คาดหวัง',
         }
+        widgets = {
+            'sc_name': forms.TextInput(attrs={'class': 'form-control'}),
+        }
 
 class AdministrativeCompetencyForm(forms.ModelForm):
     # ดึงข้อมูล ac_name ของ academic_type มาใช้ใน adc_type
-
-
     class Meta:
         model = administrative_competency
         fields = ['adc_name']
         labels = {
             'adc_name': 'สมรรถนะทางการบริหาร (ที่สภามหาวิทยาลัยกำหนด) ',
-            
-            
+        }
+        widgets = {
+            'adc_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class GroupSelectionForm(forms.ModelForm):
@@ -343,11 +356,11 @@ class UserWorkloadSelectionForm(forms.ModelForm):
         queryset=WorkloadCriteria.objects.none(),
         label="เลือกเกณฑ์ภาระงาน",
         required=True,
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_selected_id', 'style': 'max-width: 200px; white-space: normal;'})
+        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_selected_id', 'style': 'max-width: 100vh; white-space: normal;'})
         )
 
     selected_unit = forms.CharField(
-        label="จำนวน",
+        label="หน่วย",
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'id_selected_unit'})
         )
@@ -356,8 +369,14 @@ class UserWorkloadSelectionForm(forms.ModelForm):
         model = UserWorkloadSelection
         fields = ['selected_id', 'selected_name', 'selected_num', 'selected_unit', 'notes']
         labels = {
-            'selected_unit': 'จำนวน',
+            'selected_name':'ชื่อภาระงาน', 
+            'selected_num':'จำนวน',
+            'selected_unit': 'หน่วย',
             'notes': 'หมายเหตุ',
+        }
+        widgets = {
+            'selected_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -380,6 +399,10 @@ class UserWorkloadSelectionForm1(forms.ModelForm):
         labels = {
             'selected_unit': 'จำนวน',
             'notes': 'หมายเหตุ',
+        }
+        widgets = {
+            'selected_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'notes': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class UserWorkloadSelectionForm2(forms.ModelForm):

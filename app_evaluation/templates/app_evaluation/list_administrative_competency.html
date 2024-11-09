@@ -7,18 +7,12 @@
     <table class="table1">
         <tr>
             <th>ชื่อ</th>
-
-          
             <th>จัดการ</th>
         </tr>
         {% for competency in competencies %}
         <tr>
             <td style="text-align: left;">{{ competency.adc_name }}</td>
-
-          
-            <td>
-                <a href="{% url 'edit_administrative_competency' competency.adc_id %}" class="btn btn-warning">แก้ไข</a> 
-                <a href="{% url 'delete_administrative_competency' competency.adc_id %}" class="btn btn-danger">ลบ</a>
+            <td><a href="{% url 'edit_administrative_competency' competency.adc_id %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'delete_administrative_competency' competency.adc_id %}" class="btn btn-danger">ลบ</a>
             </td>
         </tr>
         {% endfor %}

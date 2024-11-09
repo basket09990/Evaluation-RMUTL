@@ -16,9 +16,7 @@
             <td style="text-align: left;">{{ competency.sc_name }}</td>
             <td>{{ competency.sc_type }}</td>
             <td>{{ competency.sc_num }}</td>
-            <td>
-                <a href="{% url 'edit_specific_competency' competency.sc_id %}" class="btn btn-warning">แก้ไข</a>
-                <a href="{% url 'delete_specific_competency' competency.sc_id %}" class="btn btn-danger">ลบ</a>
+            <td><a href="{% url 'edit_specific_competency' competency.sc_id %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'delete_specific_competency' competency.sc_id %}" class="btn btn-danger">ลบ</a>
             </td>
         </tr>
         {% endfor %}

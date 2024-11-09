@@ -18,10 +18,7 @@
                 <td>{{ group.g_name }}</td>
                 <td style="text-align: left;">{{ group.g_field_name }}</td>
                 <td>{{ group.g_max_workload }}</td>
-                <td>
-                    <a href="{% url 'group_edit' group.pk %}" class="btn btn-warning">แก้ไข</a>
-                    <a href="{% url 'group_delete' group.pk %}" class="btn btn-danger">ลบ</a>
-                    <a href="{% url 'group_detail_list' group.pk %}" class="btn btn-info">ดูรายละเอียด</a>
+                <td><a href="{% url 'group_edit' group.pk %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'group_delete' group.pk %}" class="btn btn-danger">ลบ</a> <a href="{% url 'group_detail_list' group.pk %}" class="btn btn-info">ดูรายละเอียด</a>
                 </td>
             </tr>
             {% endfor %}

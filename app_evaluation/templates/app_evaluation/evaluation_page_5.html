@@ -111,8 +111,6 @@
         background-color: transparent;
     }
 
-    
-    
     .action-buttons {
         white-space: nowrap; /* Prevent buttons from wrapping */
     }
@@ -124,8 +122,29 @@
         margin: 2px; /* Add a small margin between buttons */
     }
     
-    td.action-buttons a.btn-primary, td.action-buttons button.btn-danger {
+    /* สีของปุ่มใน td.action-buttons */
+    td.action-buttons a.btn-primary {
         width: 60px; /* Control button width */
+        background-color: #007bff; /* เปลี่ยนสีปุ่มเป็นสีน้ำเงิน */
+        color: white; /* สีตัวอักษรในปุ่ม */
+        border-color: #007bff;
+    }
+    
+    td.action-buttons a.btn-primary:hover {
+        background-color: #0056b3; /* สีปุ่มเมื่อ hover */
+        border-color: #0056b3;
+    }
+    
+    td.action-buttons button.btn-danger {
+        width: 60px; /* Control button width */
+        background-color: #dc3545; /* สีปุ่มแดง */
+        color: white; /* สีตัวอักษร */
+        border-color: #dc3545;
+    }
+    
+    td.action-buttons button.btn-danger:hover {
+        background-color: #c82333; /* สีปุ่มแดงเมื่อ hover */
+        border-color: #c82333;
     }
 
     form textarea {
@@ -292,6 +311,14 @@
         padding: 10px;
     }
 
+    .content2 {
+        justify-content: center;
+        background-color: #F6F0E5;
+        margin-left: 60px;
+        margin-right: 60px;
+        transition: margin-left 0.3s;
+    }
+
     /* โครงสร้างปุ่มทางซ้าย */
     .sidebar-left {
         position: fixed;
@@ -299,6 +326,7 @@
         left: 60px; /* ตำแหน่งเริ่มต้นจากด้านซ้าย */
         transform: translateY(-50%);
         width: 50px;
+        height: 100%;
         background-color: rgba(52, 58, 64, 0.5);
         padding: 10px;
         box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
@@ -314,6 +342,7 @@
 
     .sidebar-left .button {
         width: 100%;
+        height: 100%;
         padding: 15px 0;
         background-color: #007bff;
         color: white;
@@ -341,6 +370,7 @@
         right: 0;
         transform: translateY(-50%);
         width: 50px;
+        height: 100%;
         background-color: rgba(52, 58, 64, 0.5);
         padding: 10px;
         box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
@@ -356,6 +386,7 @@
 
     .sidebar-right .button {
         width: 100%;
+        height: 100%;
         padding: 15px 0;
         background-color: #007bff;
         color: white;
@@ -371,9 +402,65 @@
         background-color: #0056b3;
         opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
     }
+
+    /* ปุ่มแสดงเมนู */
+    .menu-toggle {
+        position: fixed;
+        top: 0%;
+        left: 140px;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .sidebar:hover ~ .content .menu-toggle {
+        left: 280px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    /* ซ่อนเมนูเริ่มต้น */
+    .centered-menu {
+        display: none;
+        gap: 10px;
+        padding: 10px;
+        position: fixed;
+        top: 0;
+        background-color: #F6F0E5;
+        flex-wrap: wrap; 
+    }
+
+    .centered-menu a,
+    .centered-menu button {
+        padding: 10px 15px;
+        font-size: 14px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+
+    .centered-menu .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 1px solid #6c757d;
+    }
+
+    .centered-menu .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+    }
+
+    .centered-menu .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+    }
+
+    .centered-menu .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
     
 </style>
-<div>
+<div class="content2">
     <div>
         <form action="{% url 'evaluation_page_5' evaluation_id %}" method="POST">
             {% csrf_token %}
@@ -393,7 +480,7 @@
                         <tr>
                             <td>{{ pd.skill_evol }}</td>
                             <td>{{ pd.dev }}</td>
-                            <td style="display: flex; align-items: center;">
+                            <td class="action-buttons" style="display: flex; align-items: center;">
                                 {{ pd.dev_time }}
                                 <a href="{% url 'edit_personal_diagram' pd.instance.pk %}" class="btn btn-primary btn-sm" style="margin-left: 5px; padding: 3px 8px; font-size: 12px;">แก้ไข</a>
                                 <form action="{% url 'delete_personal_diagram' pd.instance.pk %}" method="post" style="display:inline; margin-left: 5px;">
@@ -478,12 +565,30 @@
             บันทึกชื่อ-นามสกุล
         </button>
     </form>
-    <a href="{% url 'evaluation_page' evaluation_id=evaluation_id %}" class="btn btn-secondary">ย้อนกลับ</a>
-    
+
+    <div>
+        <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+            <div>
+                <div class="centered-menu" id="centeredMenu">
+                    <a href="{% url 'evaluation_page' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
+                    <a href="{% url 'evaluation_page_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
+                    <a href="{% url 'evaluation_page_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
+                    <a href="{% url 'evaluation_page_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
+                    <a href="{% url 'evaluation_page_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+            
+                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                    <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
+                </form>
+                </div>
+            </div>
+    </div>
 </div>
 
 <div class="sidebar-left">
     <button class="button" onclick="window.location.href='{% url 'evaluation_page_4' evaluation_id %}'">ย้อนกลับ</button>
+</div>
+<div class="sidebar-right">
+    <button class="button" onclick="window.location.href='{% url 'evaluation_page_6' evaluation_id %}'">ถัดไป</button>
 </div>
 
 <script>
@@ -492,6 +597,24 @@
         alert('บันทึกข้อมูลเรียบร้อย');
     }
 
+    // ฟังก์ชันเพื่อแสดง/ซ่อนเมนูเมื่อคลิกปุ่ม
+    function toggleMenu() {
+        const menu = document.getElementById('centeredMenu');
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'flex';
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+
+    // ซ่อนเมนูเมื่อคลิกภายนอกเมนู
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('centeredMenu');
+        const toggleButton = document.querySelector('.menu-toggle');
+        if (!menu.contains(event.target) && event.target !== toggleButton) {
+            menu.style.display = 'none';
+        }
+    });
 
 </script>
 {% endblock %}

@@ -1381,6 +1381,18 @@ def delete_personal_diagram1(request, pd_id):
     return redirect('evaluation_page5', evaluation_id=personal_diagram.uevr_id.uevr_id)
 
 @login_required
+def evaluation_page6(request, evaluation_id):
+    # Fetch the evaluation object
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+
+    context = {
+        'evaluation_id': evaluation_id,
+        'evaluation':evaluation,
+    }
+
+    return render(request,'app_evaluation/evaluation_page6.html', context)
+
+@login_required
 def search_evaluations_2(request):
     query = request.GET.get('q')  # รับค่าค้นหาจาก URL เช่น ?q=คำค้นหา
     year = request.GET.get('year')  # รับค่าปีจาก URL
@@ -2432,6 +2444,18 @@ def delete_personal_diagram2(request, pd_id):
 
     # ในกรณีที่ไม่ใช่ POST ให้กลับไปที่ evaluation_page_5
     return redirect('evaluation_page_from_5', evaluation_id=personal_diagram.uevr_id.uevr_id)
+
+@login_required
+def evaluation_page_from_6(request, evaluation_id):
+    # Fetch the evaluation object
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+
+    context = {
+        'evaluation_id': evaluation_id,
+        'evaluation':evaluation,
+    }
+
+    return render(request,'app_evaluation/evaluation_page_from_6.html', context)
 
 @login_required
 def view_evaluation(request, uevr_id):
@@ -3698,8 +3722,16 @@ def delete_personal_diagram(request, pd_id):
     return redirect('evaluation_page_5', evaluation_id=personal_diagram.uevr_id.uevr_id)
 
 @login_required
-def evaluation_page_6(request):
-    return render(request,'app_evaluation/evaluation_page_6.html')
+def evaluation_page_6(request, evaluation_id):
+    # Fetch the evaluation object
+    evaluation = get_object_or_404(user_evaluation, pk=evaluation_id, user=request.user)
+
+    context = {
+        'evaluation_id': evaluation_id,
+        'evaluation':evaluation,
+    }
+
+    return render(request,'app_evaluation/evaluation_page_6.html', context)
 
 @login_required
 def update_evr_status(request, evaluation_id):

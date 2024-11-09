@@ -61,7 +61,7 @@ urlpatterns = [
     path('evaluation/evaluation_page3/<int:evaluation_id>/', views.evaluation_page3, name='evaluation_page3'),
     path('evaluation/evaluation_page4/<int:evaluation_id>/', views.evaluation_page4, name='evaluation_page4'),
     path('evaluation/evaluation_page5/<int:evaluation_id>/', views.evaluation_page5, name='evaluation_page5'),
-
+    path('evaluation/evaluation_page6/<int:evaluation_id>/', views.evaluation_page6, name='evaluation_page6'),
 
 
 
@@ -96,7 +96,7 @@ urlpatterns = [
     path('evaluation/evaluation_page_3/<int:evaluation_id>/', views.evaluation_page_3, name='evaluation_page_3'),
     path('evaluation/evaluation_page_4/<int:evaluation_id>/', views.evaluation_page_4, name='evaluation_page_4'),
     path('evaluation_page_5/<int:evaluation_id>/', views.evaluation_page_5, name='evaluation_page_5'),
-    path('evaluation_page_6', views.evaluation_page_6, name='evaluation_page_6'),
+    path('evaluation_page_6/<int:evaluation_id>/', views.evaluation_page_6, name='evaluation_page_6'),
     path('update_evr_status/<int:evaluation_id>/', views.update_evr_status, name='update_evr_status'),
 
     
@@ -120,7 +120,7 @@ urlpatterns = [
     path('evaluation_page_from_3/<int:evaluation_id>/', views.evaluation_page_from_3, name='evaluation_page_from_3'),
     path('evaluation_page_from_4/<int:evaluation_id>/', views.evaluation_page_from_4, name='evaluation_page_from_4'),
     path('evaluation_page_from_5/<int:evaluation_id>/', views.evaluation_page_from_5, name='evaluation_page_from_5'),
-
+    path('evaluation_page_from_6/<int:evaluation_id>/', views.evaluation_page_from_6, name='evaluation_page_from_6'),
     path('show_all_evidence/<int:selection_id>/', views.show_all_evidence, name='show_all_evidence'),
 
 

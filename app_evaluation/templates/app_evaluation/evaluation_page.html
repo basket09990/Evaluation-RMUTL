@@ -321,6 +321,58 @@
         padding: 10px;
     }
 
+    .content2 {
+        justify-content: center;
+        background-color: #F6F0E5;
+        margin-left: 60px;
+        margin-right: 60px;
+        transition: margin-left 0.3s;
+    }
+
+    /* โครงสร้างปุ่มทางซ้าย */
+    .sidebar-left {
+        position: fixed;
+        top: 50%;
+        left: 60px; /* ตำแหน่งเริ่มต้นจากด้านซ้าย */
+        transform: translateY(-50%);
+        width: 50px;
+        height: 100%;
+        background-color: rgba(52, 58, 64, 0.5);
+        padding: 10px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        border-radius: 0 8px 8px 0;
+        transition: background-color 0.3s, left 0.3s; /* เพิ่มการเลื่อน left เมื่อ Sidebar ขยาย */
+        z-index: 3; /* วางปุ่มทางซ้ายให้อยู่บน Sidebar */
+    }
+
+    .sidebar:hover ~ .content .sidebar-left {
+        left: 200px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    .sidebar-left .button {
+        width: 100%;
+        height: 100%;
+        padding: 15px 0;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+        opacity: 0.1; /* ทำให้ปุ่มจางลง */
+    }
+
+    .sidebar-left:hover {
+        background-color: rgba(52, 58, 64, 0.9);
+    }
+
+    .sidebar-left .button:hover {
+        background-color: #0056b3;
+        opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
+    }
+
     /* ปรับปุ่มทางขวา */
     .sidebar-right {
         position: fixed;
@@ -328,6 +380,7 @@
         right: 0;
         transform: translateY(-50%);
         width: 50px;
+        height: 100%;
         background-color: rgba(52, 58, 64, 0.5);
         padding: 10px;
         box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
@@ -343,6 +396,7 @@
 
     .sidebar-right .button {
         width: 100%;
+        height: 100%;
         padding: 15px 0;
         background-color: #007bff;
         color: white;
@@ -359,10 +413,66 @@
         opacity: 1; /* ทำให้ปุ่มชัดขึ้นเมื่อโฮเวอร์ */
     }
 
+    /* ปุ่มแสดงเมนู */
+    .menu-toggle {
+        position: fixed;
+        top: 0%;
+        left: 140px;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-size: 16px;
+    }
+
+    .sidebar:hover ~ .content .menu-toggle {
+        left: 280px; /* ขยับปุ่มเมื่อ Sidebar ขยาย */
+    }
+
+    /* ซ่อนเมนูเริ่มต้น */
+    .centered-menu {
+        display: none;
+        gap: 10px;
+        padding: 10px;
+        position: fixed;
+        top: 0;
+        background-color: #F6F0E5;
+        flex-wrap: wrap; 
+    }
+
+    .centered-menu a,
+    .centered-menu button {
+        padding: 10px 15px;
+        font-size: 14px;
+        border-radius: 4px;
+        text-decoration: none;
+    }
+
+    .centered-menu .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: 1px solid #6c757d;
+    }
+
+    .centered-menu .btn-secondary:hover {
+        background-color: #5a6268;
+        border-color: #5a6268;
+    }
+
+    .centered-menu .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: 1px solid #007bff;
+    }
+
+    .centered-menu .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    
 </style>
 
 
-    <div>
+    <div class="content2">
         <h1>ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ</h1>
         <h1>มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ {{ user_evaluation_agreement_year_thai}}</h1>
                     <form action="{% url 'evaluation_page' evaluation_id %}"  method="POST">
@@ -582,23 +692,29 @@
                         
                         <button type="submit" onclick="showAlert()">บันทึก</button>
                     </form>
-                                            <div class="button-container">
-                                                <a href="{% url 'evaluation_page_2' evaluation_id %}"  class="btn btn-secondary">องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน</a>
+
+                    <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
+                                        <div>
+                                            <div class="centered-menu" id="centeredMenu">
+                                                <a href="{% url 'evaluation_page_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
                                                 <a href="{% url 'evaluation_page_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
                                                 <a href="{% url 'evaluation_page_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
                                                 <a href="{% url 'evaluation_page_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
-                                                <a href="{% url 'evaluation_page_6' %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
+                                                <a href="{% url 'evaluation_page_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
-                                            </div>
+                                        
                                             {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
                                             <form action="{% url 'update_evr_status' evaluation_id %}" method="post">
                                                 {% csrf_token %}
                                                 <button type="submit" class="btn btn-primary">ส่งแบบประเมิน</button>
                                             </form>
                                             {% endif %}
+                                        
                                             <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                             </form>
+                                            </div>
+                                        </div>
 
 
                                             <div class="sidebar-right">
@@ -635,6 +751,26 @@
             currentSlide = (currentSlide - 1 + slides.length) % slides.length;
             showSlide(currentSlide);
         }
+
+    // ฟังก์ชันเพื่อแสดง/ซ่อนเมนูเมื่อคลิกปุ่ม
+    function toggleMenu() {
+        const menu = document.getElementById('centeredMenu');
+        if (menu.style.display === 'none' || menu.style.display === '') {
+            menu.style.display = 'flex';
+        } else {
+            menu.style.display = 'none';
+        }
+    }
+
+    // ซ่อนเมนูเมื่อคลิกภายนอกเมนู
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('centeredMenu');
+        const toggleButton = document.querySelector('.menu-toggle');
+        if (!menu.contains(event.target) && event.target !== toggleButton) {
+            menu.style.display = 'none';
+        }
+    });
+
 </script>
 
 

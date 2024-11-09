@@ -15,10 +15,7 @@
             {% for field in fields %}
             <tr>
                 <td style="text-align: left;">{{ field.f_name }}</td>
-                <td>
-                    <a href="{% url 'wl_field_edit' field.pk %}" class="btn btn-warning">แก้ไข</a>
-                    <a href="{% url 'wl_field_delete' field.pk %}" class="btn btn-danger">ลบ</a>
-                    <a href="{% url 'wl_subfield_list' pk=field.f_id %}" class="btn btn-info">ดูรายละเอียด</a>
+                <td><a href="{% url 'wl_field_edit' field.pk %}" class="btn btn-warning">แก้ไข</a> <a href="{% url 'wl_field_delete' field.pk %}" class="btn btn-danger">ลบ</a> <a href="{% url 'wl_subfield_list' pk=field.f_id %}" class="btn btn-info">ดูรายละเอียด</a>
                 </td>
             </tr>
             {% endfor %}

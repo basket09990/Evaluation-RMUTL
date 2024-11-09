@@ -5,7 +5,7 @@
     <form method="post" action="{% url 'edit_workload_selection2' selection.id %}">
         {% csrf_token %}
     
-        <h3>แก้ไขภาระงานใหม่</h3>
+        <h3>แก้ไขภาระงานของ {{ selection.selected_id }}</h3>
     
         <table class="table1">
             <thead>
