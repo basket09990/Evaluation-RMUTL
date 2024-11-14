@@ -597,16 +597,16 @@
         </table>
         
     </div>
+    <!--
     {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
     <form method="post" action="{% url 'save_full_name_and_current_date2' evaluation_id=evaluation_id %}">
         {% csrf_token %}
-        <!-- ปุ่มบันทึกชื่อ-นามสกุล -->
         <button type="submit" class="btn btn-primary" onclick="showAlert()">
             บันทึกชื่อ-นามสกุล
         </button>
     </form>
     {% endif %}
-
+    -->
     <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
                         <div class="centered-menu" id="centeredMenu">
                                 <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>

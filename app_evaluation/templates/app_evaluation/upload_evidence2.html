@@ -8,12 +8,22 @@
     <form id="uploadForm" action="{% url 'upload_evidence2' criteria_id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="upload-section">
+            <div>
             <label for="file">File:</label>
             <input type="file" id="file" name="file" multiple>
+            </div>
+            <div>
+            <input type="text" name="filename" placeholder="ตั้งชื่อไฟล์(สำหรับแต่ละไฟล์)" class="filename-input">
+            </div>
         </div>
         <div class="upload-section">
+            <div>
             <label for="picture">Picture:</label>
             <input type="file" id="picture" name="picture" multiple>
+            </div>
+            <div>
+            <input type="text" name="filename" placeholder="ตั้งชื่อรูปภาพ(สำหรับแต่ละไฟล์)" class="filename-input">
+            </div>
         </div>
         <button type="submit" class="btn btn-upload">อัปโหลด</button>
     </form>
@@ -21,13 +31,22 @@
     {% if user.groups.all.0.name == "Staff"%}
     <form id="uploadForm" action="{% url 'upload_evidence2' criteria_id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="upload-section">
+        <div>
             <label for="file">File:</label>
             <input type="file" id="file" name="file" multiple>
+            </div>
+            <div>
+            <input type="text" name="filename" placeholder="ตั้งชื่อไฟล์(สำหรับแต่ละไฟล์)" class="filename-input">
+            </div>
         </div>
         <div class="upload-section">
+            <div>
             <label for="picture">Picture:</label>
             <input type="file" id="picture" name="picture" multiple>
+            </div>
+            <div>
+            <input type="text" name="filename" placeholder="ตั้งชื่อรูปภาพ(สำหรับแต่ละไฟล์)" class="filename-input">
+            </div>
         </div>
         <button type="submit" class="btn btn-upload">อัปโหลด</button>
     </form>

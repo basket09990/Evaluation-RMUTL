@@ -40,6 +40,7 @@ from reportlab.lib.enums import TA_CENTER
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils import timezone
+from reportlab.lib.enums import TA_LEFT
 
 
 
@@ -2005,7 +2006,6 @@ def delete_workload_selection3(request, selection_id):
 
 @login_required
 def upload_evidence2(request, criteria_id):
-# ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
@@ -2013,38 +2013,38 @@ def upload_evidence2(request, criteria_id):
         form = UserEvidentForm(request.POST, request.FILES)
         files = request.FILES.getlist('file')
         pictures = request.FILES.getlist('picture')
+        filenames = request.POST.getlist('filename')  # รับรายชื่อไฟล์ที่ผู้ใช้กรอกเข้ามา
 
         if form.is_valid():
             # บันทึกไฟล์ PDF และ DOCX
-            for file in files:
-                new_filename = f"{uuid.uuid4()}_{file.name}"
+            for index, file in enumerate(files):
+                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else file.name
+                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
                     file=file,
                     filename=new_filename
                 )
                 evidence.save()
 
             # ลดขนาดรูปภาพก่อนบันทึก
-            for picture in pictures:
-                new_filename = f"{uuid.uuid4()}_{picture.name}"
+            for index, picture in enumerate(pictures):
+                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else picture.name
+                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+
                 image = Image.open(picture)
-
-                # ลดขนาดรูปภาพ
-                max_size = (1366, 800)  # ขนาดที่ต้องการ
+                max_size = (1366, 800)
                 image.thumbnail(max_size)
-
-                # บันทึกรูปภาพที่ลดขนาด
                 img_io = ContentFile(b'')
                 image_format = image.format or 'JPEG'
                 image.save(img_io, format=image_format)
 
-                # บันทึกไฟล์ลงใน storage
                 file_name = default_storage.save(f"uploads/{new_filename}", img_io)
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
                     picture=file_name,
                     filename=new_filename
                 )
@@ -2056,7 +2056,6 @@ def upload_evidence2(request, criteria_id):
     else:
         form = UserEvidentForm()
 
-    # แสดงรายการไฟล์ที่อัปโหลด
     evidences = user_evident.objects.filter(uwls_id=criteria)
 
     return render(request, 'app_evaluation/upload_evidence2.html', {
@@ -2279,7 +2278,9 @@ def evaluation_page_from_4(request, evaluation_id):
     # คำนวณคะแนนต่าง ๆ
     achievement_work = evaluation.achievement_work or 0
     mc_score = evaluation.mc_score or 0
+    c_sumwl = evaluation.c_sumwl or 0
     total_score = achievement_work + mc_score
+    cp_main_sum = c_sumwl + mc_score
 
     # กำหนดระดับผลการประเมิน
     if total_score >= 90:
@@ -2293,6 +2294,18 @@ def evaluation_page_from_4(request, evaluation_id):
     else:
         level = 'ต้องปรับปรุง'
 
+    # กำหนดระดับผลการประเมิน
+    if cp_main_sum >= 90:
+        level1 = 'ดีเด่น'
+    elif cp_main_sum >= 80:
+        level1 = 'ดีมาก'
+    elif cp_main_sum >= 70:
+        level1 = 'ดี'
+    elif cp_main_sum >= 60:
+        level1 = 'พอใช้'
+    else:
+        level1 = 'ต้องปรับปรุง'
+
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'user_evaluation': evaluation,
@@ -2300,11 +2313,14 @@ def evaluation_page_from_4(request, evaluation_id):
         'mc_score': mc_score,
         'total_score': total_score,
         'level': level,
+        'level1': level1,
         'remark_achievement': evaluation.remark_achievement,
         'remark_mc': evaluation.remark_mc,
         'remark_other': evaluation.remark_other,
         'remark_total': evaluation.remark_total,
         'evaluation_id': evaluation_id,
+        'cp_main_sum':cp_main_sum,
+        'c_sumwl':c_sumwl,
     }
 
     return render(request, 'app_evaluation/evaluation_page_from_4.html', context)
@@ -3433,7 +3449,6 @@ def evaluation_page_3(request, evaluation_id):
 
 @login_required
 def upload_evidence(request, criteria_id):
-    # ดึงข้อมูล WorkloadCriteria โดยใช้ criteria_id
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
@@ -3441,38 +3456,38 @@ def upload_evidence(request, criteria_id):
         form = UserEvidentForm(request.POST, request.FILES)
         files = request.FILES.getlist('file')
         pictures = request.FILES.getlist('picture')
+        filenames = request.POST.getlist('filename')  # รับรายชื่อไฟล์ที่ผู้ใช้กรอกเข้ามา
 
         if form.is_valid():
             # บันทึกไฟล์ PDF และ DOCX
-            for file in files:
-                new_filename = f"{uuid.uuid4()}_{file.name}"
+            for index, file in enumerate(files):
+                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else file.name
+                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
                     file=file,
                     filename=new_filename
                 )
                 evidence.save()
 
             # ลดขนาดรูปภาพก่อนบันทึก
-            for picture in pictures:
-                new_filename = f"{uuid.uuid4()}_{picture.name}"
+            for index, picture in enumerate(pictures):
+                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else picture.name
+                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+
                 image = Image.open(picture)
-
-                # ลดขนาดรูปภาพ
-                max_size = (1366, 800)  # ขนาดที่ต้องการ
+                max_size = (1366, 800)
                 image.thumbnail(max_size)
-
-                # บันทึกรูปภาพที่ลดขนาด
                 img_io = ContentFile(b'')
                 image_format = image.format or 'JPEG'
                 image.save(img_io, format=image_format)
 
-                # บันทึกไฟล์ลงใน storage
                 file_name = default_storage.save(f"uploads/{new_filename}", img_io)
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
                     picture=file_name,
                     filename=new_filename
                 )
@@ -3484,13 +3499,12 @@ def upload_evidence(request, criteria_id):
     else:
         form = UserEvidentForm()
 
-    # แสดงรายการไฟล์ที่อัปโหลด
     evidences = user_evident.objects.filter(uwls_id=criteria)
 
     return render(request, 'app_evaluation/upload_evidence.html', {
         'form': form,
-        'evidences': evidences,  # ส่งรายการไฟล์/รูปภาพไปยัง template
-        'criteria': criteria  # ส่งข้อมูล criteria ไปยัง template
+        'evidences': evidences,
+        'criteria': criteria
     })
 
 @login_required
@@ -3980,14 +3994,14 @@ def print_evaluation_pdf(request, evaluation_id):
     line_height = 20
     
     # ใช้ฟอนต์ภาษาไทย
-    p.setFont("SarabunBold", 24)
+    p.setFont("SarabunBold", 18)
 
     # กำหนดหัวเรื่องและรายละเอียด
     p.drawCentredString(width / 2, height - 50, "ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ")
-    p.drawCentredString(width / 2, height - 80, "มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ "f"{year_thai}")
-    p.drawCentredString(width / 2, height - 110, "หน่วยงาน คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา")
+    p.drawCentredString(width / 2, height - 70, "มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ "f"{year_thai}")
+    p.drawCentredString(width / 2, height - 90, "หน่วยงาน คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา")
 
-    p.setFont("SarabunBold", 20)
+    p.setFont("SarabunBold", 16)
     p.drawString(50, height - 150, f"กลุ่มที่เลือก: {selected_group.g_field_name}")
 
     if evr_round_obj.evr_round == 1:
@@ -3996,22 +4010,33 @@ def print_evaluation_pdf(request, evaluation_id):
         p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)")
 
     # เพิ่มข้อมูลผู้ใช้งาน
-    p.setFont("Sarabun", 18)
+    p.setFont("SarabunBold", 16)
     # กำหนดค่าเริ่มต้นสำหรับคอลัมน์ซ้ายและขวา
     col1_x = 50  # ตำแหน่ง X ของคอลัมน์ซ้าย
     col2_x = 300  # ตำแหน่ง X ของคอลัมน์ขวา
     y_position = height - 210  # เริ่มต้นที่ความสูงนี้
     # คอลัมน์ซ้าย
-    p.drawString(col1_x, y_position, f"ชื่อ-นามสกุล: {evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
-    p.drawString(col1_x, y_position - 20, f"ตำแหน่งวิชาการ: {evaluation.ac_id.ac_name}")
-    p.drawString(col1_x, y_position - 45, f"ตำแหน่งบริหาร: {evaluation.administrative_position}")
-    p.drawString(col1_x, y_position - 70, f"เลขที่ประจำตำแหน่ง: {profile.position_number}")
-    p.drawString(col1_x, y_position - 95, f"เงินเดือน: {profile.salary}")
-    p.drawString(col1_x, y_position - 120, f"หน้าที่พิเศษ: {profile.special_position}")
-    p.drawString(col1_x, y_position - 145, f"สังกัด: {profile.affiliation}")
-    p.drawString(col1_x, y_position - 170, f"มาช่วยราชการจากที่ใด (ถ้ามี): {profile.old_government}")
-    p.drawString(col1_x, y_position - 195, f"เริ่มรับราชการเมื่อวันที่: {start_goverment_str}")
-    p.drawString(col1_x, y_position - 220, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
+    p.drawString(col1_x, y_position, "ชื่อ-นามสกุล:")
+    p.drawString(col1_x, y_position - 20, f"ตำแหน่งวิชาการ:")
+    p.drawString(col1_x, y_position - 45, f"ตำแหน่งบริหาร:")
+    p.drawString(col1_x, y_position - 70, f"เลขที่ประจำตำแหน่ง:")
+    p.drawString(col1_x, y_position - 95, f"เงินเดือน:")
+    p.drawString(col1_x, y_position - 120, f"หน้าที่พิเศษ:")
+    p.drawString(col1_x, y_position - 145, f"สังกัด:")
+    p.drawString(col1_x, y_position - 170, f"มาช่วยราชการจากที่ใด (ถ้ามี):")
+    p.drawString(col1_x, y_position - 195, f"เริ่มรับราชการเมื่อวันที่:")
+    p.drawString(col1_x, y_position - 220, f"รวมเวลารับราชการ:")
+    p.setFont("Sarabun", 16)
+    p.drawString(col1_x + 70, y_position, f"{evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
+    p.drawString(col1_x + 90, y_position - 20, f"{evaluation.ac_id.ac_name}")
+    p.drawString(col1_x + 80, y_position - 45, f"{evaluation.administrative_position}")
+    p.drawString(col1_x + 100, y_position - 70, f"{profile.position_number}")
+    p.drawString(col1_x + 50, y_position - 95, f"{profile.salary}")
+    p.drawString(col1_x + 70, y_position - 120, f"{profile.special_position}")
+    p.drawString(col1_x + 40, y_position - 145, f"{profile.affiliation}")
+    p.drawString(col1_x + 140, y_position - 170, f"{profile.old_government}")
+    p.drawString(col1_x + 110, y_position - 195, f"{start_goverment_str}")
+    p.drawString(col1_x + 100, y_position - 220, f"{profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
@@ -4019,13 +4044,14 @@ def print_evaluation_pdf(request, evaluation_id):
     styleN.fontName = 'Sarabun'  # ใช้ฟอนต์ที่ลงทะเบียนไว้
     styleN.fontSize = 12  # กำหนดขนาดฟอนต์
 
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=12)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    p.setFont("SarabunBold", 16)
     p.drawString(col1_x, y_position - 250, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
     if round_1:
         data = [
-            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 1 (จำนวนวัน)", styleB), Paragraph("รอบที่ 2 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 2 (จำนวนวัน)", styleB)],
+            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
             ["ลาป่วย", sick_leave_current.times, sick_leave_current.days, "0", "0"],
             ["ลากิจ", personal_leave_current.times, personal_leave_current.days, "0", "0"],
             ["มาสาย",  late_current.times, late_current.days, "0", "0"],
@@ -4036,7 +4062,7 @@ def print_evaluation_pdf(request, evaluation_id):
         ]
     else:
         data = [
-            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 1 (จำนวนวัน)", styleB), Paragraph("รอบที่ 2 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 2 (จำนวนวัน)", styleB)],
+            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
             ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_current.times, sick_leave_current.days],
             ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_current.times, personal_leave_current.days],
             ["มาสาย", late_round_1.times, late_round_1.days, late_current.times, late_current.days],
@@ -4057,16 +4083,30 @@ def print_evaluation_pdf(request, evaluation_id):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # จัดกึ่งกลางแนวตั้งข้อความทั้งหมด
         ('FONT', (0, 0), (-1, -1), 'Sarabun'),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTSIZE', (0, 0), (-1, 0), 14),  # ขนาดฟอนต์ของหัวตาราง
-        ('FONTSIZE', (0, 1), (-1, -1), 14),  # ขนาดฟอนต์ของข้อมูลในตาราง
+        ('FONTSIZE', (0, 0), (-1, 0), 16),  # ขนาดฟอนต์ของหัวตาราง
+        ('FONTSIZE', (0, 1), (-1, -1), 16),  # ขนาดฟอนต์ของข้อมูลในตาราง
     ]))
 
     # เพิ่มตารางใน PDF
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 700)  # ตำแหน่งของตารางในหน้า PDF
+    styleBA = ParagraphStyle( name="Normal",
+    fontName="Sarabun",
+    fontSize=16,
+    leading=18,  # ระยะห่างระหว่างบรรทัด
+    alignment=TA_LEFT)
+    p.setFont("SarabunBold", 16)
+    p.drawString(50, height - 725, "การกระทำผิดวินัย/การถูกลงโทษ: ")
+    p.setFont("Sarabun", 16)
+    # ข้อความ
+    text = f"{user_work_current.punishment}"
 
-    p.drawString(50, height - 725, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
-   
+    # สร้าง Paragraph และกำหนดขนาดพื้นที่แสดง
+    paragraph = Paragraph(text, styleBA)
+    width, height_needed = paragraph.wrap(510, 200)  # กำหนดความกว้างที่ 400 (ปรับตามต้องการ)
+
+    # แสดงข้อความ
+    paragraph.drawOn(p, 50, height - 730 - height_needed)
     p.showPage()
 
     if selected_group:
@@ -4097,25 +4137,23 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
-    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=12)
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=12)
+    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
 
     # ตรวจสอบการขึ้นหน้าใหม่ก่อนแสดงหัวข้อ
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
 
     # แสดงหัวข้อ
-    p.setFont("SarabunBold", 16)
-    p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
     start_y -= line_height  # ลดตำแหน่ง Y หลังจากวาดข้อความ
     # สร้างตาราง
-    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),Paragraph( "จำนวน", styleB),Paragraph( "ภาระงาน", styleB),Paragraph( "รวมภาระงาน", styleB), Paragraph("หมายเหตุ", styleB)]]
+    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),Paragraph( "จำนวน", styleCenter),Paragraph( "ภาระงาน", styleCenter),Paragraph( "รวมภาระงาน", styleCenter), Paragraph("หมายเหตุ", styleCenter)]]
 
     field_counter = 0
     for field in fields:
         field_counter += 1
         total_for_field = 0
-        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleN), "", "", "", ""])
+        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleB), "", "", "", ""])
 
         subfield_counter = 0
         for subfield in subfields.filter(f_id=field):
@@ -4147,7 +4185,7 @@ def print_evaluation_pdf(request, evaluation_id):
     # ฟังก์ชันสร้างตาราง
     def draw_table(p, data, start_x, start_y, max_rows_per_page):
         table_data = data[:max_rows_per_page]  # ดึงเฉพาะข้อมูลที่พอดีกับหน้า
-        table = Table(table_data, colWidths=[9.75 * cm, 1.75 * cm, 1.75 * cm, 2 * cm, 1.75 * cm])
+        table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -4156,6 +4194,12 @@ def print_evaluation_pdf(request, evaluation_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONT', (0, 0), (-1, -1), 'Sarabun'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 16),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # วาดตารางและลดตำแหน่ง Y
@@ -4164,12 +4208,15 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 30  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 23  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
-        start_y = height - 100  # กำหนดจุดเริ่มต้นของหน้าใหม่
-        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = height - 50  # กำหนดจุดเริ่มต้นของหน้าใหม่
+        p.setFont("SarabunBold", 16)
+        p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
+        start_y = height - 70
+        start_y = draw_table(p, data + chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
@@ -4219,6 +4266,12 @@ def print_evaluation_pdf(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # จัดชิดซ้ายสำหรับคอลัมน์แรก
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตาราง
@@ -4230,7 +4283,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
 
     # วางตารางสมรรถนะหลัก
-    p.setFont("SarabunBold", 14)
+    p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)")
     start_y -= line_height
     start_y = draw_table(p, data_main, start_x, start_y)
@@ -4239,7 +4292,7 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y -= 2 * line_height
 
     # วางตารางสมรรถนะเฉพาะ
-    p.setFont("SarabunBold", 14)
+    p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "สมรรถนะเฉพาะ (ที่สภามหาวิทยาลัยกำหนด)")
     start_y -= line_height
     start_y = draw_table(p, data_specific, start_x, start_y)
@@ -4247,18 +4300,16 @@ def print_evaluation_pdf(request, evaluation_id):
     # วางตารางสมรรถนะทางการบริหารถ้ามี
     if data_administrative:
         start_y -= 2 * line_height
-        p.setFont("SarabunBold", 14)
+        p.setFont("SarabunBold", 16)
         p.drawString(start_x, start_y, "สมรรถนะทางการบริหาร (ถ้ามี)")
         start_y -= line_height
         start_y = draw_table(p, data_administrative, start_x, start_y)
 
     # เพิ่มช่องว่าง
     start_y -= 2 * line_height
-    p.drawString(start_x, start_y,"การประเมิน")
-    start_y -= line_height
     # สร้างตารางการประเมินคะแนน
     data = [
-        [Paragraph("จำนวนสมรรถนะ", styleCenter), "คูณ (X)", "คะแนน"],
+        [Paragraph("จำนวนสมรรถนะ", styleCenter), Paragraph("คูณ (X)", styleCenter), Paragraph("คะแนน", styleCenter)],
         [str(score_count[3]), "3", str(score_3_total)],
         [str(score_count[2]), "2", str(score_2_total)],
         [str(score_count[1]), "1", str(score_1_total)],
@@ -4275,6 +4326,12 @@ def print_evaluation_pdf(request, evaluation_id):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -4282,8 +4339,13 @@ def print_evaluation_pdf(request, evaluation_id):
         start_y = check_and_create_new_page(p, start_y, h, bottom_margin)
 
         # วางตาราง
+        p.setFont("SarabunBold", 16)
+        p.drawString(start_x, start_y,"การประเมิน")
+        start_y -= line_height
         table.drawOn(p, start_x, start_y - h)
         return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
+
+    styleCenterA = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16)
 
     # วางตารางการประเมินคะแนน
     start_y = draw_table(p, data, start_x, start_y)
@@ -4295,10 +4357,10 @@ def print_evaluation_pdf(request, evaluation_id):
     # สร้างตารางการประเมินคะแนน
     data = [
         [Paragraph("หลักเกณฑ์การประเมิน", styleCenter)],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน"],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน", styleCenterA)],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF
@@ -4311,6 +4373,12 @@ def print_evaluation_pdf(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -4356,7 +4424,8 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y = height - 70
     line_height = 20
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    styleBB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
 
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 50, "ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ")
@@ -4366,12 +4435,12 @@ def print_evaluation_pdf(request, evaluation_id):
         ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{achievement_work:.1f}", f"{evaluation.remark_achievement}"],
         ["องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)", "30", f"{mc_score:.1f}", f"{evaluation.remark_mc}"],
         ["องค์ประกอบอื่น ๆ (ถ้ามี)", "", "", f"{evaluation.remark_other}"],
-        [Paragraph("รวม", styleB), "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
+        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF
     def draw_table(p, data, start_x, start_y):
-        table = Table(data, colWidths=[8 * cm,2 * cm,2 * cm,5 * cm])  # กำหนดขนาดคอลัมน์
+        table = Table(data, colWidths=[9 * cm,2.5 * cm,2.5 * cm,4 * cm])  # กำหนดขนาดคอลัมน์
         table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONT', (0, 0), (-1, -1), 'Sarabun'),
@@ -4379,6 +4448,12 @@ def print_evaluation_pdf(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 16),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -4393,7 +4468,7 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y = draw_table(p, data, start_x, start_y)
 
     # แสดงระดับผลการประเมินในแบบ radio button (เลือกแล้ว)
-    p.drawString(50, height - 200, "ระดับผลการประเมิน:")
+    p.drawString(50, height - 250, "ระดับผลการประเมิน:")
     
     levels = [
         ("ดีเด่น (90 - 100)", total_score >= 90),
@@ -4404,7 +4479,7 @@ def print_evaluation_pdf(request, evaluation_id):
     ]
 
     # วาด radio button (ข้อความแสดงผลการประเมิน)
-    start_y = height - 230
+    start_y = height - 280
     for level_text, is_selected in levels:
         p.circle(55, start_y, 5, fill=1 if is_selected else 0)  # วาดวงกลม
         p.drawString(70, start_y - 5, level_text)  # วาดข้อความข้าง ๆ
@@ -4430,6 +4505,9 @@ def print_evaluation_pdf(request, evaluation_id):
     styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
 
     p.setFont("SarabunBold", 16)
+    styleLeft = ParagraphStyle(name='Left', fontName='Sarabun', fontSize=16, alignment=0)
+    styleCenter = ParagraphStyle(name='Center', fontName='Sarabun', fontSize=16, alignment=1)
+
 
     # แสดงหัวข้อ "ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล"
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
@@ -4440,7 +4518,11 @@ def print_evaluation_pdf(request, evaluation_id):
     data = [[Paragraph("ความรู้/ทักษะ/สมรรถนะ", styleCenter), Paragraph("วิธีการพัฒนา", styleCenter), Paragraph("ช่วงเวลาที่ต้องการพัฒนา", styleCenter)]]
 
     for item in formset_data:
-        data.append([item.skill_evol, item.dev, item.dev_time])
+        data.append([
+        Paragraph(str(item.skill_evol), styleLeft),
+        Paragraph(str(item.dev), styleLeft),
+        Paragraph(str(item.dev_time), styleLeft)
+    ])
 
     table = Table(data, colWidths=[6 * cm, 6 * cm, 5 * cm])
     table.setStyle(TableStyle([
@@ -4450,6 +4532,12 @@ def print_evaluation_pdf(request, evaluation_id):
         ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, -1), 16),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+        ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+        ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
     ]))
 
     # คำนวณความสูงของตารางและตรวจสอบว่ามีพื้นที่เพียงพอหรือไม่
@@ -4491,21 +4579,23 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y -= 2* line_height
 
     p.drawString(start_x+2, start_y, "ลายมือชื่อ.................................................(ผู้ประเมิน)")
-    if evaluation.full_name is None:
-        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
-    else:
-        p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
-        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    #if evaluation.full_name is None:
+    #    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    #else:
+    #    p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
+    #    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
     start_y -= line_height
     
     p.drawString(start_x + 25, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    if evaluation.full_name is None:
-        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    else:
-        p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
-        p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
-        p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
-        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    #if evaluation.full_name is None:
+    #    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    #else:
+    #    p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
+    #   p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
+    #    p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
+    #   p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
     p.line(start_x , start_y-20, start_x + 500, start_y-20)
     p.line(start_x , start_y+50, start_x + 500, start_y+50)
     p.line(start_x, start_y-20, start_x, start_y+100)
@@ -4631,10 +4721,6 @@ def print_evaluation_pdf(request, evaluation_id):
     p.save()
 
     return response
-
-
-
-
 
 
 
@@ -4801,14 +4887,14 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     line_height = 20
     
     # ใช้ฟอนต์ภาษาไทย
-    p.setFont("SarabunBold", 24)
+    p.setFont("SarabunBold", 18)
 
     # กำหนดหัวเรื่องและรายละเอียด
     p.drawCentredString(width / 2, height - 50, "ข้อตกลงและแบบประเมินผลการปฏิบัติงานของบุคลากรสายวิชาการ")
-    p.drawCentredString(width / 2, height - 80, "มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ "f"{year_thai}")
-    p.drawCentredString(width / 2, height - 110, "หน่วยงาน คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา")
+    p.drawCentredString(width / 2, height - 70, "มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา ประจำปีงบประมาณ "f"{year_thai}")
+    p.drawCentredString(width / 2, height - 90, "หน่วยงาน คณะวิศวกรรมศาสตร์ มหาวิทยาลัยเทคโนโลยีราชมงคลล้านนา")
 
-    p.setFont("SarabunBold", 20)
+    p.setFont("SarabunBold", 16)
     p.drawString(50, height - 150, f"กลุ่มที่เลือก: {selected_group.g_field_name}")
 
     if evr_round_obj.evr_round == 1:
@@ -4817,22 +4903,33 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)")
 
     # เพิ่มข้อมูลผู้ใช้งาน
-    p.setFont("Sarabun", 18)
+    p.setFont("SarabunBold", 16)
     # กำหนดค่าเริ่มต้นสำหรับคอลัมน์ซ้ายและขวา
     col1_x = 50  # ตำแหน่ง X ของคอลัมน์ซ้าย
     col2_x = 300  # ตำแหน่ง X ของคอลัมน์ขวา
     y_position = height - 210  # เริ่มต้นที่ความสูงนี้
     # คอลัมน์ซ้าย
-    p.drawString(col1_x, y_position, f"ชื่อ-นามสกุล: {evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
-    p.drawString(col1_x, y_position - 20, f"ตำแหน่งวิชาการ: {evaluation.ac_id.ac_name}")
-    p.drawString(col1_x, y_position - 45, f"ตำแหน่งบริหาร: {evaluation.administrative_position}")
-    p.drawString(col1_x, y_position - 70, f"เลขที่ประจำตำแหน่ง: {profile.position_number}")
-    p.drawString(col1_x, y_position - 95, f"เงินเดือน: {profile.salary}")
-    p.drawString(col1_x, y_position - 120, f"หน้าที่พิเศษ: {profile.special_position}")
-    p.drawString(col1_x, y_position - 145, f"สังกัด: {profile.affiliation}")
-    p.drawString(col1_x, y_position - 170, f"มาช่วยราชการจากที่ใด (ถ้ามี): {profile.old_government}")
-    p.drawString(col1_x, y_position - 195, f"เริ่มรับราชการเมื่อวันที่: {start_goverment_str}")
-    p.drawString(col1_x, y_position - 220, f"รวมเวลารับราชการ: {profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
+    p.drawString(col1_x, y_position, "ชื่อ-นามสกุล:")
+    p.drawString(col1_x, y_position - 20, f"ตำแหน่งวิชาการ:")
+    p.drawString(col1_x, y_position - 45, f"ตำแหน่งบริหาร:")
+    p.drawString(col1_x, y_position - 70, f"เลขที่ประจำตำแหน่ง:")
+    p.drawString(col1_x, y_position - 95, f"เงินเดือน:")
+    p.drawString(col1_x, y_position - 120, f"หน้าที่พิเศษ:")
+    p.drawString(col1_x, y_position - 145, f"สังกัด:")
+    p.drawString(col1_x, y_position - 170, f"มาช่วยราชการจากที่ใด (ถ้ามี):")
+    p.drawString(col1_x, y_position - 195, f"เริ่มรับราชการเมื่อวันที่:")
+    p.drawString(col1_x, y_position - 220, f"รวมเวลารับราชการ:")
+    p.setFont("Sarabun", 16)
+    p.drawString(col1_x + 70, y_position, f"{evaluation.user.first_name}""   "f"{evaluation.user.last_name}")
+    p.drawString(col1_x + 90, y_position - 20, f"{evaluation.ac_id.ac_name}")
+    p.drawString(col1_x + 80, y_position - 45, f"{evaluation.administrative_position}")
+    p.drawString(col1_x + 100, y_position - 70, f"{profile.position_number}")
+    p.drawString(col1_x + 50, y_position - 95, f"{profile.salary}")
+    p.drawString(col1_x + 70, y_position - 120, f"{profile.special_position}")
+    p.drawString(col1_x + 40, y_position - 145, f"{profile.affiliation}")
+    p.drawString(col1_x + 140, y_position - 170, f"{profile.old_government}")
+    p.drawString(col1_x + 110, y_position - 195, f"{start_goverment_str}")
+    p.drawString(col1_x + 100, y_position - 220, f"{profile.years_of_service} ปี { profile.months_of_service } เดือน { profile.days_of_service } วัน")
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
@@ -4840,13 +4937,14 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     styleN.fontName = 'Sarabun'  # ใช้ฟอนต์ที่ลงทะเบียนไว้
     styleN.fontSize = 12  # กำหนดขนาดฟอนต์
 
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=12)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    p.setFont("SarabunBold", 16)
     p.drawString(col1_x, y_position - 250, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
     if round_1:
         data = [
-            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 1 (จำนวนวัน)", styleB), Paragraph("รอบที่ 2 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 2 (จำนวนวัน)", styleB)],
+            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
             ["ลาป่วย", sick_leave_current.times, sick_leave_current.days, "0", "0"],
             ["ลากิจ", personal_leave_current.times, personal_leave_current.days, "0", "0"],
             ["มาสาย",  late_current.times, late_current.days, "0", "0"],
@@ -4857,7 +4955,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         ]
     else:
         data = [
-            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 1 (จำนวนวัน)", styleB), Paragraph("รอบที่ 2 (จำนวนครั้ง)", styleB), Paragraph("รอบที่ 2 (จำนวนวัน)", styleB)],
+            [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
             ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_current.times, sick_leave_current.days],
             ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_current.times, personal_leave_current.days],
             ["มาสาย", late_round_1.times, late_round_1.days, late_current.times, late_current.days],
@@ -4878,16 +4976,30 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),  # จัดกึ่งกลางแนวตั้งข้อความทั้งหมด
         ('FONT', (0, 0), (-1, -1), 'Sarabun'),
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('FONTSIZE', (0, 0), (-1, 0), 14),  # ขนาดฟอนต์ของหัวตาราง
-        ('FONTSIZE', (0, 1), (-1, -1), 14),  # ขนาดฟอนต์ของข้อมูลในตาราง
+        ('FONTSIZE', (0, 0), (-1, 0), 16),  # ขนาดฟอนต์ของหัวตาราง
+        ('FONTSIZE', (0, 1), (-1, -1), 16),  # ขนาดฟอนต์ของข้อมูลในตาราง
     ]))
 
     # เพิ่มตารางใน PDF
     table.wrapOn(p, width, height)
     table.drawOn(p, 50, height - 700)  # ตำแหน่งของตารางในหน้า PDF
+    styleBA = ParagraphStyle( name="Normal",
+    fontName="Sarabun",
+    fontSize=16,
+    leading=18,  # ระยะห่างระหว่างบรรทัด
+    alignment=TA_LEFT)
+    p.setFont("SarabunBold", 16)
+    p.drawString(50, height - 725, "การกระทำผิดวินัย/การถูกลงโทษ: ")
+    p.setFont("Sarabun", 16)
+    # ข้อความ
+    text = f"{user_work_current.punishment}"
 
-    p.drawString(50, height - 725, f"การกระทำผิดวินัย/การถูกลงโทษ: {user_work_current.punishment}")
-   
+    # สร้าง Paragraph และกำหนดขนาดพื้นที่แสดง
+    paragraph = Paragraph(text, styleBA)
+    width, height_needed = paragraph.wrap(510, 200)  # กำหนดความกว้างที่ 400 (ปรับตามต้องการ)
+
+    # แสดงข้อความ
+    paragraph.drawOn(p, 50, height - 730 - height_needed)
     p.showPage()
 
     if selected_group:
@@ -4926,26 +5038,23 @@ def print_evaluation_pdf_eva(request, evaluation_id):
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
-    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=12)
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=12)
+    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
 
     # ตรวจสอบการขึ้นหน้าใหม่ก่อนแสดงหัวข้อ
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
-    styleCenter1 = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=14, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
 
     # แสดงหัวข้อ
-    p.setFont("SarabunBold", 16)
-    p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
     start_y -= line_height  # ลดตำแหน่ง Y หลังจากวาดข้อความ
     # สร้างตาราง
-    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter1),Paragraph( "จำนวน", styleCenter),Paragraph( "ภาระงาน", styleCenter),Paragraph( "รวมภาระงาน (เดิม)", styleCenter), Paragraph("หมายเหตุ", styleCenter)]]
+    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),Paragraph( "จำนวน", styleCenter),Paragraph( "ภาระงาน", styleCenter),Paragraph( "รวมภาระงาน(เดิม)", styleCenter), Paragraph("หมายเหตุ", styleCenter)]]
 
     field_counter = 0
     for field in fields:
         field_counter += 1
         total_for_field = 0
-        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleN), "", "", "", ""])
+        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleB), "", "", "", ""])
 
         subfield_counter = 0
         for subfield in subfields.filter(f_id=field):
@@ -4977,7 +5086,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     # ฟังก์ชันสร้างตาราง
     def draw_table(p, data, start_x, start_y, max_rows_per_page):
         table_data = data[:max_rows_per_page]  # ดึงเฉพาะข้อมูลที่พอดีกับหน้า
-        table = Table(table_data, colWidths=[9.75 * cm, 1.75 * cm, 1.75 * cm, 2 * cm, 1.75 * cm])
+        table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -4986,6 +5095,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONT', (0, 0), (-1, -1), 'Sarabun'),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 0), (-1, -1), 16),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # วาดตารางและลดตำแหน่ง Y
@@ -4994,12 +5109,21 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 30  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 22  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
-        start_y = height - 100  # กำหนดจุดเริ่มต้นของหน้าใหม่
-        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = height - 50  # กำหนดจุดเริ่มต้นของหน้าใหม่
+        p.setFont("SarabunBold", 16)
+        p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
+        # กำหนดหัวตาราง
+        table_header = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
+                         Paragraph("จำนวน", styleCenter),
+                         Paragraph("ภาระงาน", styleCenter),
+                         Paragraph("รวมภาระงาน(เดิม)", styleCenter),
+                         Paragraph("หมายเหตุ", styleCenter)]]
+        start_y = height - 70
+        start_y = draw_table(p, data + chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
@@ -5049,6 +5173,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),  # จัดชิดซ้ายสำหรับคอลัมน์แรก
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตาราง
@@ -5060,7 +5190,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
 
     # วางตารางสมรรถนะหลัก
-    p.setFont("SarabunBold", 14)
+    p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)")
     start_y -= line_height
     start_y = draw_table(p, data_main, start_x, start_y)
@@ -5069,7 +5199,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y -= 2 * line_height
 
     # วางตารางสมรรถนะเฉพาะ
-    p.setFont("SarabunBold", 14)
+    p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "สมรรถนะเฉพาะ (ที่สภามหาวิทยาลัยกำหนด)")
     start_y -= line_height
     start_y = draw_table(p, data_specific, start_x, start_y)
@@ -5077,18 +5207,17 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     # วางตารางสมรรถนะทางการบริหารถ้ามี
     if data_administrative:
         start_y -= 2 * line_height
-        p.setFont("SarabunBold", 14)
+        p.setFont("SarabunBold", 16)
         p.drawString(start_x, start_y, "สมรรถนะทางการบริหาร (ถ้ามี)")
         start_y -= line_height
         start_y = draw_table(p, data_administrative, start_x, start_y)
 
     # เพิ่มช่องว่าง
     start_y -= 2 * line_height
-    p.drawString(start_x, start_y,"การประเมิน")
-    start_y -= line_height
+    
     # สร้างตารางการประเมินคะแนน
     data = [
-        [Paragraph("จำนวนสมรรถนะ", styleCenter), "คูณ (X)", "คะแนน"],
+        [Paragraph("จำนวนสมรรถนะ", styleCenter), Paragraph("คูณ (X)", styleCenter), Paragraph("คะแนน", styleCenter)],
         [str(score_count[3]), "3", str(score_3_total)],
         [str(score_count[2]), "2", str(score_2_total)],
         [str(score_count[1]), "1", str(score_1_total)],
@@ -5105,6 +5234,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -5112,23 +5247,29 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         start_y = check_and_create_new_page(p, start_y, h, bottom_margin)
 
         # วางตาราง
+        p.setFont("SarabunBold", 16)
+        p.drawString(start_x, start_y,"การประเมิน")
+        start_y -= line_height
         table.drawOn(p, start_x, start_y - h)
         return start_y - h  # คืนค่าตำแหน่ง Y ใหม่หลังจากวางตาราง
 
+    styleCenterA = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16)
+    
     # วางตารางการประเมินคะแนน
     start_y = draw_table(p, data, start_x, start_y)
 
         # เพิ่มช่องว่าง
     start_y -= 2 * line_height
+    p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, f"ผลรวมคะแนน {total_score:.1f} / ผลรวมระดับสมรรถนะที่คาดหวัง {total_max_num:.1f} * 30 คะแนนที่ได้: {calculated_score:.1f}")
     start_y -= line_height
     # สร้างตารางการประเมินคะแนน
     data = [
         [Paragraph("หลักเกณฑ์การประเมิน", styleCenter)],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน"],
-        ["จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน"],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก สูงกว่าหรือเท่ากับ ระดับสมรรถนะที่คาดหวัง x ๓ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๑ ระดับ x ๒ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๒ ระดับ x ๑ คะแนน", styleCenterA)],
+        [Paragraph("จำนวนสมรรถนะหลัก/สมรรถนะเฉพาะ/สมรรถนะทางการบริหาร ที่มีระดับสมรรถนะที่แสดงออก ต่ำกว่า ระดับสมรรถนะที่คาดหวัง ๓ ระดับ x ๐ คะแนน", styleCenterA)],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF
@@ -5141,6 +5282,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 14),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -5159,7 +5306,8 @@ def print_evaluation_pdf_eva(request, evaluation_id):
      # คำนวณคะแนนต่าง ๆ
     achievement_work = evaluation.achievement_work or 0
     mc_score = evaluation.mc_score or 0
-    total_score = achievement_work + mc_score
+    c_score = evaluation.c_sumwl or 0
+    total_score = c_score + mc_score
 
     # กำหนดระดับผลการประเมิน
     if total_score >= 90:
@@ -5186,22 +5334,23 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y = height - 70
     line_height = 20
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=16, alignment=TA_CENTER)
+    styleBB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
 
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 50, "ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ")
 
     data = [
         [Paragraph("องค์ประกอบการประเมิน", styleCenter),Paragraph("คะแนนเต็ม", styleCenter),Paragraph("คะแนนที่ได้", styleCenter),Paragraph("หมายเหตุ", styleCenter)],
-        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{achievement_work:.1f}", f"{evaluation.remark_achievement}"],
+        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{c_score:.1f}", f"{evaluation.remark_achievement}"],
         ["องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)", "30", f"{mc_score:.1f}", f"{evaluation.remark_mc}"],
         ["องค์ประกอบอื่น ๆ (ถ้ามี)", "", "", f"{evaluation.remark_other}"],
-        [Paragraph("รวม", styleB), "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
+        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF
     def draw_table(p, data, start_x, start_y):
-        table = Table(data, colWidths=[8 * cm,2 * cm,2 * cm,5 * cm])  # กำหนดขนาดคอลัมน์
+        table = Table(data, colWidths=[9 * cm,2.5 * cm,2.5 * cm,4 * cm])  # กำหนดขนาดคอลัมน์
         table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONT', (0, 0), (-1, -1), 'Sarabun'),
@@ -5209,6 +5358,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
             ('ALIGN', (0, 1), (0, -1), 'LEFT'),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+            ('FONTSIZE', (0, 0), (-1, -1), 16),
+            ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+            ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+            ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+            ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
         ]))
 
         # คำนวณขนาดตารางและตรวจสอบว่าต้องขึ้นหน้าใหม่หรือไม่
@@ -5223,7 +5378,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y = draw_table(p, data, start_x, start_y)
 
     # แสดงระดับผลการประเมินในแบบ radio button (เลือกแล้ว)
-    p.drawString(50, height - 200, "ระดับผลการประเมิน:")
+    p.drawString(50, height - 250, "ระดับผลการประเมิน:")
     
     levels = [
         ("ดีเด่น (90 - 100)", total_score >= 90),
@@ -5234,7 +5389,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     ]
 
     # วาด radio button (ข้อความแสดงผลการประเมิน)
-    start_y = height - 230
+    start_y = height - 280
     for level_text, is_selected in levels:
         p.circle(55, start_y, 5, fill=1 if is_selected else 0)  # วาดวงกลม
         p.drawString(70, start_y - 5, level_text)  # วาดข้อความข้าง ๆ
@@ -5260,6 +5415,9 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
 
     p.setFont("SarabunBold", 16)
+    styleLeft = ParagraphStyle(name='Left', fontName='Sarabun', fontSize=16, alignment=0)
+    styleCenter = ParagraphStyle(name='Center', fontName='Sarabun', fontSize=16, alignment=1)
+
 
     # แสดงหัวข้อ "ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล"
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
@@ -5270,7 +5428,11 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     data = [[Paragraph("ความรู้/ทักษะ/สมรรถนะ", styleCenter), Paragraph("วิธีการพัฒนา", styleCenter), Paragraph("ช่วงเวลาที่ต้องการพัฒนา", styleCenter)]]
 
     for item in formset_data:
-        data.append([item.skill_evol, item.dev, item.dev_time])
+        data.append([
+        Paragraph(str(item.skill_evol), styleLeft),
+        Paragraph(str(item.dev), styleLeft),
+        Paragraph(str(item.dev_time), styleLeft)
+    ])
 
     table = Table(data, colWidths=[6 * cm, 6 * cm, 5 * cm])
     table.setStyle(TableStyle([
@@ -5280,6 +5442,12 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         ('ALIGN', (0, 1), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('BACKGROUND', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, -1), 16),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),   # Padding for left side
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),  # Padding for right side
+        ('TOPPADDING', (0, 0), (-1, -1), 5),    # Padding for top side
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10), # Padding for bottom side
+        ('ROWHEIGHT', (0, 1), (-1, -1), 25),    # Row height for all rows in the body
     ]))
 
     # คำนวณความสูงของตารางและตรวจสอบว่ามีพื้นที่เพียงพอหรือไม่
@@ -5321,21 +5489,23 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y -= 2* line_height
 
     p.drawString(start_x+2, start_y, "ลายมือชื่อ.................................................(ผู้ประเมิน)")
-    if evaluation.full_name is None:
-        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
-    else:
-        p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
-        p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    #if evaluation.full_name is None:
+    #    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
+    #else:
+    #    p.drawString(start_x + 288, start_y+2, f"{evaluation.full_name}")
+    #    p.drawString(start_x + 240, start_y, f"ลายมือชื่อ.................................................(ผู้รับการประเมิน)")
     start_y -= line_height
     
     p.drawString(start_x + 25, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    if evaluation.full_name is None:
-        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
-    else:
-        p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
-        p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
-        p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
-        p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    #if evaluation.full_name is None:
+    #    p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
+    #else:
+    #    p.drawString(start_x + 290, start_y-8, f"{evaluation.start_day}")
+    #   p.drawString(start_x + 352, start_y-8, f"{evaluation.start_month}")
+    #    p.drawString(start_x + 413, start_y-8, f"{evaluation.start_year}")
+    #   p.drawString(start_x + 265, start_y-10, "วันที่..........เดือน...................พ.ศ. ............")
     p.line(start_x , start_y-20, start_x + 500, start_y-20)
     p.line(start_x , start_y+50, start_x + 500, start_y+50)
     p.line(start_x, start_y-20, start_x, start_y+100)
