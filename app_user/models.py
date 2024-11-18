@@ -133,7 +133,7 @@ class Profile(models.Model):
 class WorkloadCriteria(models.Model):
     c_id = models.AutoField(primary_key=True)
     c_name = models.TextField(default="", blank=True, null=True)
-    c_num = models.FloatField(default="0", blank=True, null=True)
+    c_num = models.FloatField(default="1", blank=True, null=True)
     c_unit = models.TextField(default="", blank=True, null=True)
     c_maxnum = models.FloatField(default="0", blank=True, null=True)
     c_workload = models.FloatField(default="1", blank=True, null=True)
