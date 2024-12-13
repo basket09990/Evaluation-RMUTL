@@ -1,0 +1,14 @@
+{% extends 'app_general/components/base.html' %}
+
+{% block title %}ข้อมูลผู้ใช้{% endblock %}
+
+{% block content %}
+                <div class="info-box">
+                    <h1>ข้อมูลผู้ใช้</h1>
+                    {% csrf_token %}
+                    {{ form.non_field_error }}
+                    <div class="form-group">
+                    {{ form.as_p }}
+                    </div> 
+                </div>
+{% endblock %}

@@ -4208,7 +4208,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 23  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 22  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
@@ -4216,7 +4216,7 @@ def print_evaluation_pdf(request, evaluation_id):
         p.setFont("SarabunBold", 16)
         p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
         start_y = height - 70
-        start_y = draw_table(p, data + chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
@@ -5123,7 +5123,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
                          Paragraph("รวมภาระงาน(เดิม)", styleCenter),
                          Paragraph("หมายเหตุ", styleCenter)]]
         start_y = height - 70
-        start_y = draw_table(p, data + chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
