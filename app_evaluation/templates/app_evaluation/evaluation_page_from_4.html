@@ -467,13 +467,13 @@
                 <tr>
                     <th>องค์ประกอบการประเมิน</th>
                     <th>คะแนนเต็ม</th>
-                    <th>คะแนนที่ได้</th>
+                    <th>คะแนนที่ได้(เดิม)</th>
                     <th>หมายเหตุ</th>
                 </tr>
                 <tr>
                     <td>องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน</td>
                     <td style="text-align: center;">70</td>
-                    <td style="text-align: center;">{{ c_sumwl|floatformat:1  }}</td>
+                    <td style="text-align: center;">{{ c_sumwl|floatformat:1  }}({{ achievement_work|floatformat:1  }})</td>
                     <td style="text-align: center;">
                         <textarea name="remark_achievement" style="width: 100%; height: 100%; resize: none; box-sizing: border-box;" rows="2" cols="20">{{ remark_achievement|default_if_none:'' }}</textarea>
                     </td>
@@ -497,7 +497,7 @@
                 <tr>
                     <td>รวม</td>
                     <td style="text-align: center;">100</td>
-                    <td style="text-align: center;">{{ cp_main_sum|floatformat:1  }}</td>
+                    <td style="text-align: center;">{{ cp_main_sum|floatformat:1  }}({{ total_score|floatformat:1  }})</td>
                     <td style="text-align: center;">
                         <textarea name="remark_total" style="width: 100%; height: 100%; resize: none; box-sizing: border-box;" rows="2" cols="20">{{ remark_total|default_if_none:'' }}</textarea>
                     </td>
@@ -634,13 +634,17 @@
                             <form action="{% url 'toggle_approve_status' evaluation_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
-                                    ตรวจสอบการประเมินแล้ว
+                                    {% if user_evaluation.approve_status == 0 %}
+                                    ยืนยันตรวจสอบผลการประเมิน
+                                    {% elif user_evaluation.approve_status == 1 %}
+                                    ยกเลิกตรวจสอบผลการประเมิน
+                                    {%endif%}
                                 </button>
                             </form>
                             {% if user.groups.all.0.name == "Evaluator" %}
                             <table>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                 </form>
                             </td>
@@ -649,12 +653,12 @@
                             {% elif user.groups.all.0.name != "Evaluator" %}
                             <table>
                                 <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                 </form>
                             </td>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                 </form>
                             </td>

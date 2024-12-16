@@ -603,7 +603,7 @@
                 <a href="{% url 'evaluation_page_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
                 <a href="{% url 'evaluation_page_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
         
-            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                 <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
             </form>
             </div>

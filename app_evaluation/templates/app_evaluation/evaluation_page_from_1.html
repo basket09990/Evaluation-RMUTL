@@ -804,17 +804,21 @@
                             <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
-                                    ตรวจสอบการประเมินแล้ว
+                                    {% if user_evaluation.approve_status == 0 %}
+                                    ยืนยันตรวจสอบผลการประเมิน
+                                    {% elif user_evaluation.approve_status == 1 %}
+                                    ยกเลิกตรวจสอบผลการประเมิน
+                                    {%endif%}
                                 </button>
                             </form>
                             <table>
                                 <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                 </form>
                             </td>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                 </form>
                             </td>
@@ -1067,10 +1071,14 @@
                                                 <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
                                                     {% csrf_token %}
                                                     <button type="submit" class="btn btn-primary">
-                                                        ตรวจสอบการประเมินแล้ว
+                                                        {% if user_evaluation.approve_status == 0 %}
+                                                        ยืนยันตรวจสอบผลการประเมิน
+                                                        {% elif user_evaluation.approve_status == 1 %}
+                                                        ยกเลิกตรวจสอบผลการประเมิน
+                                                        {%endif%}
                                                     </button>
                                                 </form>
-                                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                                 </form>
                                                 </div>
@@ -1318,17 +1326,21 @@
                             <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
-                                    ตรวจสอบการประเมินแล้ว
+                                    {% if user_evaluation.approve_status == 0 %}
+                                    ยืนยันตรวจสอบผลการประเมิน
+                                    {% elif user_evaluation.approve_status == 1 %}
+                                    ยกเลิกตรวจสอบผลการประเมิน
+                                    {%endif%}
                                 </button>
                             </form>
                             <table>
                                 <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                 </form>
                             </td>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                 </form>
                             </td>

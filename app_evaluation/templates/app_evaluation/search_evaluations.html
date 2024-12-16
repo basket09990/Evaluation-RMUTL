@@ -11,7 +11,7 @@
         <select name="year">
             <option value="">เลือกปี</option>
             {% for y in years %}
-                <option value="{{ y }}" {% if y|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                <option value="{{ y }}" {% if y|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ y|add:"543" }}</option>
             {% endfor %}
         </select>
         
@@ -33,10 +33,10 @@
             <tr>
                 <th>ชื่อจริง</th>
                 <th>นามสกุล</th>
-                <th>สถานะการอนุมัติ</th>
+                <th>สถานะการตรวจสอบของผู้ประเมิน</th>
                 <th>ปี</th>
                 <th>รอบการประเมิน</th>
-                <th>สถานะการประเมิน</th>
+                <th>สถานะช่วงเวลาการทำแบบประเมิน</th>
                 <th>การกระทำ</th>
             </tr>
         </thead>
@@ -45,30 +45,22 @@
             <tr>
                 <td>{{ evaluation.user.first_name }}</td>
                 <td>{{ evaluation.user.last_name }}</td>
-                <td>
-                    {% if evaluation.approve_status %}
+                <td>{% if evaluation.approve_status %}
                     ตรวจสอบแล้ว
                     {% else %}
                     ยังไม่ได้ตรวจสอบ
-                    {% endif %}
-                </td>
-                <td>{{ evaluation.evr_id.evr_year }}</td>
+                    {% endif %}</td>
+                <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                 <td>{{ evaluation.evr_id.evr_round }}</td>
-                <td>
-                    {% if evaluation.evr_id.evr_status %}
+                <td>{% if evaluation.evr_id.evr_status %}
                     อยู่นอกระยะเวลาการทำประเมิน
                     {% else %}
                     อยู่ในช่วงระยะเวลาการทำแบบประเมิน
-                    {% endif %}
-                </td>     
-                <td>
-                        <a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-primary">ดู</a>
-                </td>           
+                    {% endif %}</td>     
+                <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-primary">ดู</a></td>           
             </tr>
             {% empty %}
-            <tr>
-                <td colspan="7">ไม่มีข้อมูลการประเมิน</td>
-            </tr>
+            <tr><td colspan="7">ไม่มีข้อมูลการประเมิน</td></tr>
             {% endfor %}
         </tbody>
     </table>

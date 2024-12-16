@@ -12,7 +12,7 @@
         <select name="year">
             <option value="">เลือกปี</option>
             {% for year in years %}
-                <option value="{{ year }}" {% if year == request.GET.year %}selected{% endif %}>{{ year }}</option>
+                <option value="{{ year }}" {% if year == request.GET.year %}selected{% endif %}>{{ year|add:"543" }}</option>
             {% endfor %}
         </select>
         
@@ -34,10 +34,10 @@
                 <tr>
                     <th>ชื่อจริง</th>
                     <th>นามสกุล</th>
-                    <th>สถานะการอนุมัติ</th>
+                    <th>สถานะการตรวจสอบของผู้ประเมิน</th>
                     <th>ปี</th>
                     <th>รอบการประเมิน</th>
-                    <th>สถานะการประเมิน</th>
+                    <th>สถานะช่วงเวลาการทำแบบประเมิน</th>
                     <th>การกระทำ</th>
                 </tr>
             </thead>
@@ -47,12 +47,10 @@
                     <td>{{ evaluation.user.first_name }}</td>  <!-- ดึงจาก User โดยตรง -->
                     <td>{{ evaluation.user.last_name }}</td>  <!-- ดึงจาก User โดยตรง -->
                     <td>{{ evaluation.approve_status|yesno:"ตรวจสอบแล้ว,ยังไม่ได้ตรวจสอบ" }}</td>
-                    <td>{{ evaluation.evr_id.evr_year }}</td>
+                    <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                     <td>{{ evaluation.evr_id.evr_round }}</td>
                     <td>{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}</td>
-                    <td>
-                    <a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">ไปยังการประเมิน</a>
-                    </td>
+                    <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a></td>
                 </tr>
                 {% endfor %}
             </tbody>

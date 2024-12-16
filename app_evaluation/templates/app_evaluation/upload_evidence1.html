@@ -31,7 +31,7 @@
                         <!-- เปิดไฟล์ใน pop-up โดยใช้ iframe และป้องกัน IDM จากการดาวน์โหลด -->
                         <a href="#" onclick="openPopup('{{ evidence.file.url }}')" class="file-link">{{ evidence.filename }}</a>
                         <span class="delete-link">
-                            <a href="{% url 'delete_evidence1' evidence.uevd_id %}">ลบไฟล์</a>
+                            <a href="{% url 'delete_evidence1' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบไฟล์</a>
                         </span>
                     </div>
                 </li>
@@ -52,7 +52,7 @@
                                     <img src="{{ evidence.picture.url }}" alt="รูปภาพที่อัปโหลด" class="uploaded-image">
                                 </a>
                                 <span class="delete-link">
-                                    <a href="{% url 'delete_evidence1' evidence.uevd_id %}">ลบรูปภาพ</a>
+                                    <a href="{% url 'delete_evidence1' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบรูปภาพ</a>
                                 </span>
                             </div>
                         </div>

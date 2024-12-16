@@ -591,28 +591,28 @@
                                                 <a href="{% url 'evaluation_page6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
 
                                             {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                             </form>
-                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                             </form>
                                             {% endif %}
                                             {% if user.groups.all.0.name == "Staff"%}
-                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                             </form>
-                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                             </form>
                                             {% endif %}
                                             {% if user.groups.all.0.name == "Evaluator" %}
-                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                             </form>
                                             {% endif %}
                                             {% if user.groups.all.0.name == "Assessor" %}
-                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                            <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                                 <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                             </form>
                                             {% endif %}

@@ -4146,8 +4146,19 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # แสดงหัวข้อ
     start_y -= line_height  # ลดตำแหน่ง Y หลังจากวาดข้อความ
+    # ฟังก์ชันสำหรับหัวตาราง
+    def get_table_header():
+        return [
+            [
+                Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
+                Paragraph("จำนวน", styleCenter),
+                Paragraph("ภาระงาน", styleCenter),
+                Paragraph("รวมภาระงาน(เดิม)", styleCenter),
+                Paragraph("หมายเหตุ", styleCenter)
+            ]
+        ]
     # สร้างตาราง
-    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),Paragraph( "จำนวน", styleCenter),Paragraph( "ภาระงาน", styleCenter),Paragraph( "รวมภาระงาน", styleCenter), Paragraph("หมายเหตุ", styleCenter)]]
+    data = []
 
     field_counter = 0
     for field in fields:
@@ -4182,9 +4193,12 @@ def print_evaluation_pdf(request, evaluation_id):
         for i in range(0, len(data), chunk_size):
             yield data[i:i + chunk_size]
 
-    # ฟังก์ชันสร้างตาราง
-    def draw_table(p, data, start_x, start_y, max_rows_per_page):
-        table_data = data[:max_rows_per_page]  # ดึงเฉพาะข้อมูลที่พอดีกับหน้า
+    # ฟังก์ชันรวมข้อมูลและหัวตารางในแต่ละหน้า
+    def draw_table_with_header(p, data_chunk, start_x, start_y):
+        table_header = get_table_header()
+        table_data = table_header + data_chunk  # รวมหัวตารางกับข้อมูล
+        
+        # กำหนดตาราง
         table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
@@ -4208,7 +4222,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 22  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 24  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
@@ -4216,7 +4230,7 @@ def print_evaluation_pdf(request, evaluation_id):
         p.setFont("SarabunBold", 16)
         p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
         start_y = height - 70
-        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = draw_table_with_header(p, chunk, start_x, start_y)  # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
@@ -5047,24 +5061,34 @@ def print_evaluation_pdf_eva(request, evaluation_id):
 
     # แสดงหัวข้อ
     start_y -= line_height  # ลดตำแหน่ง Y หลังจากวาดข้อความ
+    def get_table_header():
+        return [
+            [
+                Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
+                Paragraph("จำนวน", styleCenter),
+                Paragraph("ภาระงาน", styleCenter),
+                Paragraph("รวมภาระงาน(เดิม)", styleCenter),
+                Paragraph("หมายเหตุ", styleCenter)
+            ]
+        ]
     # สร้างตาราง
-    data = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),Paragraph( "จำนวน", styleCenter),Paragraph( "ภาระงาน", styleCenter),Paragraph( "รวมภาระงาน(เดิม)", styleCenter), Paragraph("หมายเหตุ", styleCenter)]]
+    data1 = []
 
     field_counter = 0
     for field in fields:
         field_counter += 1
         total_for_field = 0
-        data.append([Paragraph(f"{field_counter}. {field.f_name}", styleB), "", "", "", ""])
+        data1.append([Paragraph(f"{field_counter}. {field.f_name}", styleB), "", "", "", ""])
 
         subfield_counter = 0
         for subfield in subfields.filter(f_id=field):
             subfield_counter += 1
-            data.append([Paragraph(f"{field_counter}.{subfield_counter}. {subfield.sf_name}", styleN), "", "", "", ""])
+            data1.append([Paragraph(f"{field_counter}.{subfield_counter}. {subfield.sf_name}", styleN), "", "", "", ""])
 
             selection_counter = 0
             for selection in workload_selections.filter(sf_id=subfield):
                 selection_counter += 1
-                data.append([
+                data1.append([
                     Paragraph(f"{field_counter}.{subfield_counter}.{selection_counter}. {selection.selected_name}", styleN),
                     str(selection.selected_num),
                     f"{selection.selected_workload:.1f}",  # แสดงทศนิยม 1 ตำแหน่ง
@@ -5074,18 +5098,19 @@ def print_evaluation_pdf_eva(request, evaluation_id):
                 total_for_field += selection.calculated_workload
             
     # เพิ่มแถวที่เป็นตัวหนา
-    data.append([Paragraph("รวมคะแนนสำหรับภาระงานทั้งหมด", styleB), "", "", f"{c_gtt:.1f} ({total_workload:.1f})", ""])
-    data.append([Paragraph("คะแนนผลสัมฤทธิ์ของงาน", styleB), "", "", f"{c_sumwl:.1f} ({achievement_work:.1f})", ""])
+    data1.append([Paragraph("รวมคะแนนสำหรับภาระงานทั้งหมด", styleB), "", "", f"{c_gtt:.1f} ({total_workload:.1f})", ""])
+    data1.append([Paragraph("คะแนนผลสัมฤทธิ์ของงาน", styleB), "", "", f"{c_sumwl:.1f} ({achievement_work:.1f})", ""])
 
     # ฟังก์ชันแบ่งข้อมูลเป็นชุด ๆ
-    def chunk_data(data, chunk_size):
+    def chunk_data(data1, chunk_size):
         """แบ่งข้อมูลออกเป็นชุด ๆ ตาม chunk_size"""
-        for i in range(0, len(data), chunk_size):
-            yield data[i:i + chunk_size]
+        for i in range(0, len(data1), chunk_size):
+            yield data1[i:i + chunk_size]
 
     # ฟังก์ชันสร้างตาราง
-    def draw_table(p, data, start_x, start_y, max_rows_per_page):
-        table_data = data[:max_rows_per_page]  # ดึงเฉพาะข้อมูลที่พอดีกับหน้า
+    def draw_table_with_header(p, data_chunk, start_x, start_y):
+        table_header = get_table_header()
+        table_data = table_header + data_chunk  # รวมหัวตารางกับข้อมูล
         table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
@@ -5109,21 +5134,22 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 22  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 24  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
-    # วาดตารางในแต่ละหน้า
-    for chunk in chunk_data(data, max_rows_per_page):
-        start_y = height - 50  # กำหนดจุดเริ่มต้นของหน้าใหม่
-        p.setFont("SarabunBold", 16)
-        p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
-        # กำหนดหัวตาราง
-        table_header = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
+    table_header = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
                          Paragraph("จำนวน", styleCenter),
                          Paragraph("ภาระงาน", styleCenter),
                          Paragraph("รวมภาระงาน(เดิม)", styleCenter),
                          Paragraph("หมายเหตุ", styleCenter)]]
+
+    # วาดตารางในแต่ละหน้า
+    for chunk in chunk_data(data1, max_rows_per_page):
+        start_y = height - 50  # กำหนดจุดเริ่มต้นของหน้าใหม่
+        p.setFont("SarabunBold", 16)
+        p.drawString(start_x, start_y, "ส่วนที่ 1 องค์ประกอบที่ 1 ผลสัมฤทธิ์ของงาน")
+        # กำหนดหัวตาราง
         start_y = height - 70
-        start_y = draw_table(p, chunk, start_x, start_y, max_rows_per_page)  # วาดและอัพเดท start_y
+        start_y = draw_table_with_header(p, chunk, start_x, start_y) # วาดและอัพเดท start_y
         p.showPage()  # ขึ้นหน้าใหม่เมื่อวาดเสร็จ
 
 
@@ -5307,6 +5333,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     achievement_work = evaluation.achievement_work or 0
     mc_score = evaluation.mc_score or 0
     c_score = evaluation.c_sumwl or 0
+    cp_sum = achievement_work + mc_score
     total_score = c_score + mc_score
 
     # กำหนดระดับผลการประเมิน
@@ -5341,16 +5368,16 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     p.drawString(50, height - 50, "ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ")
 
     data = [
-        [Paragraph("องค์ประกอบการประเมิน", styleCenter),Paragraph("คะแนนเต็ม", styleCenter),Paragraph("คะแนนที่ได้", styleCenter),Paragraph("หมายเหตุ", styleCenter)],
-        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{c_score:.1f}", f"{evaluation.remark_achievement}"],
+        [Paragraph("องค์ประกอบการประเมิน", styleCenter),Paragraph("คะแนนเต็ม", styleCenter),Paragraph("คะแนนที่ได้(เดิม)", styleCenter),Paragraph("หมายเหตุ", styleCenter)],
+        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{c_score:.1f}({achievement_work:.1f})", f"{evaluation.remark_achievement}"],
         ["องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)", "30", f"{mc_score:.1f}", f"{evaluation.remark_mc}"],
         ["องค์ประกอบอื่น ๆ (ถ้ามี)", "", "", f"{evaluation.remark_other}"],
-        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f}", f"{evaluation.remark_total}"],
+        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f}({cp_sum:.1f})", f"{evaluation.remark_total}"],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF
     def draw_table(p, data, start_x, start_y):
-        table = Table(data, colWidths=[9 * cm,2.5 * cm,2.5 * cm,4 * cm])  # กำหนดขนาดคอลัมน์
+        table = Table(data, colWidths=[9 * cm,2.5 * cm,2.2 * cm,4 * cm])  # กำหนดขนาดคอลัมน์
         table.setStyle(TableStyle([
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONT', (0, 0), (-1, -1), 'Sarabun'),

@@ -495,6 +495,103 @@
 
 </style>
 <div class="content2">
+
+    {% if user.groups.all.0.name == "Evaluator" %}
+    <div>
+        <form action="{% url 'evaluation_page_from_5' evaluation_id %}" method="POST">
+            {% csrf_token %}
+            <h2>ส่วนที่ 4 : แผนพัฒนาการปฏิบัติราชการรายบุคคล</h2>
+        
+            <!-- Formset for PersonalDiagram -->
+            <table class="form-table3">
+                <thead>
+                    <tr>
+                        <th>ความรู้/ทักษะ/สมรรถนะที่ต้องได้รับการพัฒนา</th>
+                        <th>วิธีการพัฒนา</th>
+                        <th>ช่วงเวลาที่ต้องการพัฒนา</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pd in formset %}
+                        <tr>
+                            <td>{{ pd.skill_evol }}</td>
+                            <td>{{ pd.dev }}</td>
+                            <td class="action-buttons" style="display: flex; align-items: center;">
+                                {{ pd.dev_time }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+           
+            <!-- UserEvaluationForm Fields -->
+            <table class="form-table" style="margin-top: 20px;">
+                <thead>
+                    <tr>
+                        <th>ความเห็นเพิ่มเติมของผู้ประเมิน</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <label for="improved" style="text-align: left;">1) จุดเด่น และ/หรือ สิ่งที่ควรปรับปรุงแก้ไข</label><br>
+                            {{ form.improved }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label for="suggestions" style="text-align: left;">2) ข้อเสนอแนะเกี่ยวกับวิธีส่งเสริมและพัฒนา</label><br>
+                            {{ form.suggestions }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        
+            <!-- Submit Button -->
+            <button type="submit" value="form" onclick="showAlert()">บันทึกข้อมูลการประเมิน</button>
+        </form>
+        <table class="form-table">
+            <tr>
+                <td colspan="2" style="text-align: center;">
+                    ผู้ประเมินและผู้รับการประเมินได้ตกลงร่วมกันและเห็นพ้องกันแล้ว (ระบุข้อมูลให้ครบ)
+                    <div style="text-align: center;">
+                    จึงลงลายมือชื่อไว้เป็นหลักฐาน (ลงนามเมื่อจัดทำข้อตกลง)
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center; padding-top:10px;">
+                    ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">&nbsp;</span>(ผู้ประเมิน)
+                    <div class="date-container" style="text-align: center;">
+                        วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">&nbsp;</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">&nbsp;</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">&nbsp;</span>
+                    </div>
+                </td>
+                {% if evaluation.full_name is None %}
+                    <td style="text-align: center; padding-top:10px;">
+                        ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">&nbsp;</span>(ผู้รับการประเมิน)
+                        <div class="date-container" style="text-align: center;" padding-top:10px;>
+                            วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">&nbsp;</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">&nbsp;</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">&nbsp;</span>
+                        </div>
+                    </td>
+                {% else %}
+                    <td style="text-align: center; padding-top:10px;">
+                        ลายมือชื่อ<span style="border-bottom: 1px dotted black; display: inline-block; width: 200px;">{{ evaluation.full_name }}</span>(ผู้รับการประเมิน)
+                        <div class="date-container" style="text-align: center;" padding-top:10px;>
+                            วันที่<span style="border-bottom: 1px dotted black; display: inline-block; width: 40px;">{{ evaluation.start_day }}</span>เดือน<span style="border-bottom: 1px dotted black; display: inline-block; width: 60px;">{{ evaluation.start_month }}</span>พ.ศ.<span style="border-bottom: 1px dotted black; display: inline-block; width: 80px;">{{ evaluation.start_year }}</span>
+                        </div>
+                    </td>
+                {% endif %}
+            </tr>
+        </table>
+        
+    </div>
+
+
+    {% endif %}
+
+    {% if user.groups.all.0.name != "Evaluator" %}
+
+
     <div>
         <form action="{% url 'evaluation_page_from_5' evaluation_id %}" method="POST">
             {% csrf_token %}
@@ -597,6 +694,8 @@
         </table>
         
     </div>
+
+    {% endif %}
     <!--
     {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
     <form method="post" action="{% url 'save_full_name_and_current_date2' evaluation_id=evaluation_id %}">
@@ -618,13 +717,17 @@
                             <form action="{% url 'toggle_approve_status' evaluation_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
-                                    ตรวจสอบการประเมินแล้ว
+                                    {% if evaluation.approve_status == 0 %}
+                                    ยืนยันตรวจสอบผลการประเมิน
+                                    {% elif evaluation.approve_status == 1 %}
+                                    ยกเลิกตรวจสอบผลการประเมิน
+                                    {%endif%}
                                 </button>
                             </form>
                             {% if user.groups.all.0.name == "Evaluator" %}
                             <table>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF</button>
                                 </form>
                             </td>
@@ -633,12 +736,12 @@
                             {% elif user.groups.all.0.name != "Evaluator" %}
                             <table>
                                 <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้รับประเมิน)</button>
                                 </form>
                             </td>
                             <td>
-                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}">
+                                <form method="get" action="{% url 'print_evaluation_pdf_eva' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
                                     <button type="submit" class="btn btn-primary">พิมพ์ PDF (ผู้ประเมิน)</button>
                                 </form>
                             </td>
