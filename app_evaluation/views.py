@@ -41,6 +41,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.utils import timezone
 from reportlab.lib.enums import TA_LEFT
+import time
 
 
 
@@ -948,46 +949,69 @@ def upload_evidence1(request, criteria_id):
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
+    # ฟังก์ชันสร้าง path สำหรับไฟล์
+    def generate_upload_path(evaluation, filename):
+        """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
+        year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
+        round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
+        username = evaluation.user.username  # ชื่อผู้ใช้
+        lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+
+        base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+
+        # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
+        new_filename = f"{base}{ext}"
+        count = 1
+        while default_storage.exists(os.path.join(folder_path, new_filename)):
+            new_filename = f"{base}_copy{count}{ext}"
+            count += 1
+
+        return os.path.join(folder_path, new_filename)
+
     if request.method == 'POST':
         form = UserEvidentForm(request.POST, request.FILES)
         files = request.FILES.getlist('file')
         pictures = request.FILES.getlist('picture')
+        filenames = request.POST.getlist('filename')  # รับรายชื่อไฟล์ที่ผู้ใช้กรอกเข้ามา
 
         if form.is_valid():
             # บันทึกไฟล์ PDF และ DOCX
-            for file in files:
-                new_filename = f"{uuid.uuid4()}_{file.name}"
+            for i, file in enumerate(files):
+                custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
+                file_path = default_storage.save(upload_path, file)
+
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
-                    file=file,
-                    filename=new_filename
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
+                    file=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
 
-            # ลดขนาดรูปภาพก่อนบันทึก
-            for picture in pictures:
-                new_filename = f"{uuid.uuid4()}_{picture.name}"
+            # บันทึกรูปภาพหลังลดขนาด
+            for i, picture in enumerate(pictures):
+                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
+
                 image = Image.open(picture)
-
-                # ลดขนาดรูปภาพ
-                max_size = (1366, 800)  # ขนาดที่ต้องการ
+                max_size = (1366, 800)
                 image.thumbnail(max_size)
-
-                # บันทึกรูปภาพที่ลดขนาด
                 img_io = ContentFile(b'')
                 image_format = image.format or 'JPEG'
                 image.save(img_io, format=image_format)
 
-                # บันทึกไฟล์ลงใน storage
-                file_name = default_storage.save(f"uploads/{new_filename}", img_io)
+                file_path = default_storage.save(upload_path, img_io)
+
                 evidence = user_evident(
-                    uwls_id=criteria,  # ตั้งค่า uwls_id ด้วย instance ของ UserWorkloadSelection
-                    uevr_id=evaluation,  # ตั้งค่า uevr_id ด้วย instance ของ UserEvaluation
-                    picture=file_name,
-                    filename=new_filename
+                    uwls_id=criteria,
+                    uevr_id=evaluation,
+                    picture=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
+
 
             messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
             return redirect('upload_evidence1', criteria_id=criteria_id)
@@ -2009,6 +2033,26 @@ def upload_evidence2(request, criteria_id):
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
+    # ฟังก์ชันสร้าง path สำหรับไฟล์
+    def generate_upload_path(evaluation, filename):
+        """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
+        year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
+        round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
+        username = evaluation.user.username  # ชื่อผู้ใช้
+        lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+
+        base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+
+        # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
+        new_filename = f"{base}{ext}"
+        count = 1
+        while default_storage.exists(os.path.join(folder_path, new_filename)):
+            new_filename = f"{base}_copy{count}{ext}"
+            count += 1
+
+        return os.path.join(folder_path, new_filename)
+
     if request.method == 'POST':
         form = UserEvidentForm(request.POST, request.FILES)
         files = request.FILES.getlist('file')
@@ -2017,22 +2061,23 @@ def upload_evidence2(request, criteria_id):
 
         if form.is_valid():
             # บันทึกไฟล์ PDF และ DOCX
-            for index, file in enumerate(files):
-                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else file.name
-                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+            for i, file in enumerate(files):
+                custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
+                file_path = default_storage.save(upload_path, file)
 
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
-                    file=file,
-                    filename=new_filename
+                    file=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
 
-            # ลดขนาดรูปภาพก่อนบันทึก
-            for index, picture in enumerate(pictures):
-                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else picture.name
-                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+            # บันทึกรูปภาพหลังลดขนาด
+            for i, picture in enumerate(pictures):
+                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
 
                 image = Image.open(picture)
                 max_size = (1366, 800)
@@ -2041,12 +2086,13 @@ def upload_evidence2(request, criteria_id):
                 image_format = image.format or 'JPEG'
                 image.save(img_io, format=image_format)
 
-                file_name = default_storage.save(f"uploads/{new_filename}", img_io)
+                file_path = default_storage.save(upload_path, img_io)
+
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
-                    picture=file_name,
-                    filename=new_filename
+                    picture=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
 
@@ -3452,6 +3498,26 @@ def upload_evidence(request, criteria_id):
     criteria = get_object_or_404(UserWorkloadSelection, pk=criteria_id)
     evaluation = criteria.evaluation  # ดึงค่า evaluation จาก UserWorkloadSelection
 
+    # ฟังก์ชันสร้าง path สำหรับไฟล์
+    def generate_upload_path(evaluation, filename):
+        """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
+        year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
+        round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
+        username = evaluation.user.username  # ชื่อผู้ใช้
+        lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+
+        base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+
+        # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
+        new_filename = f"{base}{ext}"
+        count = 1
+        while default_storage.exists(os.path.join(folder_path, new_filename)):
+            new_filename = f"{base}_copy{count}{ext}"
+            count += 1
+
+        return os.path.join(folder_path, new_filename)
+
     if request.method == 'POST':
         form = UserEvidentForm(request.POST, request.FILES)
         files = request.FILES.getlist('file')
@@ -3460,22 +3526,23 @@ def upload_evidence(request, criteria_id):
 
         if form.is_valid():
             # บันทึกไฟล์ PDF และ DOCX
-            for index, file in enumerate(files):
-                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else file.name
-                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+            for i, file in enumerate(files):
+                custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
+                file_path = default_storage.save(upload_path, file)
 
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
-                    file=file,
-                    filename=new_filename
+                    file=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
 
-            # ลดขนาดรูปภาพก่อนบันทึก
-            for index, picture in enumerate(pictures):
-                custom_filename = filenames[index] if index < len(filenames) and filenames[index] else picture.name
-                new_filename = f"{uuid.uuid4()}_{custom_filename}"
+            # บันทึกรูปภาพหลังลดขนาด
+            for i, picture in enumerate(pictures):
+                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                upload_path = generate_upload_path(evaluation, custom_filename)
 
                 image = Image.open(picture)
                 max_size = (1366, 800)
@@ -3484,14 +3551,16 @@ def upload_evidence(request, criteria_id):
                 image_format = image.format or 'JPEG'
                 image.save(img_io, format=image_format)
 
-                file_name = default_storage.save(f"uploads/{new_filename}", img_io)
+                file_path = default_storage.save(upload_path, img_io)
+
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
-                    picture=file_name,
-                    filename=new_filename
+                    picture=file_path,
+                    filename=os.path.basename(file_path)
                 )
                 evidence.save()
+
 
             messages.success(request, "อัปโหลดไฟล์เรียบร้อยแล้ว!")
             return redirect('upload_evidence', criteria_id=criteria_id)
@@ -4246,7 +4315,7 @@ def print_evaluation_pdf(request, evaluation_id):
     start_y = height - 70
     line_height = 20
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=14, alignment=TA_CENTER)
 
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 50, "ส่วนที่ 2 องค์ประกอบที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)")
@@ -5165,7 +5234,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     start_y = height - 70
     line_height = 20
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
-    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=12, alignment=TA_CENTER)
+    styleCenter = ParagraphStyle(name='Center', fontName='SarabunBold', fontSize=14, alignment=TA_CENTER)
 
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 50, "ส่วนที่ 2 องค์ประกอบที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)")

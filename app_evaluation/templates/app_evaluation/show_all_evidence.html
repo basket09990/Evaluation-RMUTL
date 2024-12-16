@@ -116,10 +116,12 @@
     .slideshow-container {
         margin-top: 50px;
         position: relative;
+        max-width: 80%; /* กำหนดความกว้างสูงสุดเป็น 80% */
         margin: auto;
+        overflow: hidden; /* ซ่อนเนื้อหาที่เลยขอบ */
         display: flex;
-        justify-content: center; /* จัดกึ่งกลางแนวนอน */
-        align-items: center; /* จัดกึ่งกลางแนวตั้ง */
+        justify-content: center;
+        align-items: center;
     }
 
     .mySlides {
@@ -164,23 +166,30 @@
     .row {
         display: flex;
         justify-content: center;
+        flex-wrap: wrap; /* ทำให้ thumbnail ขึ้นบรรทัดใหม่ได้หากพื้นที่ไม่พอ */
         margin-top: 20px;
-    }
+        gap: 10px; /* เพิ่มช่องว่างระหว่าง thumbnails */
+    }    
 
     .column {
         flex: 0 0 auto;
-        width: 80px;
+        width: 70px; /* ปรับขนาด thumbnail */
         padding: 5px;
+        box-sizing: border-box;
     }
 
     .thumbnail {
         width: 100%;
+        height: auto;
         cursor: pointer;
         opacity: 0.6;
+        border: 1px solid #ddd; /* เพิ่มขอบให้ thumbnail */
+        border-radius: 4px;
     }
-
-    .thumbnail:hover {
+    
+    .thumbnail:hover, .thumbnail.active {
         opacity: 1;
+        border-color: #007bff; /* เปลี่ยนสีขอบเมื่อ hover */
     }
 
     .active {

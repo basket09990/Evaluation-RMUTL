@@ -6,13 +6,20 @@
     <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
     <form id="uploadForm" action="{% url 'upload_evidence1' evaluation.uevr_id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <div class="upload-section">
-            <label for="file">File:</label>
-            <input type="file" id="file" name="file" multiple>
+        <div>
+            <label for="file">File: สกุลไฟล์ที่รองรับ 'pdf', 'docx', 'xlsx'</label>
+            <br>
+            <input type="file" id="file" name="file" multiple onchange="generateFilenameInputs('file')">
+            <br><br>
+            <div id="file-name-container"></div> <!-- แสดงช่องกรอกชื่อไฟล์ -->
         </div>
-        <div class="upload-section">
-            <label for="picture">Picture:</label>
-            <input type="file" id="picture" name="picture" multiple>
+        
+        <div class="upload-section" style="margin-top: 20px;">
+            <label for="picture">Picture: สกุลรูปภาพที่รองรับ 'jpg', 'jpeg', 'png'</label>
+            <br>
+            <input type="file" id="picture" name="picture" multiple onchange="generateFilenameInputs('picture')">
+            <br><br>
+            <div id="picture-name-container"></div> <!-- แสดงช่องกรอกชื่อรูปภาพ -->
         </div>
         <button type="submit" class="btn btn-upload">อัปโหลด</button>
     </form>
@@ -119,6 +126,25 @@
 
         // เปิดหน้าต่าง pop-up
         window.open(url, 'popupWindow', `width=${width}, height=${height}, top=${top}, left=${left}, scrollbars=yes`);
+    }
+    function generateFilenameInputs(inputId) {
+        const inputElement = document.getElementById(inputId);
+        const fileList = inputElement.files;
+        const containerId = inputId === 'file' ? 'file-name-container' : 'picture-name-container';
+        const container = document.getElementById(containerId);
+    
+        container.innerHTML = ""; // เคลียร์ช่องกรอกเก่าทิ้งก่อน
+    
+        // สร้างช่องกรอกชื่อไฟล์ใหม่ตามจำนวนไฟล์ที่เลือก
+        for (let i = 0; i < fileList.length; i++) {
+            const fileName = fileList[i].name;
+            const inputDiv = document.createElement('div');
+            inputDiv.innerHTML = `
+                <label>ชื่อไฟล์สำหรับ: ${fileName}</label>
+                <input type="text" name="filename" placeholder="ตั้งชื่อไฟล์ที่นี่">
+            `;
+            container.appendChild(inputDiv);
+        }
     }
 </script>
 
