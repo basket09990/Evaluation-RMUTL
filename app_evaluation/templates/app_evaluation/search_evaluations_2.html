@@ -50,7 +50,11 @@
                     <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                     <td>{{ evaluation.evr_id.evr_round }}</td>
                     <td>{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}</td>
+                    {% if evaluation.approve_status == 0 %}
                     <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a></td>
+                    {% else %}
+                    <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a></td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
