@@ -630,7 +630,7 @@
                                 <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
                                 <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
                                 <a href="{% url 'evaluation_page_from_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
-
+                                {% if user.groups.all.0.name != "Staff"%}
                             <form action="{% url 'toggle_approve_status' evaluation_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
@@ -641,6 +641,7 @@
                                     {%endif%}
                                 </button>
                             </form>
+                            {%endif%}
                             {% if user.groups.all.0.name == "Evaluator" %}
                             <table>
                             <td>

@@ -807,12 +807,11 @@
                     <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
                         <div class="centered-menu" id="centeredMenu">
                                 <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
-                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
                                 <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
                                 <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
                                 <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
                                 <a href="{% url 'evaluation_page_from_6' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 5 และ 6</a>
-
+                            {% if user.groups.all.0.name != "Staff"%}
                             <form action="{% url 'toggle_approve_status' evaluation_id=user_evaluation.uevr_id %}" method="post" style="display:inline;">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-primary">
@@ -823,6 +822,7 @@
                                     {%endif%}
                                 </button>
                             </form>
+                            {%endif%}
                             <table>
                                 <td>
                                 <form method="get" action="{% url 'print_evaluation_pdf' evaluation_id %}" target="_blank" onsubmit="window.open(this.action, '_blank'); return false;">
@@ -1018,7 +1018,6 @@
     <button class="menu-toggle" onclick="toggleMenu()">เมนูการประเมิน</button>
                         <div class="centered-menu" id="centeredMenu">
                                 <a href="{% url 'evaluation_page_from_1' evaluation_id=evaluation_id %}" class="btn btn-secondary">ข้อมูลของผู้รับประเมินและบันทึกการปฏิบัติงาน</a>
-                                <a href="{% url 'evaluation_page_from_2' evaluation_id %}"  class="btn btn-secondary">ส่วนที่ 1 ผลสัมฤทธิ์ของงาน</a>
                                 <a href="{% url 'evaluation_page_from_3' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 2 พฤติกรรมการปฏิบัติงาน (สมรรถนะ)</a>
                                 <a href="{% url 'evaluation_page_from_4' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 3 สรุปการประเมินผลการปฏิบัติราชการ</a>
                                 <a href="{% url 'evaluation_page_from_5' evaluation_id %}" class="btn btn-secondary">ส่วนที่ 4 แผนพัฒนาการปฏิบัติราชการรายบุคคล</a>
