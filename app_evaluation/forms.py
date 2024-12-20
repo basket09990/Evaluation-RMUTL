@@ -68,7 +68,7 @@ class WorkloadCriteriaForm(forms.ModelForm):
         model = WorkloadCriteria
         fields = ['c_name', 'c_num', 'c_maxnum', 'c_unit', 'c_workload']
         labels = {
-            'c_name': 'สมรรถนะหลัก (ที่สภามหาวิทยาลัยกำหนด)',
+            'c_name': 'ชื่อเกณฑ์ภาระงาน',
             'c_num': 'จำนวน',
             'c_maxnum': 'จำนวนสูงสุด',
             'c_unit': 'หน่วย',
