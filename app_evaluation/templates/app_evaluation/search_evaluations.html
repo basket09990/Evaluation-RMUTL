@@ -36,7 +36,7 @@
                 <th>สถานะการตรวจสอบของผู้ประเมิน</th>
                 <th>ปี</th>
                 <th>รอบการประเมิน</th>
-                <th>สถานะช่วงเวลาการทำแบบประเมิน</th>
+               <!-- <th>สถานะช่วงเวลาการทำแบบประเมิน</th> -->
                 <th>การกระทำ</th>
             </tr>
         </thead>
@@ -52,11 +52,11 @@
                     {% endif %}</td>
                 <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                 <td>{{ evaluation.evr_id.evr_round }}</td>
-                <td>{% if evaluation.evr_id.evr_status %}
+              <!--  <td>{% if evaluation.evr_id.evr_status %}
                     อยู่นอกระยะเวลาการทำประเมิน
                     {% else %}
                     อยู่ในช่วงระยะเวลาการทำแบบประเมิน
-                    {% endif %}</td>     
+                    {% endif %}</td>     -->
                 <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-primary">ดูแบบประเมิน</a></td>           
             </tr>
             {% empty %}
