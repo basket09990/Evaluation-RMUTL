@@ -37,7 +37,7 @@
                     <th>สถานะการตรวจสอบของผู้ประเมิน</th>
                     <th>ปี</th>
                     <th>รอบการประเมิน</th>
-                   <th>ช่วงเวลาการทำแบบประเมิน</th>
+                    <!--<th>ช่วงเวลาการทำแบบประเมิน</th>-->
                     <th>การกระทำ</th>
                 </tr>
             </thead>
@@ -50,11 +50,17 @@
                     <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                     <td>{{ evaluation.evr_id.evr_round }}</td>
                     <!--{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}-->
+                    <!--{% if evaluation.evr_id.evr_status == 0 %}
                     <td>{% if evaluation.evr_id.evr_round == 1 %}1 ตุลาคม - 31 มีนาคม{% elif evaluation.evr_id.evr_round == 2 %}1 เมษายน - 30 กันยายน{% else %}ยังไม่มีข้อมูลรอบการประเมิน{% endif %}</td>
-                    {% if evaluation.approve_status == 0 %}
-                    <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a></td>
                     {% else %}
-                    <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a></td>
+                    <td>ผู้รับประเมินหมดเวลาในการทำแบบประเมิน</td>
+                    {% endif %}-->
+                    {% if evaluation.approve_status == 0 %}
+                    <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a>
+                    </td>
+                    {% else %}
+                    <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a>
+                    </td>
                     {% endif %}
                 </tr>
                 {% endfor %}

@@ -513,7 +513,7 @@
                                 <a href="{% url 'edit_workload_selection' selection.id %}" class="btn btn-primary btn-small" onclick="saveScrollPosition()">แก้ไข</a>
                                 <form action="{% url 'delete_workload_selection' selection.id %}" method="post" style="display:inline;" onsubmit="saveScrollPosition()">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
+                                    <button type="submit" class="btn btn-info btn-small" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ {{ selection.selected_name }}?');">ลบ</button>
                                 </form>
                                 </div>
                             </td>

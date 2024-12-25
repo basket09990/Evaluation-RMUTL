@@ -5,7 +5,7 @@
 {% block content %}
 <div>
     <h2>ลบรายละเอียดกลุ่ม</h2>
-    <p>คุณต้องการลบรายละเอียดกลุ่มนี้ใช่หรือไม่?</p>
+    <p>คุณต้องการลบรายละเอียดกลุ่ม {{ detail.f_id.f_name }} ใช่หรือไม่?</p>
     <form method="post" action="{% url 'group_detail_delete' detail.gd_id %}">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">ลบ</button>

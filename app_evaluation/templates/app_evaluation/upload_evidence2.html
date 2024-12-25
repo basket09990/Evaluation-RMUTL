@@ -62,10 +62,10 @@
                         <a href="#" onclick="openPopup('{{ evidence.file.url }}')" class="file-link">{{ evidence.filename }}</a>
                         <span class="delete-link">
                             {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                            <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบไฟล์</a>
+                            <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ {{ evidence.filename }}?');">ลบไฟล์</a>
                             {% endif %}
                             {% if user.groups.all.0.name == "Staff"%}
-                            <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบไฟล์</a>
+                            <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบ {{ evidence.filename }}?');">ลบไฟล์</a>
                             {% endif %}
                         </span>
                     </div>
@@ -88,10 +88,10 @@
                                 </a>
                                 <span class="delete-link">
                                     {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                                    <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบรูปภาพ</a>
+                                    <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?');">ลบรูปภาพ</a>
                                     {% endif %}
                                     {% if user.groups.all.0.name == "Staff"%}
-                                    <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบรูปภาพ</a>
+                                    <a href="{% url 'delete_evidence2' evidence.uevd_id %}" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรูปภาพนี้?');">ลบรูปภาพ</a>
                                     {% endif %}
                                 </span>
                             </div>

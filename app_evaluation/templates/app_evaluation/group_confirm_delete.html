@@ -6,7 +6,7 @@
 {% block content %}
 <div>
     <h2>ลบกลุ่ม</h2>
-<p>คุณต้องการลบกลุ่ม "{{ group.g_name }}" ใช่หรือไม่?</p>
+<p>คุณต้องการลบกลุ่ม "{{ group.g_field_name }}" ใช่หรือไม่?</p>
 <form method="post" action="{% url 'group_delete' group.g_id %}">
     {% csrf_token %}
     <button type="submit" class="btn btn-danger">ลบ</button>

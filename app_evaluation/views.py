@@ -954,11 +954,12 @@ def upload_evidence1(request, criteria_id):
         """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
         year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
         round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
-        username = evaluation.user.username  # ชื่อผู้ใช้
+        username = evaluation.user.first_name  # ชื่อผู้ใช้
         lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+        workloadname = criteria.selected_name
 
         base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
-        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}/{workloadname}"
 
         # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
         new_filename = f"{base}{ext}"
@@ -979,6 +980,9 @@ def upload_evidence1(request, criteria_id):
             # บันทึกไฟล์ PDF และ DOCX
             for i, file in enumerate(files):
                 custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                base, ext = os.path.splitext(file.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
                 file_path = default_storage.save(upload_path, file)
 
@@ -993,6 +997,9 @@ def upload_evidence1(request, criteria_id):
             # บันทึกรูปภาพหลังลดขนาด
             for i, picture in enumerate(pictures):
                 custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                base, ext = os.path.splitext(picture.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
 
                 image = Image.open(picture)
@@ -2038,11 +2045,12 @@ def upload_evidence2(request, criteria_id):
         """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
         year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
         round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
-        username = evaluation.user.username  # ชื่อผู้ใช้
+        username = evaluation.user.first_name  # ชื่อผู้ใช้
         lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+        workloadname = criteria.selected_name
 
         base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
-        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}/{workloadname}"
 
         # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
         new_filename = f"{base}{ext}"
@@ -2063,6 +2071,9 @@ def upload_evidence2(request, criteria_id):
             # บันทึกไฟล์ PDF และ DOCX
             for i, file in enumerate(files):
                 custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                base, ext = os.path.splitext(file.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
                 file_path = default_storage.save(upload_path, file)
 
@@ -2077,6 +2088,9 @@ def upload_evidence2(request, criteria_id):
             # บันทึกรูปภาพหลังลดขนาด
             for i, picture in enumerate(pictures):
                 custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                base, ext = os.path.splitext(picture.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
 
                 image = Image.open(picture)
@@ -3503,11 +3517,12 @@ def upload_evidence(request, criteria_id):
         """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
         year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
         round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
-        username = evaluation.user.username  # ชื่อผู้ใช้
+        username = evaluation.user.first_name  # ชื่อผู้ใช้
         lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
+        workloadname = criteria.selected_name
 
         base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
-        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}"
+        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}/{workloadname}"
 
         # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
         new_filename = f"{base}{ext}"
@@ -3528,6 +3543,9 @@ def upload_evidence(request, criteria_id):
             # บันทึกไฟล์ PDF และ DOCX
             for i, file in enumerate(files):
                 custom_filename = filenames[i] if i < len(filenames) and filenames[i] else file.name
+                base, ext = os.path.splitext(file.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
                 file_path = default_storage.save(upload_path, file)
 
@@ -3542,6 +3560,9 @@ def upload_evidence(request, criteria_id):
             # บันทึกรูปภาพหลังลดขนาด
             for i, picture in enumerate(pictures):
                 custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
+                base, ext = os.path.splitext(picture.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
+                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
+                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
                 upload_path = generate_upload_path(evaluation, custom_filename)
 
                 image = Image.open(picture)
@@ -4222,7 +4243,7 @@ def print_evaluation_pdf(request, evaluation_id):
                 Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
                 Paragraph("จำนวน", styleCenter),
                 Paragraph("ภาระงาน", styleCenter),
-                Paragraph("รวมภาระงาน(เดิม)", styleCenter),
+                Paragraph("รวมภาระงาน", styleCenter),
                 Paragraph("หมายเหตุ", styleCenter)
             ]
         ]
@@ -4291,7 +4312,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 24  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 20  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
@@ -5203,7 +5224,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 24  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 20  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     table_header = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
                          Paragraph("จำนวน", styleCenter),
