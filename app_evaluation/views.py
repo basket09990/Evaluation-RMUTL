@@ -675,7 +675,7 @@ def evaluation_page1(request, evaluation_id):
         # ฟอร์มรอบที่ 1 ถ้ามี
         **round_1_forms,
         'evaluation_id': evaluation_id,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543 if user_evaluation_agreement_obj else None,
+        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543 if user_evaluation_agreement_obj else None,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
         'user_evaluation': evaluation,
     }
@@ -1648,7 +1648,7 @@ def evaluation_page_from_1(request, evaluation_id):
         # ฟอร์มรอบที่ 1 ถ้ามี
         **round_1_forms,
         'evaluation_id': evaluation_id,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543 if user_evaluation_agreement_obj else None,
+        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543 if user_evaluation_agreement_obj else None,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
         'user_evaluation': evaluation,
     }
@@ -2647,7 +2647,7 @@ def select_group(request):
 
         if evaluation:
             # ถ้ามีข้อมูลการประเมินแล้ว ให้ไปที่หน้า evaluation_page ทันที
-            return redirect('evaluation_page', evaluation_id=evaluation.uevr_id)
+            return redirect('search_evaluations')
 
     # ถ้าเป็นรอบที่ 2 และมีข้อมูลกลุ่มจากรอบที่ 1 ให้ใช้กลุ่มของรอบที่ 1
     if evr_round_obj.evr_round == 2 and round_1_agreement:
@@ -2889,9 +2889,21 @@ def evaluation_page(request, evaluation_id):
         # ตรวจสอบฟอร์มและบันทึกเฉพาะฟอร์มที่ถูกต้อง
         if profile_form.is_valid():
             profile_form.save()
-            extended_profile = extended_form.save(commit=False)
-            extended_profile.user = user
-            extended_profile.save()
+            try:
+                # ตรวจสอบความถูกต้องของ extended_form
+                if extended_form.is_valid():
+                    extended_profile = extended_form.save(commit=False)
+                    extended_profile.user = user
+                    extended_profile.save()
+                else:
+                    # แสดงข้อผิดพลาดของ extended_form
+                    print("Extended Form Errors:", extended_form.errors)
+                    messages.error(request, "ข้อมูลในฟอร์มไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง")
+                    
+            except ValueError as e:
+                print("Extended Profile Form Save Error:", e)
+                messages.error(request, "เกิดข้อผิดพลาดในการบันทึกข้อมูล Extended Profile")
+                
 
             if work_form_current.is_valid():
                 work_instance = work_form_current.save(commit=False)
@@ -2987,7 +2999,7 @@ def evaluation_page(request, evaluation_id):
         'evr_round': evr_round_obj,
         'profile': profile,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.year + 543,
+        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543,
         'selected_group': selected_group,
         'user_evaluation': user_evaluation_obj,
         'upload_url': upload_url,
@@ -4628,7 +4640,7 @@ def print_evaluation_pdf(request, evaluation_id):
         Paragraph(str(item.dev_time), styleLeft)
     ])
 
-    table = Table(data, colWidths=[6 * cm, 6 * cm, 5 * cm])
+    table = Table(data, colWidths=[6.3 * cm, 6.2 * cm, 5 * cm])
     table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('FONT', (0, 0), (-1, -1), 'Sarabun'),
@@ -4660,14 +4672,14 @@ def print_evaluation_pdf(request, evaluation_id):
     # ส่วนแสดงความคิดเห็น
     p.drawString(start_x, start_y, "1) จุดเด่น และ/หรือ สิ่งที่ควรปรับปรุงแก้ไข")
     start_y -= line_height
-    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.rect(start_x, start_y - 60, 499, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
     p.setFont("Sarabun", 16)
     p.drawString(start_x + 5, start_y -20 , f"{evaluation.improved if evaluation.improved else ''}")
     start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น
     p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "2) ข้อเสนอแนะเกี่ยวกับวิธีส่งเสริมและพัฒนา")
     start_y -= line_height
-    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.rect(start_x, start_y - 60, 499, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
     p.setFont("Sarabun", 16)
     p.drawString(start_x + 5, start_y -20 , f"{evaluation.suggestions if evaluation.suggestions else ''}")
     start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น
@@ -5551,7 +5563,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         Paragraph(str(item.dev_time), styleLeft)
     ])
 
-    table = Table(data, colWidths=[6 * cm, 6 * cm, 5 * cm])
+    table = Table(data, colWidths=[6.3 * cm, 6.2 * cm, 5 * cm])
     table.setStyle(TableStyle([
         ('GRID', (0, 0), (-1, -1), 1, colors.black),
         ('FONT', (0, 0), (-1, -1), 'Sarabun'),
@@ -5583,14 +5595,14 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     # ส่วนแสดงความคิดเห็น
     p.drawString(start_x, start_y, "1) จุดเด่น และ/หรือ สิ่งที่ควรปรับปรุงแก้ไข")
     start_y -= line_height
-    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.rect(start_x, start_y - 60, 499, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
     p.setFont("Sarabun", 16)
     p.drawString(start_x + 5, start_y -20 , f"{evaluation.improved if evaluation.improved else ''}")
     start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น
     p.setFont("SarabunBold", 16)
     p.drawString(start_x, start_y, "2) ข้อเสนอแนะเกี่ยวกับวิธีส่งเสริมและพัฒนา")
     start_y -= line_height
-    p.rect(start_x, start_y - 60, 483, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
+    p.rect(start_x, start_y - 60, 499, 60)  # สร้างกล่องสำหรับแสดงความคิดเห็น
     p.setFont("Sarabun", 16)
     p.drawString(start_x + 5, start_y -20 , f"{evaluation.suggestions if evaluation.suggestions else ''}")
     start_y -= 80  # ลดระยะหลังจากกล่องแสดงความคิดเห็น

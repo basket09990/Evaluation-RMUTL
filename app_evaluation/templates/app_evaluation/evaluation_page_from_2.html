@@ -538,7 +538,7 @@
                                                    onchange="autoSave('{{ selection.id }}', this.value)">
                                         {% endif %}
                                         <div>
-                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}" onclick="saveScrollPosition()">บันทึก</button>
+                                        <button type="submit" class="btn btn-warning btn-small" name="edit_form" value="{{ selection.id }}" onclick="saveScrollPosition(); showAlert()">บันทึก</button>
                                         </div>
                                     </form>
                             </td>

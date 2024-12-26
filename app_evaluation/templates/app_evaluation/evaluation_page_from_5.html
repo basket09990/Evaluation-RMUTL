@@ -518,12 +518,24 @@
                             <td>{{ pd.dev }}</td>
                             <td class="action-buttons" style="display: flex; align-items: center;">
                                 {{ pd.dev_time }}
+                                <a href="{% url 'edit_personal_diagram2' pd.instance.pk %}" class="btn btn-primary btn-sm" style="margin-left: 5px; padding: 3px 8px; font-size: 12px;">แก้ไข</a>
+                                <form action="{% url 'delete_personal_diagram2' pd.instance.pk %}" method="post" style="display:inline; margin-left: 5px;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 3px 8px; font-size: 12px;" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">ลบ</button>
+                                </form>
+                                
                             </td>
                         </tr>
                     {% endfor %}
                 </tbody>
             </table>
+
+           <!-- Add new PersonalDiagram Button -->
            
+           <div style="margin-top: 10px;">
+            <a href="{% url 'add_personal_diagram2' evaluation_id=evaluation_id %}" class="btn btn-primary btn-sm">เพิ่มข้อมูล</a>
+            </div>
+            
             <!-- UserEvaluationForm Fields -->
             <table class="form-table" style="margin-top: 20px;">
                 <thead>
