@@ -95,16 +95,16 @@
             <li><a href="{% url 'profile' %}"><img src="{% static 'app_general/profile.png' %}" alt="profile"><span>ข้อมูลผู้ใช้</span></a></li>
             
             {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
-                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
                 <li><a href="{% url 'search' %}"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="search users"><span>ค้นหาผู้ใช้งาน</span></a></li>
-                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>เปลี่ยนน้ำหนักงาน</span></a></li>
+                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>จัดการการประเมิน</span></a></li>
                 <li><a href="{% url 'admin:index' %}"><img src="{% static 'app_general/manageuser.png' %}" alt="manage users"><span>จัดการผู้ใช้</span></a></li>
             {% endif %}
             
             {% if user.groups.all.0.name == "Staff" %}
-                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
                 <li><a href="{% url 'search' %}"><img src="{% static 'app_general/search_evaluations_2.png' %}" alt="search users"><span>ค้นหาผู้ใช้งาน</span></a></li>
-                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>เปลี่ยนน้ำหนักงาน</span></a></li>
+                <li><a href="{% url 'search_evaluations_2' %}"><img src="{% static 'app_general/search.png' %}" alt="search"><span>ค้นหาแบบประเมิน</span></a></li>
+                <li><a href="{% url 'score' %}"><img src="{% static 'app_general/wight_change.png' %}" alt="change weight"><span>จัดการการประเมิน</span></a></li>
                 <li><a href="{% url 'admin:index' %}"><img src="{% static 'app_general/manageuser.png' %}" alt="manage users"><span>จัดการผู้ใช้</span></a></li>
             {% endif %}
             

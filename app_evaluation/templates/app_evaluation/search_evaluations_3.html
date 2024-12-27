@@ -49,7 +49,8 @@
                     <td>{{ evaluation.approve_status|yesno:"ตรวจสอบแล้ว,ยังไม่ได้ตรวจสอบ" }}</td>
                     <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                     <td>{{ evaluation.evr_id.evr_round }}</td>
-                    <td>{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}</td>
+                    <!--<td>{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}</td>-->
+                    <td>{% with evaluation.evr_id.start_date|date:"Y"|add:543 as start_year_thai %}{% with evaluation.evr_id.end_date|date:"Y"|add:543 as end_year_thai %}{{ evaluation.evr_id.start_date|date:"j F" }} {{ start_year_thai }} - {{ evaluation.evr_id.end_date|date:"j F" }} {{ end_year_thai }}{% endwith %}{% endwith %}</td>
                     <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">ไปยังการประเมิน</a></td>
                 </tr>
                 {% endfor %}

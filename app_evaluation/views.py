@@ -9,7 +9,7 @@ from datetime import datetime,date
 from django.urls import reverse_lazy,reverse
 from app_user.models import WorkLeave,PersonalDiagram,UserWorkloadSelection,UserSelectedSubField,SelectedWorkload,SelectedSubfields,WorkloadCriteria,main_competency,Profile ,user_evaluation_score,UserMainCompetencyScore,UserAdministrativeCompetencyScore,UserSpecificCompetencyScore
 from .forms import UserWorkloadSelectionForm,UserWorkInfoForm, GroupForm, GroupDetailForm, WlFieldForm ,WorkloadCriteriaForm,WlSubfieldForm ,MainCompetencyForm,SpecificCompetencyForm,AdministrativeCompetencyForm,GroupSelectionForm,UserEvaluationForm ,UserEvidentForm
-from .forms import UserWorkloadSelectionForm2,UserWorkloadSelectionForm1,UserEvaluationScoreForm , SubFieldForm , SelectSubfieldForm , WorkloadCriteriaSelectionForm, SubFieldSelectionForm,PersonalDiagramForm,WorkLeaveForm
+from .forms import ManualEvrRoundForm,ManualEvrRoundForm2,UserWorkloadSelectionForm2,UserWorkloadSelectionForm1,UserEvaluationScoreForm , SubFieldForm , SelectSubfieldForm , WorkloadCriteriaSelectionForm, SubFieldSelectionForm,PersonalDiagramForm,WorkLeaveForm
 from django.utils import timezone
 from app_user.forms import UserProfileForm,ExtendedProfileForm
 from django.forms import modelformset_factory
@@ -42,8 +42,8 @@ import json
 from django.utils import timezone
 from reportlab.lib.enums import TA_LEFT
 import time
-
-
+import locale
+from babel.dates import format_date
 
 
 # สัญญาณที่จะถูกเรียกเมื่อ UserSelectedSubField ถูกลบ
@@ -471,30 +471,45 @@ def score(request):
 def score0(request):
     return render(request,'app_evaluation/score0.html')
 
-# ฟังก์ชันเพื่อดึงข้อมูลรอบการประเมิน
-def get_evr_round():
+# ฟังก์ชันเพื่อดึงข้อมูลรอบการประเมิน (รองรับแบบ manual)
+def get_evr_round(manual_round=None, manual_year=None):
     current_date = timezone.now().date()
     current_month = current_date.month
     current_year = current_date.year
 
-    if 10 <= current_month <= 12:
-        # รอบแรก (ปลายปี)
-        round_number = 1
-        evr_year = current_year
-        start_date = date(current_year, 10, 1)  # 1 ตุลาคมของปีปัจจุบัน
-        end_date = date(current_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
-    elif 1 <= current_month <= 3:
-        # รอบแรก (ต้นปีถัดไป)
-        round_number = 1
-        evr_year = current_year - 1
-        start_date = date(current_year - 1, 10, 1)  # 1 ตุลาคมของปีที่ผ่านมา
-        end_date = date(current_year, 3, 31)  # 31 มีนาคมของปีปัจจุบัน
+    if manual_round and manual_year:
+        # ใช้ข้อมูลที่ผู้ใช้กำหนดเอง (manual)
+        round_number = manual_round
+        evr_year = manual_year
+
+        if round_number == 1:
+            start_date = date(evr_year, 10, 1)  # 1 ตุลาคมของปีที่กำหนด
+            end_date = date(evr_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
+        elif round_number == 2:
+            start_date = date(evr_year + 1, 4, 1)  # 1 เมษายนของปีถัดไป
+            end_date = date(evr_year + 1, 9, 30)  # 30 กันยายนของปีถัดไป
+        else:
+            raise ValueError("manual_round ต้องเป็น 1 หรือ 2 เท่านั้น")
     else:
-        # รอบสอง (กลางปี)
-        round_number = 2
-        evr_year = current_year - 1
-        start_date = date(current_year, 4, 1)  # 1 เมษายน
-        end_date = date(current_year, 9, 30)  # 30 กันยายน
+        # คำนวณรอบอัตโนมัติ
+        if 10 <= current_month <= 12:
+            # รอบแรก (ปลายปี)
+            round_number = 1
+            evr_year = current_year
+            start_date = date(current_year, 10, 1)  # 1 ตุลาคมของปีปัจจุบัน
+            end_date = date(current_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
+        elif 1 <= current_month <= 3:
+            # รอบแรก (ต้นปีถัดไป)
+            round_number = 1
+            evr_year = current_year - 1
+            start_date = date(current_year - 1, 10, 1)  # 1 ตุลาคมของปีที่ผ่านมา
+            end_date = date(current_year, 3, 31)  # 31 มีนาคมของปีปัจจุบัน
+        else:
+            # รอบสอง (กลางปี)
+            round_number = 2
+            evr_year = current_year - 1
+            start_date = date(current_year, 4, 1)  # 1 เมษายน
+            end_date = date(current_year, 9, 30)  # 30 กันยายน
 
     # อัปเดตหรือสร้างรอบการประเมิน
     evr_round_obj, created = evr_round.objects.get_or_create(
@@ -509,6 +524,89 @@ def get_evr_round():
         evr_round_obj.save()
 
     return evr_round_obj
+
+@login_required
+def select_manual_round(request):
+    if request.method == "POST":
+        form = ManualEvrRoundForm(request.POST)
+        if form.is_valid():
+            manual_round = int(form.cleaned_data['manual_round'])
+            manual_year = int(form.cleaned_data['manual_year'])
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+
+            # ตรวจสอบไม่ให้ start_date และ end_date ทับซ้อนกับรอบที่มีอยู่
+            overlapping_rounds = evr_round.objects.filter(
+                start_date__lte=end_date,
+                end_date__gte=start_date
+            ).exclude(
+                evr_year=manual_year,
+                evr_round=manual_round
+            )
+
+            if overlapping_rounds.exists():
+                form.add_error(None, "วันเริ่มต้นหรือวันสิ้นสุดซ้อนทับกับรอบการประเมินที่มีอยู่")
+            else:
+                # สร้างหรืออัปเดตรอบการประเมิน
+                evr_round_obj, created = evr_round.objects.update_or_create(
+                    evr_year=manual_year,
+                    evr_round=manual_round,
+                    defaults={
+                        'start_date': start_date,
+                        'end_date': end_date
+                    }
+                )
+                # ส่งผู้ใช้กลับไปยังหน้าเลือกกลุ่ม
+                messages.success(request, "บันทึกข้อมูลรอบการประเมินสำเร็จ!", extra_tags='select_manual_round')
+                return redirect('select_manual_round')
+    else:
+        form = ManualEvrRoundForm(initial={
+            'start_date': date.today().strftime('%Y-%m-%d'),
+            'end_date': date.today().strftime('%Y-%m-%d'),
+        })
+
+    # ดึงข้อมูลรอบการประเมินทั้งหมด
+    existing_rounds = evr_round.objects.all().order_by('-evr_year', '-evr_round')
+
+    return render(request, 'app_evaluation/select_manual_round.html', {
+        'form': form,
+        'existing_rounds': existing_rounds,
+    })
+
+@login_required
+def edit_manual_round(request, round_id):
+    evr_round_obj = get_object_or_404(evr_round, evr_id=round_id)
+
+    if request.method == "POST":
+        form = ManualEvrRoundForm2(request.POST)
+        if form.is_valid():
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+
+            # ตรวจสอบไม่ให้ start_date และ end_date ทับซ้อนกับรอบที่มีอยู่
+            overlapping_rounds = evr_round.objects.filter(
+                start_date__lt=end_date,  # เงื่อนไขเริ่มต้นของรอบอื่นอยู่ก่อนวันสิ้นสุด
+                end_date__gt=start_date  # เงื่อนไขสิ้นสุดของรอบอื่นอยู่หลังวันเริ่มต้น
+            ).exclude(evr_id=round_id)
+
+            if overlapping_rounds.exists():
+                form.add_error(None, "วันเริ่มต้นหรือวันสิ้นสุดซ้อนทับกับรอบการประเมินที่มีอยู่")
+            else:
+                # อัปเดตข้อมูลรอบการประเมิน
+                evr_round_obj.start_date = start_date
+                evr_round_obj.end_date = end_date
+                evr_round_obj.save()
+
+                return redirect('select_manual_round')
+    else:
+        form = ManualEvrRoundForm2(initial={
+            'manual_year': evr_round_obj.evr_year + 543,  # แปลงเป็น พ.ศ.
+            'manual_round': evr_round_obj.evr_round,
+            'start_date': evr_round_obj.start_date.isoformat(),  # แปลงเป็น YYYY-MM-DD
+            'end_date': evr_round_obj.end_date.isoformat(),  # แปลงเป็น YYYY-MM-DD
+        })
+
+    return render(request, 'app_evaluation/edit_manual_round.html', {'form': form, 'evr_round_obj': evr_round_obj})
 
 @login_required
 def search_evaluation(request):
@@ -675,7 +773,7 @@ def evaluation_page1(request, evaluation_id):
         # ฟอร์มรอบที่ 1 ถ้ามี
         **round_1_forms,
         'evaluation_id': evaluation_id,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543 if user_evaluation_agreement_obj else None,
+        'user_evaluation_agreement_year_thai': evaluation.evr_id.evr_year + 543,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
         'user_evaluation': evaluation,
     }
@@ -1648,7 +1746,7 @@ def evaluation_page_from_1(request, evaluation_id):
         # ฟอร์มรอบที่ 1 ถ้ามี
         **round_1_forms,
         'evaluation_id': evaluation_id,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543 if user_evaluation_agreement_obj else None,
+        'user_evaluation_agreement_year_thai': evaluation.evr_id.evr_year + 543,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
         'user_evaluation': evaluation,
     }
@@ -2647,7 +2745,7 @@ def select_group(request):
 
         if evaluation:
             # ถ้ามีข้อมูลการประเมินแล้ว ให้ไปที่หน้า evaluation_page ทันที
-            return redirect('search_evaluations')
+            return redirect('evaluation_page', evaluation_id=evaluation.uevr_id)
 
     # ถ้าเป็นรอบที่ 2 และมีข้อมูลกลุ่มจากรอบที่ 1 ให้ใช้กลุ่มของรอบที่ 1
     if evr_round_obj.evr_round == 2 and round_1_agreement:
@@ -2999,7 +3097,7 @@ def evaluation_page(request, evaluation_id):
         'evr_round': evr_round_obj,
         'profile': profile,
         'user_evaluation_agreement': user_evaluation_agreement_obj,
-        'user_evaluation_agreement_year_thai': user_evaluation_agreement_obj.evr_id.evr_year + 543,
+        'user_evaluation_agreement_year_thai': evaluation.evr_id.evr_year + 543,
         'selected_group': selected_group,
         'user_evaluation': user_evaluation_obj,
         'upload_url': upload_url,
@@ -3981,7 +4079,7 @@ def print_evaluation_pdf(request, evaluation_id):
     # ดึงข้อมูลการประเมินผลของผู้ใช้
     user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
     selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
-    year_thai=user_evaluation_agreement_obj.year+543
+    year_thai = evaluation.evr_id.evr_year + 543
     user_work_current = user_work_info.objects.filter(user=user, round=evr_round_obj).first()
     user_work_round_1 = user_work_info.objects.filter(user=user, round=round_1).first() if round_1 else None
 
@@ -4106,10 +4204,17 @@ def print_evaluation_pdf(request, evaluation_id):
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 150, f"กลุ่มที่เลือก: {selected_group.g_field_name}")
 
-    if evr_round_obj.evr_round == 1:
-        p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)")
-    elif evr_round_obj.evr_round == 2:
-        p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)")
+    # แปลงวันที่เป็นภาษาไทย
+    start_date_thai = format_date(evaluation.evr_id.start_date, format="d MMMM", locale="th")
+    end_date_thai = format_date(evaluation.evr_id.end_date, format="d MMMM", locale="th")
+
+    # แปลงปีเป็น พ.ศ.
+    start_year_thai = evaluation.evr_id.start_date.year + 543
+    end_year_thai = evaluation.evr_id.end_date.year + 543
+
+    # ใส่ข้อมูลใน PDF
+    p.drawString(50, height - 175, f"ช่วงเวลา: ครั้งที่ {evaluation.evr_id.evr_round} ({start_date_thai} {start_year_thai} - {end_date_thai} {end_year_thai})")
+
 
     # เพิ่มข้อมูลผู้ใช้งาน
     p.setFont("SarabunBold", 16)
@@ -4888,7 +4993,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     # ดึงข้อมูลการประเมินผลของผู้ใช้
     user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
     selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
-    year_thai=user_evaluation_agreement_obj.year+543
+    year_thai =  evaluation.evr_id.evr_year + 543
     user_work_current = user_work_info.objects.filter(user=user, round=evr_round_obj).first()
     user_work_round_1 = user_work_info.objects.filter(user=user, round=round_1).first() if round_1 else None
 
@@ -5013,10 +5118,17 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     p.setFont("SarabunBold", 16)
     p.drawString(50, height - 150, f"กลุ่มที่เลือก: {selected_group.g_field_name}")
 
-    if evr_round_obj.evr_round == 1:
-        p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)")
-    elif evr_round_obj.evr_round == 2:
-        p.drawString(50, height - 175, "ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)")
+    # แปลงวันที่เป็นภาษาไทย
+    start_date_thai = format_date(evaluation.evr_id.start_date, format="d MMMM", locale="th")
+    end_date_thai = format_date(evaluation.evr_id.end_date, format="d MMMM", locale="th")
+
+    # แปลงปีเป็น พ.ศ.
+    start_year_thai = evaluation.evr_id.start_date.year + 543
+    end_year_thai = evaluation.evr_id.end_date.year + 543
+
+    # ใส่ข้อมูลใน PDF
+    p.drawString(50, height - 175, f"ช่วงเวลา: ครั้งที่ {evaluation.evr_id.evr_round} ({start_date_thai} {start_year_thai} - {end_date_thai} {end_year_thai})")
+
 
     # เพิ่มข้อมูลผู้ใช้งาน
     p.setFont("SarabunBold", 16)
@@ -5471,10 +5583,10 @@ def print_evaluation_pdf_eva(request, evaluation_id):
 
     data = [
         [Paragraph("องค์ประกอบการประเมิน", styleCenter),Paragraph("คะแนนเต็ม", styleCenter),Paragraph("คะแนนที่ได้(เดิม)", styleCenter),Paragraph("หมายเหตุ", styleCenter)],
-        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{c_score:.1f}({achievement_work:.1f})", f"{evaluation.remark_achievement}"],
+        ["องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน", "70", f"{c_score:.1f} ({achievement_work:.1f})", f"{evaluation.remark_achievement}"],
         ["องค์ประกอบที่ 2: พฤติกรรมการปฏิบัติราชการ (สมรรถนะ)", "30", f"{mc_score:.1f}", f"{evaluation.remark_mc}"],
         ["องค์ประกอบอื่น ๆ (ถ้ามี)", "", "", f"{evaluation.remark_other}"],
-        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f}({cp_sum:.1f})", f"{evaluation.remark_total}"],
+        [Paragraph("รวม", styleBB), "100", f"{total_score:.1f} ({cp_sum:.1f})", f"{evaluation.remark_total}"],
     ]
 
     # ฟังก์ชันสำหรับสร้างตารางใน PDF

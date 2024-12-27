@@ -36,7 +36,7 @@
                 <th>สถานะการตรวจสอบของผู้ประเมิน</th>
                 <th>ปี</th>
                 <th>รอบการประเมิน</th>
-                <!--<th>ช่วงเวลาการทำแบบประเมิน</th>-->
+                <th>ช่วงเวลาการทำแบบประเมิน</th>
                 <th>การกระทำ</th>
             </tr>
         </thead>
@@ -45,26 +45,18 @@
             <tr>
                 <td>{{ evaluation.user.first_name }}</td>
                 <td>{{ evaluation.user.last_name }}</td>
-                <td>{% if evaluation.approve_status %}
-                    ตรวจสอบแล้ว
-                    {% else %}
-                    ยังไม่ได้ตรวจสอบ
-                    {% endif %}</td>
+                <td>{% if evaluation.approve_status %}ตรวจสอบแล้ว{% else %}ยังไม่ได้ตรวจสอบ{% endif %}</td>
                 <td>{{ evaluation.evr_id.evr_year|add:"543" }}</td>
                 <td>{{ evaluation.evr_id.evr_round }}</td>
+                <td>{% with evaluation.evr_id.start_date|date:"Y"|add:543 as start_year_thai %}{% with evaluation.evr_id.end_date|date:"Y"|add:543 as end_year_thai %}{{ evaluation.evr_id.start_date|date:"j F" }} {{ start_year_thai }} - {{ evaluation.evr_id.end_date|date:"j F" }} {{ end_year_thai }}{% endwith %}{% endwith %}</td>
                 <!--{{ evaluation.evr_id.evr_status|yesno:"อยู่นอกระยะเวลาการทำประเมิน,อยู่ในช่วงระยะเวลาการทำแบบประเมิน"  }}-->
                 <!--{% if evaluation.evr_id.evr_status == 0 %}
                 <td>{% if evaluation.evr_id.evr_round == 1 %}1 ตุลาคม - 31 มีนาคม{% elif evaluation.evr_id.evr_round == 2 %}1 เมษายน - 30 กันยายน{% else %}ยังไม่มีข้อมูลรอบการประเมิน{% endif %}</td>
                 {% else %}
                 <td>แบบประเมิน</td>
                 {% endif %}-->
-                {% if evaluation.approve_status == 0 %}
-                <td><a href="{% url 'evaluation_page' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a>
-                </td>
-                {% else %}
                 <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a>
                 </td>
-                {% endif %}
             </tr>
             {% empty %}
             <tr><td colspan="7">ไม่มีข้อมูลการประเมิน</td></tr>

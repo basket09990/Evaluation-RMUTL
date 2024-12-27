@@ -1,0 +1,24 @@
+{% extends 'app_general/components/base.html' %}
+{% load static %}
+
+{% block title %}แก้ไขรอบการประเมิน{% endblock %}
+
+{% block content %}
+<div class="form-group">
+    <h2>แก้ไขรอบการประเมินรอบที่ {{ evr_round_obj.evr_round }} ช่วงเวลา ( {{ evr_round_obj.start_date }} ) ถึง ( {{ evr_round_obj.end_date }} )</h2>
+    
+    <h3>{% with evr_round_obj.start_date|date:"Y"|add:543 as start_year_thai %}
+    {% with evr_round_obj.end_date|date:"Y"|add:543 as end_year_thai %}
+        ({{ evr_round_obj.start_date|date:"j F" }} {{ start_year_thai }} - {{ evr_round_obj.end_date|date:"j F" }} {{ end_year_thai }})
+    {% endwith %}
+    {% endwith %}
+    </h3>
+
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">บันทึกการเปลี่ยนแปลง</button>
+        <a href="{% url 'select_manual_round' %}" class="btn btn-secondary">ยกเลิก</a>
+    </form>
+</div> 
+{% endblock %}

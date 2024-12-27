@@ -488,13 +488,13 @@
                         </div>
 
                         <div>
-                                {% if evr_round.evr_round == 1 %}
-                                    <h4>ช่วงเวลา: ครั้งที่ 1 (1 ตุลาคม - 31 มีนาคม)</h4>
-                                {% elif evr_round.evr_round == 2 %}
-                                    <h4>ช่วงเวลา: ครั้งที่ 2 (1 เมษายน - 30 กันยายน)</h4>
-                                {% else %}
-                                    <p>ยังไม่มีข้อมูลรอบการประเมิน</p>
-                                {% endif %}
+                            <h4>ช่วงเวลา: ครั้งที่ {{ evr_round.evr_round }}
+                                {% with evr_round.start_date|date:"Y"|add:543 as start_year_thai %}
+                                {% with evr_round.end_date|date:"Y"|add:543 as end_year_thai %}
+                                    ({{ evr_round.start_date|date:"j F" }} {{ start_year_thai }} - {{ evr_round.end_date|date:"j F" }} {{ end_year_thai }})
+                                {% endwith %}
+                                {% endwith %}
+                            </h4>
                         </div>
 
                         <div >

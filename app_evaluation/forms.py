@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from app_user.models import  WorkLeave,PersonalDiagram,UserWorkloadSelection,user_evaluation_score,user_work_info, administrative_competency,user_evident,group, user_evaluation_agreement, wl_field, wl_subfield, group_detail, WorkloadCriteria ,user_competency_main , main_competency , academic_type,specific_competency,user_evaluation
 from django.core.exceptions import ValidationError
+from datetime import date
 
 
 
@@ -443,5 +444,90 @@ class WorkLeaveForm(forms.ModelForm):
             'days': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'จำนวนวัน'}),
         }
 
+class ManualEvrRoundForm(forms.Form):
+    manual_round = forms.ChoiceField(
+        choices=[(1, "รอบที่ 1"), (2, "รอบที่ 2")],
+        label="เลือกรอบการประเมิน",
+        required=True,
+        widget=forms.Select(attrs={'style': 'font-size: 20px;'})  
+    )
+    manual_year = forms.IntegerField(
+        label="ประจำปี (พ.ศ.)",
+        required=True,
+        min_value=2560,  # ค.ศ. 2000
+        max_value=3000,  # ค.ศ. 2100
+        widget=forms.NumberInput(attrs={'placeholder': 'กรอกปี (พ.ศ.)','style': 'font-size: 20px;'})
+    )
+    start_date = forms.DateField(
+        label="วันเริ่มต้น",
+        required=True,
+        initial=date.today(),
+        widget=forms.DateInput(attrs={'type': 'date', 'style': 'font-size: 20px;'})
+    )
+    end_date = forms.DateField(
+        label="วันสิ้นสุด",
+        required=True,
+        initial=date.today(),
+        widget=forms.DateInput(attrs={'type': 'date', 'style': 'font-size: 20px;'})
+    )
 
-        
+    def clean(self):
+        """ตรวจสอบว่า end_date ต้องไม่ก่อน start_date"""
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date and end_date < start_date:
+            raise ValidationError("วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น")
+
+        return cleaned_data
+
+    def clean_manual_year(self):
+        """แปลงปีจาก พ.ศ. เป็น ค.ศ."""
+        manual_year = self.cleaned_data['manual_year']
+        if manual_year:
+            return manual_year - 543  # แปลงเป็น ค.ศ.
+        return manual_year
+
+class ManualEvrRoundForm2(forms.Form):
+    manual_round = forms.ChoiceField(
+        choices=[(1, "รอบที่ 1"), (2, "รอบที่ 2")],
+        label="รอบการประเมิน",
+        required=False,
+        widget=forms.Select(attrs={'disabled': 'disabled'})
+    )
+    manual_year = forms.IntegerField(
+        label="ประจำปี (พ.ศ.)",
+        required=False,
+        min_value=2560,
+        max_value=3000,
+        widget=forms.NumberInput(attrs={'disabled': 'disabled'})
+    )
+    start_date = forms.DateField(
+        label="วันเริ่มต้น",
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    end_date = forms.DateField(
+        label="วันสิ้นสุด",
+        required=True,
+        widget=forms.DateInput(attrs={'type': 'date'})
+    )
+    
+    def clean(self):
+        """ตรวจสอบว่า end_date ต้องไม่ก่อน start_date"""
+        cleaned_data = super().clean()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+
+        if start_date and end_date and end_date < start_date:
+            raise ValidationError("วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น")
+
+        return cleaned_data
+    
+    def clean_manual_year(self):
+        """แปลงปีจาก พ.ศ. เป็น ค.ศ."""
+        manual_year = self.cleaned_data['manual_year']
+        if manual_year:
+            return manual_year - 543  # แปลงเป็น ค.ศ.
+        return manual_year

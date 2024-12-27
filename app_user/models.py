@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import  User
 from datetime import date, datetime
 from django.utils import timezone
+from django.utils.timezone import now
 
 
 class group(models.Model):
@@ -16,10 +17,12 @@ class group(models.Model):
 class evr_round(models.Model):
     evr_id = models.AutoField(primary_key=True)
     evr_year = models.IntegerField(default=datetime.now().year)
-    evr_round = models.IntegerField(default="1", blank=True, null=True)
+    evr_round = models.IntegerField(choices=[(1, "รอบที่ 1"), (2, "รอบที่ 2")])
     evr_status = models.BooleanField(default=False)
     start_date = models.DateField(null=True, blank=True)
     end_date = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.evr_year} รอบที่ {self.evr_round}"
