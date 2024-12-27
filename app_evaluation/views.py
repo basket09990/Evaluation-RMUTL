@@ -1235,9 +1235,21 @@ def evaluation_page3(request, evaluation_id):
         return redirect('evaluation_page_from_3', evaluation_id=evaluation_id)
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=evaluation)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
+    # ดึงข้อมูลคะแนนที่เคยกรอก โดยตรวจสอบ ac_id
+    main_scores = user_competency_main.objects.filter(
+        evaluation=evaluation,
+        mc_id__mc_type=evaluation.ac_id.ac_name
+    )
+
+    specific_scores = user_competency_councilde.objects.filter(
+        evaluation=evaluation,
+        sc_id__sc_type=evaluation.ac_id.ac_name
+    )
+
+    administrative_scores = user_competency_ceo.objects.filter(
+        evaluation=evaluation,
+        adc_id__adc_type=evaluation.ac_id.ac_name
+    )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 
@@ -2308,9 +2320,21 @@ def evaluation_page_from_3(request, evaluation_id):
         return redirect('evaluation_page_from_3', evaluation_id=evaluation_id)
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=evaluation)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
+    # ดึงข้อมูลคะแนนที่เคยกรอก โดยตรวจสอบ ac_id
+    main_scores = user_competency_main.objects.filter(
+        evaluation=evaluation,
+        mc_id__mc_type=evaluation.ac_id.ac_name
+    )
+
+    specific_scores = user_competency_councilde.objects.filter(
+        evaluation=evaluation,
+        sc_id__sc_type=evaluation.ac_id.ac_name
+    )
+
+    administrative_scores = user_competency_ceo.objects.filter(
+        evaluation=evaluation,
+        adc_id__adc_type=evaluation.ac_id.ac_name
+    )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 
@@ -3529,9 +3553,21 @@ def evaluation_page_3(request, evaluation_id):
         return redirect('evaluation_page_3', evaluation_id=evaluation_id)
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=user_evaluation_obj)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=user_evaluation_obj)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=user_evaluation_obj)
+    # ดึงข้อมูลคะแนนที่เคยกรอก โดยตรวจสอบ ac_id
+    main_scores = user_competency_main.objects.filter(
+        evaluation=user_evaluation_obj,
+        mc_id__mc_type=user_evaluation_obj.ac_id.ac_name
+    )
+
+    specific_scores = user_competency_councilde.objects.filter(
+        evaluation=user_evaluation_obj,
+        sc_id__sc_type=user_evaluation_obj.ac_id.ac_name
+    )
+
+    administrative_scores = user_competency_ceo.objects.filter(
+        evaluation=user_evaluation_obj,
+        adc_id__adc_type=user_evaluation_obj.ac_id.ac_name
+    )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 2: 0, 1: 0, 0: 0}

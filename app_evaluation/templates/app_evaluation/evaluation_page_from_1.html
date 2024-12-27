@@ -605,7 +605,7 @@
                                         <td>ในกรณีที่ไม่มีตำแหน่งบริหารให้ใช้เครื่องหมาย (-)</td>
                                         <td style="text-align: center; font-size:35px;"> - </td>
                                         <td>{{ extended_form.ac_id.label_tag }}</td>
-                                        <td>{{ user_evaluation.ac_id }}</td>
+                                        <td>{{ extended_form.ac_id }} {{ extended_form.ac_id.errors }}</td>
                                     </tr>
                                     <tr>
                                         <td>{{ extended_form.administrative_position.label_tag }}</td>
