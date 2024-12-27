@@ -1247,8 +1247,7 @@ def evaluation_page3(request, evaluation_id):
     )
 
     administrative_scores = user_competency_ceo.objects.filter(
-        evaluation=evaluation,
-        adc_id__adc_type=evaluation.ac_id.ac_name
+        evaluation=evaluation
     )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
@@ -2332,8 +2331,7 @@ def evaluation_page_from_3(request, evaluation_id):
     )
 
     administrative_scores = user_competency_ceo.objects.filter(
-        evaluation=evaluation,
-        adc_id__adc_type=evaluation.ac_id.ac_name
+        evaluation=evaluation
     )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
@@ -3565,8 +3563,7 @@ def evaluation_page_3(request, evaluation_id):
     )
 
     administrative_scores = user_competency_ceo.objects.filter(
-        evaluation=user_evaluation_obj,
-        adc_id__adc_type=user_evaluation_obj.ac_id.ac_name
+        evaluation=user_evaluation_obj
     )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
@@ -4142,9 +4139,20 @@ def print_evaluation_pdf(request, evaluation_id):
         administrative_competencies = administrative_competency.objects.all()
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=evaluation)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
+    # ดึงข้อมูลคะแนนที่เคยกรอก โดยตรวจสอบ ac_id
+    main_scores = user_competency_main.objects.filter(
+        evaluation=evaluation,
+        mc_id__mc_type=evaluation.ac_id.ac_name
+    )
+
+    specific_scores = user_competency_councilde.objects.filter(
+        evaluation=evaluation,
+        sc_id__sc_type=evaluation.ac_id.ac_name
+    )
+
+    administrative_scores = user_competency_ceo.objects.filter(
+        evaluation=evaluation
+    )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 
@@ -5056,9 +5064,20 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         administrative_competencies = administrative_competency.objects.all()
 
     # ดึงข้อมูลคะแนนที่เคยกรอก
-    main_scores = user_competency_main.objects.filter(evaluation=evaluation)
-    specific_scores = user_competency_councilde.objects.filter(evaluation=evaluation)
-    administrative_scores = user_competency_ceo.objects.filter(evaluation=evaluation)
+    # ดึงข้อมูลคะแนนที่เคยกรอก โดยตรวจสอบ ac_id
+    main_scores = user_competency_main.objects.filter(
+        evaluation=evaluation,
+        mc_id__mc_type=evaluation.ac_id.ac_name
+    )
+
+    specific_scores = user_competency_councilde.objects.filter(
+        evaluation=evaluation,
+        sc_id__sc_type=evaluation.ac_id.ac_name
+    )
+
+    administrative_scores = user_competency_ceo.objects.filter(
+        evaluation=evaluation
+    )
 
     # เก็บจำนวนสมรรถนะที่ได้คะแนนตามเงื่อนไขต่าง ๆ
     score_count = {3: 0, 
