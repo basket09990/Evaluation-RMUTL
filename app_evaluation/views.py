@@ -44,6 +44,9 @@ from reportlab.lib.enums import TA_LEFT
 import time
 import locale
 from babel.dates import format_date
+from io import BytesIO
+
+
 
 
 # สัญญาณที่จะถูกเรียกเมื่อ UserSelectedSubField ถูกลบ
@@ -474,56 +477,52 @@ def score0(request):
 # ฟังก์ชันเพื่อดึงข้อมูลรอบการประเมิน (รองรับแบบ manual)
 def get_evr_round(manual_round=None, manual_year=None):
     current_date = timezone.now().date()
-    current_month = current_date.month
-    current_year = current_date.year
 
+    # ใช้ manual_round และ manual_year ถ้ามี
     if manual_round and manual_year:
-        # ใช้ข้อมูลที่ผู้ใช้กำหนดเอง (manual)
-        round_number = manual_round
-        evr_year = manual_year
+        evr_round_obj = evr_round.objects.filter(
+            evr_year=manual_year,
+            evr_round=manual_round
+        ).first()
+        if evr_round_obj:
+            return evr_round_obj
 
-        if round_number == 1:
-            start_date = date(evr_year, 10, 1)  # 1 ตุลาคมของปีที่กำหนด
-            end_date = date(evr_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
-        elif round_number == 2:
-            start_date = date(evr_year + 1, 4, 1)  # 1 เมษายนของปีถัดไป
-            end_date = date(evr_year + 1, 9, 30)  # 30 กันยายนของปีถัดไป
-        else:
-            raise ValueError("manual_round ต้องเป็น 1 หรือ 2 เท่านั้น")
-    else:
-        # คำนวณรอบอัตโนมัติ
+    # ค้นหารอบที่ครอบคลุมวันที่ปัจจุบัน
+    evr_round_obj = evr_round.objects.filter(
+        start_date__lte=current_date,
+        end_date__gte=current_date
+    ).first()
+
+    if not evr_round_obj:
+        # ถ้าไม่พบรอบการประเมิน ให้ใช้ค่าคำนวณรอบอัตโนมัติ
+        current_month = current_date.month
+        current_year = current_date.year
+
         if 10 <= current_month <= 12:
-            # รอบแรก (ปลายปี)
             round_number = 1
             evr_year = current_year
-            start_date = date(current_year, 10, 1)  # 1 ตุลาคมของปีปัจจุบัน
-            end_date = date(current_year + 1, 3, 31)  # 31 มีนาคมของปีถัดไป
+            start_date = date(current_year, 10, 1)
+            end_date = date(current_year + 1, 3, 31)
         elif 1 <= current_month <= 3:
-            # รอบแรก (ต้นปีถัดไป)
             round_number = 1
             evr_year = current_year - 1
-            start_date = date(current_year - 1, 10, 1)  # 1 ตุลาคมของปีที่ผ่านมา
-            end_date = date(current_year, 3, 31)  # 31 มีนาคมของปีปัจจุบัน
+            start_date = date(current_year - 1, 10, 1)
+            end_date = date(current_year, 3, 31)
         else:
-            # รอบสอง (กลางปี)
             round_number = 2
             evr_year = current_year - 1
-            start_date = date(current_year, 4, 1)  # 1 เมษายน
-            end_date = date(current_year, 9, 30)  # 30 กันยายน
+            start_date = date(current_year, 4, 1)
+            end_date = date(current_year, 9, 30)
 
-    # อัปเดตหรือสร้างรอบการประเมิน
-    evr_round_obj, created = evr_round.objects.get_or_create(
-        evr_year=evr_year,
-        evr_round=round_number,
-        defaults={'start_date': start_date, 'end_date': end_date}
-    )
-
-    # อัปเดต end_date หากมีการเปลี่ยนแปลง (ถ้าเป็นการอัปเดตค่าเดิม)
-    if not created:
-        evr_round_obj.end_date = end_date
-        evr_round_obj.save()
+        # สร้างรอบใหม่ถ้าไม่มีในฐานข้อมูล
+        evr_round_obj, created = evr_round.objects.get_or_create(
+            evr_year=evr_year,
+            evr_round=round_number,
+            defaults={'start_date': start_date, 'end_date': end_date}
+        )
 
     return evr_round_obj
+
 
 @login_required
 def select_manual_round(request):
@@ -690,7 +689,7 @@ def evaluation_page1(request, evaluation_id):
 
     # ตรวจสอบรอบที่ 1 (หากมีข้อมูล)
     round_1 = evr_round.objects.filter(
-        evr_round=1, evr_year=(evr_round_obj.evr_year - 1 if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
+        evr_round=1, evr_year=(evr_round_obj.evr_year if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
     ).first()
 
     # ดึงข้อมูลการลาของรอบที่ 1 และรอบปัจจุบัน
@@ -1674,7 +1673,7 @@ def evaluation_page_from_1(request, evaluation_id):
 
     # ตรวจสอบรอบที่ 1 (หากมีข้อมูล)
     round_1 = evr_round.objects.filter(
-        evr_round=1, evr_year=(evr_round_obj.evr_year - 1 if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
+        evr_round=1, evr_year=(evr_round_obj.evr_year if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
     ).first()
 
     # ดึงข้อมูลการลาของรอบที่ 1 และรอบปัจจุบัน
@@ -2165,7 +2164,7 @@ def upload_evidence2(request, criteria_id):
         new_filename = f"{base}{ext}"
         count = 1
         while default_storage.exists(os.path.join(folder_path, new_filename)):
-            new_filename = f"{base}_copy{count}{ext}"
+            new_filename = f"{base}_{count}{ext}"
             count += 1
 
         return os.path.join(folder_path, new_filename)
@@ -2196,26 +2195,35 @@ def upload_evidence2(request, criteria_id):
 
             # บันทึกรูปภาพหลังลดขนาด
             for i, picture in enumerate(pictures):
-                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
-                base, ext = os.path.splitext(picture.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
-                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
-                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
+                # ใช้ชื่อที่ผู้ใช้กำหนด (filenames) หากไม่มีให้ใช้ชื่อไฟล์เดิม (picture.name)
+                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) and filenames[i + len(files)] else picture.name
+                base, ext = os.path.splitext(picture.name)  # แยกชื่อไฟล์และนามสกุลเดิม
+                if not os.path.splitext(custom_filename)[1]:  # ตรวจสอบว่าชื่อใหม่ไม่มีนามสกุล
+                    custom_filename = custom_filename + ext  # เพิ่มนามสกุลเดิมกลับไป
+                else:
+                    custom_filename = os.path.splitext(custom_filename)[0] + ext  # ใช้ชื่อที่กำหนดและนามสกุลเดิม
+
+                # สร้าง path สำหรับบันทึกไฟล์
                 upload_path = generate_upload_path(evaluation, custom_filename)
 
+                # ลดขนาดรูปภาพและบันทึกลงใน Memory
                 image = Image.open(picture)
                 max_size = (1366, 800)
                 image.thumbnail(max_size)
-                img_io = ContentFile(b'')
-                image_format = image.format or 'JPEG'
+                img_io = BytesIO()
+                image_format = image.format if image.format else 'JPEG'  # ตรวจสอบรูปแบบภาพ
                 image.save(img_io, format=image_format)
+                img_io.seek(0)
 
-                file_path = default_storage.save(upload_path, img_io)
+                # บันทึกไฟล์ไปยังระบบจัดเก็บไฟล์
+                file_path = default_storage.save(upload_path, ContentFile(img_io.read()))
 
+                # บันทึกข้อมูลลงในฐานข้อมูล
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
                     picture=file_path,
-                    filename=os.path.basename(file_path)
+                    filename=os.path.basename(custom_filename)  # เก็บชื่อไฟล์ที่ถูกต้อง
                 )
                 evidence.save()
 
@@ -2735,13 +2743,23 @@ def edit_evaluation(request, evaluation_id):
 def select_group(request):
     # ดึงข้อมูลกลุ่มที่มีอยู่ทั้งหมด
     groups = group.objects.all()
-    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
+     # ดึงวันที่ปัจจุบัน
+    today = timezone.now().date()
 
+    # ดึงข้อมูลรอบการประเมินที่มี start_date และ end_date ครอบคลุมวันที่ปัจจุบัน
+    evr_round_obj = evr_round.objects.filter(
+        start_date__lte=today,
+        end_date__gte=today
+    ).first()
+
+    # ถ้าไม่พบรอบการประเมิน ให้แสดงข้อความแจ้งเตือน
+    if not evr_round_obj:
+        messages.error(request, "ไม่พบรอบการประเมินที่ตรงกับวันที่ปัจจุบัน")
+        return redirect('home')  # หรือหน้าอื่นที่เหมาะสม
 
     # ตรวจสอบว่าผู้ใช้มีการเลือกกลุ่มและมีข้อมูลการประเมินสำหรับรอบปัจจุบันแล้วหรือไม่
     selected_agreement = user_evaluation_agreement.objects.filter(
         user=request.user,
-        year=timezone.now().year,
         evr_id=evr_round_obj
     ).first()
 
@@ -2750,7 +2768,7 @@ def select_group(request):
     if evr_round_obj.evr_round == 2:
         round_1_agreement = user_evaluation_agreement.objects.filter(
             user=request.user,
-            year=timezone.now().year - 1,
+            evr_id__evr_year=evr_round_obj.evr_year - 1,
             evr_id__evr_round=1
         ).first()
 
@@ -2802,7 +2820,6 @@ def select_group(request):
         # บันทึกข้อมูลการเลือกกลุ่มสำหรับรอบที่ 2
         user_evaluation_agreement.objects.update_or_create(
             user=request.user,
-            year=timezone.now().year,
             evr_id=evr_round_obj,
             defaults={'g_id': round_1_agreement.g_id}
         )
@@ -2824,7 +2841,6 @@ def select_group(request):
             # สร้างหรืออัปเดตข้อมูลการเลือกกลุ่มของผู้ใช้สำหรับรอบนี้
             user_evaluation_agreement.objects.update_or_create(
                 user=request.user,
-                year=timezone.now().year,
                 evr_id=evr_round_obj,
                 defaults={'g_id': selected_group}
             )
@@ -3671,7 +3687,7 @@ def upload_evidence(request, criteria_id):
         new_filename = f"{base}{ext}"
         count = 1
         while default_storage.exists(os.path.join(folder_path, new_filename)):
-            new_filename = f"{base}_copy{count}{ext}"
+            new_filename = f"{base}_{count}{ext}"
             count += 1
 
         return os.path.join(folder_path, new_filename)
@@ -3702,26 +3718,35 @@ def upload_evidence(request, criteria_id):
 
             # บันทึกรูปภาพหลังลดขนาด
             for i, picture in enumerate(pictures):
-                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) else picture.name
-                base, ext = os.path.splitext(picture.name)  # ตรวจสอบนามสกุลจากชื่อไฟล์เดิม
-                if not os.path.splitext(custom_filename)[1]:  # ถ้าไม่มีนามสกุลในชื่อใหม่
-                    custom_filename += ext  # เพิ่มนามสกุลกลับไป
+                # ใช้ชื่อที่ผู้ใช้กำหนด (filenames) หากไม่มีให้ใช้ชื่อไฟล์เดิม (picture.name)
+                custom_filename = filenames[i + len(files)] if (i + len(files)) < len(filenames) and filenames[i + len(files)] else picture.name
+                base, ext = os.path.splitext(picture.name)  # แยกชื่อไฟล์และนามสกุลเดิม
+                if not os.path.splitext(custom_filename)[1]:  # ตรวจสอบว่าชื่อใหม่ไม่มีนามสกุล
+                    custom_filename = custom_filename + ext  # เพิ่มนามสกุลเดิมกลับไป
+                else:
+                    custom_filename = os.path.splitext(custom_filename)[0] + ext  # ใช้ชื่อที่กำหนดและนามสกุลเดิม
+
+                # สร้าง path สำหรับบันทึกไฟล์
                 upload_path = generate_upload_path(evaluation, custom_filename)
 
+                # ลดขนาดรูปภาพและบันทึกลงใน Memory
                 image = Image.open(picture)
                 max_size = (1366, 800)
                 image.thumbnail(max_size)
-                img_io = ContentFile(b'')
-                image_format = image.format or 'JPEG'
+                img_io = BytesIO()
+                image_format = image.format if image.format else 'JPEG'  # ตรวจสอบรูปแบบภาพ
                 image.save(img_io, format=image_format)
+                img_io.seek(0)
 
-                file_path = default_storage.save(upload_path, img_io)
+                # บันทึกไฟล์ไปยังระบบจัดเก็บไฟล์
+                file_path = default_storage.save(upload_path, ContentFile(img_io.read()))
 
+                # บันทึกข้อมูลลงในฐานข้อมูล
                 evidence = user_evident(
                     uwls_id=criteria,
                     uevr_id=evaluation,
                     picture=file_path,
-                    filename=os.path.basename(file_path)
+                    filename=os.path.basename(custom_filename)  # เก็บชื่อไฟล์ที่ถูกต้อง
                 )
                 evidence.save()
 
@@ -4068,12 +4093,30 @@ def get_c_unit(request):
 
 @login_required
 def print_evaluation_pdf(request, evaluation_id):
+    # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+    evr_round_obj = evaluation.evr_id  # Get the current evaluation round from user_evaluation
     user = evaluation.user
+    # ดึงข้อมูล profile ที่เชื่อมกับ user_evaluation
     profile = evaluation.user.profile
 
+    # ดึงข้อมูลการประเมินผลของผู้ใช้
+    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=evaluation.user, evr_id=evr_round_obj).first()
+    selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
 
-    # ฟังก์ชันสำหรับการดึงข้อมูลการลาในแต่ละรอบ
+    # ดึงข้อมูลการปฏิบัติงานของผู้ใช้
+    user_work_info_obj, created = user_work_info.objects.get_or_create(
+        user=evaluation.user,
+        round=evr_round_obj,
+        defaults={'punishment': ''}
+    )
+    work_form_current = UserWorkInfoForm(instance=user_work_info_obj)
+
+    # สร้างฟอร์มโปรไฟล์และการปฏิบัติงาน
+    profile_form = UserProfileForm(instance=evaluation.user)
+    extended_form = ExtendedProfileForm(instance=profile)
+
+    # ฟังก์ชันสำหรับดึงข้อมูลการลา
     def get_or_create_leave(user, round_obj, leave_type):
         leave, created = WorkLeave.objects.get_or_create(
             user=user,
@@ -4083,31 +4126,32 @@ def print_evaluation_pdf(request, evaluation_id):
         )
         return leave
     
+    # ตรวจสอบรอบที่ 1 (หากมีข้อมูล)
+    round_1 = evr_round.objects.filter(
+        evr_round=1, evr_year=(evr_round_obj.evr_year if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
+    ).first()
 
-    # ดึงข้อมูลการลา
-    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
-    round_1 = evr_round.objects.filter(evr_round=1, evr_year=(timezone.now().year - 1 if evr_round_obj.evr_round == 2 else timezone.now().year)).first()
+    # ดึงข้อมูลการลาของรอบที่ 1 และรอบปัจจุบัน
+    sick_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'SL') if round_1 else None
+    sick_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'SL')
     
-    sick_leave_round_1 = get_or_create_leave(user, round_1, 'SL') if round_1 else None
-    sick_leave_current = get_or_create_leave(user, evr_round_obj, 'SL')
-    
-    personal_leave_round_1 = get_or_create_leave(user, round_1, 'PL') if round_1 else None
-    personal_leave_current = get_or_create_leave(user, evr_round_obj, 'PL')
-    
-    late_round_1 = get_or_create_leave(user, round_1, 'LT') if round_1 else None
-    late_current = get_or_create_leave(user, evr_round_obj, 'LT')
+    personal_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'PL') if round_1 else None
+    personal_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'PL')
 
-    maternity_leave_round_1 = get_or_create_leave(user, round_1, 'ML') if round_1 else None
-    maternity_leave_current = get_or_create_leave(user, evr_round_obj, 'ML')
+    late_round_1 = get_or_create_leave(evaluation.user, round_1, 'LT') if round_1 else None
+    late_form = get_or_create_leave(evaluation.user, evr_round_obj, 'LT')
 
-    ordination_leave_round_1 = get_or_create_leave(user, round_1, 'OL') if round_1 else None
-    ordination_leave_current = get_or_create_leave(user, evr_round_obj, 'OL')
+    maternity_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'ML') if round_1 else None
+    maternity_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'ML')
 
-    longsick_leave_round_1 = get_or_create_leave(user, round_1, 'LSL') if round_1 else None
-    longsick_leave_current = get_or_create_leave(user, evr_round_obj, 'LSL')
+    ordination_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'OL') if round_1 else None
+    ordination_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'OL')
 
-    adsent_work_round_1 = get_or_create_leave(user, round_1, 'AW') if round_1 else None
-    adsent_work_current = get_or_create_leave(user, evr_round_obj, 'AW')
+    longsick_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'LSL') if round_1 else None
+    longsick_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'LSL')
+
+    adsent_work_round_1 = get_or_create_leave(evaluation.user, round_1, 'AW') if round_1 else None
+    adsent_work_form = get_or_create_leave(evaluation.user, evr_round_obj, 'AW')
 
     # ดึงข้อมูลการประเมินผลของผู้ใช้
     user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
@@ -4300,27 +4344,27 @@ def print_evaluation_pdf(request, evaluation_id):
     p.setFont("SarabunBold", 16)
     p.drawString(col1_x, y_position - 250, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
-    if round_1:
+    if evaluation.evr_id.evr_round == 1:
         data = [
             [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
-            ["ลาป่วย", sick_leave_current.times, sick_leave_current.days, "0", "0"],
-            ["ลากิจ", personal_leave_current.times, personal_leave_current.days, "0", "0"],
-            ["มาสาย",  late_current.times, late_current.days, "0", "0"],
-            ["ลาคลอดบุตร", maternity_leave_current.times, maternity_leave_current.days, "0", "0"],
-            ["ลาอุปสมบท", ordination_leave_current.times, ordination_leave_current.days, "0", "0"],
-            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_current.times, longsick_leave_current.days, "0", "0"],
-            ["ขาดราชการ", adsent_work_current.times, adsent_work_current.days, "0", "0"],
+            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, "0", "0"],
+            ["ลากิจ", personal_leave_round_1.times, personal_leave_round_1.days, "0", "0"],
+            ["มาสาย",  late_round_1.times, late_round_1.days, "0", "0"],
+            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, "0", "0"],
+            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, "0", "0"],
+            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, "0", "0"],
+            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, "0", "0"],
         ]
     else:
         data = [
             [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
-            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_current.times, sick_leave_current.days],
-            ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_current.times, personal_leave_current.days],
-            ["มาสาย", late_round_1.times, late_round_1.days, late_current.times, late_current.days],
-            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, maternity_leave_current.times, maternity_leave_current.days],
-            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, ordination_leave_current.times, ordination_leave_current.days],
-            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, longsick_leave_current.times, longsick_leave_current.days],
-            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, adsent_work_current.times, adsent_work_current.days],
+            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_form.times, sick_leave_form.days],
+            ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_form.times, personal_leave_form.days],
+            ["มาสาย", late_round_1.times, late_round_1.days, late_form.times, late_form.days],
+            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, maternity_leave_form.times, maternity_leave_form.days],
+            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, ordination_leave_form.times, ordination_leave_form.days],
+            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, longsick_leave_form.times, longsick_leave_form.days],
+            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, adsent_work_form.times, adsent_work_form.days],
         ]
 
     # สร้างตารางใน PDF โดยใช้ข้อมูลที่กำหนดตามเงื่อนไข
@@ -4990,15 +5034,32 @@ def print_evaluation_pdf(request, evaluation_id):
 
 
 
-
 @login_required
 def print_evaluation_pdf_eva(request, evaluation_id):
+    # ดึงข้อมูล user_evaluation โดยไม่สนใจ request.user
     evaluation = get_object_or_404(user_evaluation, pk=evaluation_id)
+    evr_round_obj = evaluation.evr_id  # Get the current evaluation round from user_evaluation
     user = evaluation.user
+    # ดึงข้อมูล profile ที่เชื่อมกับ user_evaluation
     profile = evaluation.user.profile
 
+    # ดึงข้อมูลการประเมินผลของผู้ใช้
+    user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=evaluation.user, evr_id=evr_round_obj).first()
+    selected_group = user_evaluation_agreement_obj.g_id if user_evaluation_agreement_obj else None
 
-    # ฟังก์ชันสำหรับการดึงข้อมูลการลาในแต่ละรอบ
+    # ดึงข้อมูลการปฏิบัติงานของผู้ใช้
+    user_work_info_obj, created = user_work_info.objects.get_or_create(
+        user=evaluation.user,
+        round=evr_round_obj,
+        defaults={'punishment': ''}
+    )
+    work_form_current = UserWorkInfoForm(instance=user_work_info_obj)
+
+    # สร้างฟอร์มโปรไฟล์และการปฏิบัติงาน
+    profile_form = UserProfileForm(instance=evaluation.user)
+    extended_form = ExtendedProfileForm(instance=profile)
+
+    # ฟังก์ชันสำหรับดึงข้อมูลการลา
     def get_or_create_leave(user, round_obj, leave_type):
         leave, created = WorkLeave.objects.get_or_create(
             user=user,
@@ -5008,31 +5069,32 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         )
         return leave
     
+    # ตรวจสอบรอบที่ 1 (หากมีข้อมูล)
+    round_1 = evr_round.objects.filter(
+        evr_round=1, evr_year=(evr_round_obj.evr_year if evr_round_obj.evr_round == 2 else evr_round_obj.evr_year)
+    ).first()
 
-    # ดึงข้อมูลการลา
-    evr_round_obj = get_evr_round()  # ดึงข้อมูลรอบการประเมินปัจจุบัน
-    round_1 = evr_round.objects.filter(evr_round=1, evr_year=(timezone.now().year - 1 if evr_round_obj.evr_round == 2 else timezone.now().year)).first()
+    # ดึงข้อมูลการลาของรอบที่ 1 และรอบปัจจุบัน
+    sick_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'SL') if round_1 else None
+    sick_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'SL')
     
-    sick_leave_round_1 = get_or_create_leave(user, round_1, 'SL') if round_1 else None
-    sick_leave_current = get_or_create_leave(user, evr_round_obj, 'SL')
-    
-    personal_leave_round_1 = get_or_create_leave(user, round_1, 'PL') if round_1 else None
-    personal_leave_current = get_or_create_leave(user, evr_round_obj, 'PL')
-    
-    late_round_1 = get_or_create_leave(user, round_1, 'LT') if round_1 else None
-    late_current = get_or_create_leave(user, evr_round_obj, 'LT')
+    personal_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'PL') if round_1 else None
+    personal_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'PL')
 
-    maternity_leave_round_1 = get_or_create_leave(user, round_1, 'ML') if round_1 else None
-    maternity_leave_current = get_or_create_leave(user, evr_round_obj, 'ML')
+    late_round_1 = get_or_create_leave(evaluation.user, round_1, 'LT') if round_1 else None
+    late_form = get_or_create_leave(evaluation.user, evr_round_obj, 'LT')
 
-    ordination_leave_round_1 = get_or_create_leave(user, round_1, 'OL') if round_1 else None
-    ordination_leave_current = get_or_create_leave(user, evr_round_obj, 'OL')
+    maternity_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'ML') if round_1 else None
+    maternity_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'ML')
 
-    longsick_leave_round_1 = get_or_create_leave(user, round_1, 'LSL') if round_1 else None
-    longsick_leave_current = get_or_create_leave(user, evr_round_obj, 'LSL')
+    ordination_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'OL') if round_1 else None
+    ordination_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'OL')
 
-    adsent_work_round_1 = get_or_create_leave(user, round_1, 'AW') if round_1 else None
-    adsent_work_current = get_or_create_leave(user, evr_round_obj, 'AW')
+    longsick_leave_round_1 = get_or_create_leave(evaluation.user, round_1, 'LSL') if round_1 else None
+    longsick_leave_form = get_or_create_leave(evaluation.user, evr_round_obj, 'LSL')
+
+    adsent_work_round_1 = get_or_create_leave(evaluation.user, round_1, 'AW') if round_1 else None
+    adsent_work_form = get_or_create_leave(evaluation.user, evr_round_obj, 'AW')
 
     # ดึงข้อมูลการประเมินผลของผู้ใช้
     user_evaluation_agreement_obj = user_evaluation_agreement.objects.filter(user=user, evr_id=evr_round_obj).first()
@@ -5225,27 +5287,27 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     p.setFont("SarabunBold", 16)
     p.drawString(col1_x, y_position - 250, "บันทึกการปฏิบัติงาน: ")
     # ตรวจสอบว่ามีข้อมูลของ round_1 หรือไม่ก่อนสร้างตารางใน PDF
-    if round_1:
+    if evaluation.evr_id.evr_round == 1:
         data = [
             [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
-            ["ลาป่วย", sick_leave_current.times, sick_leave_current.days, "0", "0"],
-            ["ลากิจ", personal_leave_current.times, personal_leave_current.days, "0", "0"],
-            ["มาสาย",  late_current.times, late_current.days, "0", "0"],
-            ["ลาคลอดบุตร", maternity_leave_current.times, maternity_leave_current.days, "0", "0"],
-            ["ลาอุปสมบท", ordination_leave_current.times, ordination_leave_current.days, "0", "0"],
-            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_current.times, longsick_leave_current.days, "0", "0"],
-            ["ขาดราชการ", adsent_work_current.times, adsent_work_current.days, "0", "0"],
+            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, "0", "0"],
+            ["ลากิจ", personal_leave_round_1.times, personal_leave_round_1.days, "0", "0"],
+            ["มาสาย",  late_round_1.times, late_round_1.days, "0", "0"],
+            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, "0", "0"],
+            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, "0", "0"],
+            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, "0", "0"],
+            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, "0", "0"],
         ]
     else:
         data = [
             [Paragraph("ประเภทการลา", styleCenter), Paragraph("รอบที่ 1 (ครั้ง)", styleB), Paragraph("รอบที่ 1 (วัน)", styleB), Paragraph("รอบที่ 2 (ครั้ง)", styleB), Paragraph("รอบที่ 2 (วัน)", styleB)],
-            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_current.times, sick_leave_current.days],
-            ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_current.times, personal_leave_current.days],
-            ["มาสาย", late_round_1.times, late_round_1.days, late_current.times, late_current.days],
-            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, maternity_leave_current.times, maternity_leave_current.days],
-            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, ordination_leave_current.times, ordination_leave_current.days],
-            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, longsick_leave_current.times, longsick_leave_current.days],
-            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, adsent_work_current.times, adsent_work_current.days],
+            ["ลาป่วย", sick_leave_round_1.times, sick_leave_round_1.days, sick_leave_form.times, sick_leave_form.days],
+            ["ลากิจ",  personal_leave_round_1.times, personal_leave_round_1.days, personal_leave_form.times, personal_leave_form.days],
+            ["มาสาย", late_round_1.times, late_round_1.days, late_form.times, late_form.days],
+            ["ลาคลอดบุตร", maternity_leave_round_1.times, maternity_leave_round_1.days, maternity_leave_form.times, maternity_leave_form.days],
+            ["ลาอุปสมบท", ordination_leave_round_1.times, ordination_leave_round_1.days, ordination_leave_form.times, ordination_leave_form.days],
+            [Paragraph("ลาป่วยจำเป็นต้องรักษาตัวเป็นเวลานานคราวเดียวหรือหลายคราวรวมกัน", styleN), longsick_leave_round_1.times, longsick_leave_round_1.days, longsick_leave_form.times, longsick_leave_form.days],
+            ["ขาดราชการ", adsent_work_round_1.times, adsent_work_round_1.days, adsent_work_form.times, adsent_work_form.days],
         ]
 
     # สร้างตารางใน PDF โดยใช้ข้อมูลที่กำหนดตามเงื่อนไข
