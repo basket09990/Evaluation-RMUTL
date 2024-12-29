@@ -452,11 +452,11 @@ class ManualEvrRoundForm(forms.Form):
         widget=forms.Select(attrs={'style': 'font-size: 20px;'})  
     )
     manual_year = forms.IntegerField(
-        label="ประจำปี (พ.ศ.)",
+        label="รอบการประเมินประจำปี (พ.ศ.)",
         required=True,
         min_value=2560,  # ค.ศ. 2000
         max_value=3000,  # ค.ศ. 2100
-        widget=forms.NumberInput(attrs={'placeholder': 'กรอกปี (พ.ศ.)','style': 'font-size: 20px;'})
+        widget=forms.NumberInput(attrs={'placeholder': 'กรอกรอบการประเมินประจำปี (พ.ศ.)','style': 'font-size: 20px;'})
     )
     start_date = forms.DateField(
         label="วันเริ่มต้น",
@@ -531,3 +531,6 @@ class ManualEvrRoundForm2(forms.Form):
         if manual_year:
             return manual_year - 543  # แปลงเป็น ค.ศ.
         return manual_year
+    
+
+    
