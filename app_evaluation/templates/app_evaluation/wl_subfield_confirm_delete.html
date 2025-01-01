@@ -2,7 +2,7 @@
 {% block content %}
 <div>
     <h2>ยืนยันการลบกลุ่มย่อยภาระงาน</h2>
-    <p>คุณต้องการลบกลุ่มย่อยภาระงาน "{{ subfield.sf_name }}" ใช่หรือไม่?</p>
+    <h1>คุณต้องการลบกลุ่มย่อยภาระงาน "{{ subfield.sf_name }}" ใช่หรือไม่?</h1>
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">ลบ</button>

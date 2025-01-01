@@ -2755,7 +2755,7 @@ def select_group(request):
     # ถ้าไม่พบรอบการประเมิน ให้แสดงข้อความแจ้งเตือน
     if not evr_round_obj:
         messages.error(request, "ไม่พบรอบการประเมินที่ตรงกับวันที่ปัจจุบัน")
-        return redirect('home')  # หรือหน้าอื่นที่เหมาะสม
+        return redirect('show_evaluation_outtime') # หรือหน้าอื่นที่เหมาะสม
 
     # ตรวจสอบว่าผู้ใช้มีการเลือกกลุ่มและมีข้อมูลการประเมินสำหรับรอบปัจจุบันแล้วหรือไม่
     selected_agreement = user_evaluation_agreement.objects.filter(
@@ -4072,6 +4072,9 @@ def eval_4(request):
 def eval_5(request):
     return render(request,'app_evaluation/evaluation5.html')
 
+def show_evaluation_outtime(request):
+    return render(request,'app_evaluation/show_evaluation_outtime.html')
+
 
 from django.views.decorators.http import require_GET
 @require_GET
@@ -4232,8 +4235,8 @@ def print_evaluation_pdf(request, evaluation_id):
     score_1_total = score_count[1] * 1
     score_0_total = score_count[0] * 0
 
-    total_score = total_score if 'total_score' is locals() else 0.0
-    total_max_num = total_max_num if 'total_max_num' is locals() else 0.0
+    total_score = total_score if 'total_score' in locals() else 0.0
+    total_max_num = total_max_num if 'total_max_num' in locals() else 0.0
 
     total_score = float(total_score) if total_score is not None else 0.0
     total_max_num = float(total_max_num) if total_max_num is not None else 0.0
@@ -5175,8 +5178,8 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     score_1_total = score_count[1] * 1
     score_0_total = score_count[0] * 0
 
-    total_score = total_score if 'total_score' is locals() else 0.0
-    total_max_num = total_max_num if 'total_max_num' is locals() else 0.0
+    total_score = total_score if 'total_score' in locals() else 0.0
+    total_max_num = total_max_num if 'total_max_num' in locals() else 0.0
 
     total_score = float(total_score) if total_score is not None else 0.0
     total_max_num = float(total_max_num) if total_max_num is not None else 0.0

@@ -162,6 +162,7 @@ urlpatterns = [
     path('select_manual_round/', views.select_manual_round, name='select_manual_round'),
     path('edit_manual_round/<int:round_id>/', views.edit_manual_round, name='edit_manual_round'),
 
+    path('show_evaluation_outtime/', views.show_evaluation_outtime, name='show_evaluation_outtime'),
 
     path('eval_2/', views.eval_2, name='eval_2'),
     path('eval_3/', views.eval_3, name='eval_3'),

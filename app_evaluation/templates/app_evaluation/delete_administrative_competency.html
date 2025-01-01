@@ -3,7 +3,7 @@
 {% block content %}
 <div>
     <h2>ลบ สมรรถนะทางการบริหาร</h2>
-    <p>คุณต้องการลบ สมรรถนะทางการบริหาร {{ competency.adc_name }} จริงหรือไม่?</p>
+    <h1>คุณต้องการลบ สมรรถนะทางการบริหาร {{ competency.adc_name }} จริงหรือไม่?</h1>
     <form method="post">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">ลบ</button>
