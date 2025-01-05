@@ -3,7 +3,7 @@
 {% block title %}แนบไฟล์และรูปภาพ{% endblock %}
 {% block content %}
 <div>
-    <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
+    <h1>ไฟล์/รูปภาพที่อัปโหลดของ {{ criteria.selected_name }}</h1>
     {% if user.groups.all.0.name == "Admin" or user.is_superuser %}
     <form id="uploadForm" action="{% url 'upload_evidence2' criteria_id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}

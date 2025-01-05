@@ -7,11 +7,12 @@
 <div class="form-group">
     <h2>แก้ไขรอบการประเมินรอบที่ {{ evr_round_obj.evr_round }} ช่วงเวลา ( {{ evr_round_obj.start_date }} ) ถึง ( {{ evr_round_obj.end_date }} )</h2>
     
-    <h3>{% with evr_round_obj.start_date|date:"Y"|add:543 as start_year_thai %}
-    {% with evr_round_obj.end_date|date:"Y"|add:543 as end_year_thai %}
-        ({{ evr_round_obj.start_date|date:"j F" }} {{ start_year_thai }} - {{ evr_round_obj.end_date|date:"j F" }} {{ end_year_thai }})
-    {% endwith %}
-    {% endwith %}
+    <h3>
+        {% with evr_round_obj.start_date|date:"Y"|add:543 as start_year_thai %}
+        {% with evr_round_obj.end_date|date:"Y"|add:543 as end_year_thai %}
+            ({{ evr_round_obj.start_date|date:"j F" }} {{ start_year_thai }} - {{ evr_round_obj.end_date|date:"j F" }} {{ end_year_thai }})
+        {% endwith %}
+        {% endwith %}
     </h3>
 
     <form method="POST">
@@ -21,4 +22,43 @@
         <a href="{% url 'select_manual_round' %}" class="btn btn-secondary">ยกเลิก</a>
     </form>
 </div> 
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .Toggle-Switch {
+        width: 100px;
+        height: 30px;
+        background-color: #f1f1f1;
+        border: 1px solid #ccc;
+        border-radius: 15px;
+        font-size: 14px;
+        font-weight: bold;
+        text-align: center;
+        line-height: 30px;
+        cursor: pointer;
+        transition: background-color 0.3s, color 0.3s;
+    }
+    
+    .Toggle-Switch option {
+        text-align: center;
+    }
+    
+    .Toggle-Switch:hover {
+        background-color: #e0e0e0;
+    }
+    
+    .Toggle-Switch:focus {
+        outline: none;
+        border-color: #4caf50;
+    }
+    
+    .Toggle-Switch option[value="True"] {
+        color: #4caf50;
+    }
+    
+    .Toggle-Switch option[value="False"] {
+        color: #ff5252;
+    }
+    </style>    
 {% endblock %}

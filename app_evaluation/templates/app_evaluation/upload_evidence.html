@@ -3,7 +3,7 @@
 {% block title %}แนบไฟล์และรูปภาพ{% endblock %}
 {% block content %}
 <div>
-    <h1>ไฟล์/รูปภาพที่อัปโหลด</h1>
+    <h1>ไฟล์/รูปภาพที่อัปโหลดของ {{ criteria.selected_name }}</h1>
     <form id="uploadForm" action="{% url 'upload_evidence' criteria.id %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div>

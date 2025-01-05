@@ -581,6 +581,7 @@ def edit_manual_round(request, round_id):
         if form.is_valid():
             start_date = form.cleaned_data['start_date']
             end_date = form.cleaned_data['end_date']
+            evr_status = form.cleaned_data.get('evr_status', False)  # ดึงสถานะจากฟอร์ม
 
             # ตรวจสอบไม่ให้ start_date และ end_date ทับซ้อนกับรอบที่มีอยู่
             overlapping_rounds = evr_round.objects.filter(
@@ -595,7 +596,15 @@ def edit_manual_round(request, round_id):
                 evr_round_obj.start_date = start_date
                 evr_round_obj.end_date = end_date
                 evr_round_obj.save()
+                evr_round_obj.evr_status = evr_status  # อัปเดตสถานะ
 
+                # หากสถานะเป็น True ให้ปิดสถานะของรอบอื่นในปีเดียวกัน
+                if evr_status:
+                    evr_round.objects.filter(
+                        evr_year=evr_round_obj.evr_year,
+                    ).exclude(evr_id=round_id).update(evr_status=False)
+
+                evr_round_obj.save()
                 return redirect('select_manual_round')
     else:
         form = ManualEvrRoundForm2(initial={
@@ -603,6 +612,7 @@ def edit_manual_round(request, round_id):
             'manual_round': evr_round_obj.evr_round,
             'start_date': evr_round_obj.start_date.isoformat(),  # แปลงเป็น YYYY-MM-DD
             'end_date': evr_round_obj.end_date.isoformat(),  # แปลงเป็น YYYY-MM-DD
+            'evr_status': evr_round_obj.evr_status,  # เพิ่มสถานะ
         })
 
     return render(request, 'app_evaluation/edit_manual_round.html', {'form': form, 'evr_round_obj': evr_round_obj})
@@ -627,17 +637,6 @@ def search_evaluation(request):
     # กรองตามรอบ ถ้ามีการป้อนข้อมูล
     if round:
         evaluations = evaluations.filter(evr_id__evr_round=round)
-
-    # ตรวจสอบวันที่ปัจจุบันกับ end_date ของ evr_round และอัพเดตสถานะ
-    current_date = timezone.now().date()
-    for evaluation in evaluations:
-        evr_round_obj = evaluation.evr_id
-        
-        # ถ้า end_date เกิน current_date ให้เปลี่ยนสถานะเป็น True
-        if evr_round_obj.end_date and current_date > evr_round_obj.end_date:
-            if not evr_round_obj.evr_status:  # ตรวจสอบสถานะก่อนว่าเป็น False อยู่หรือไม่
-                evr_round_obj.evr_status = True  # หมดเวลา: เปลี่ยนสถานะเป็น True
-                evr_round_obj.save()
                
     # ดึงปีและรอบทั้งหมดเพื่อนำไปใช้ในตัวเลือก
     years = evaluations.values_list('evr_id__evr_year', flat=True).distinct()
@@ -1556,18 +1555,6 @@ def search_evaluations_2(request):
     if round:
         evaluations = evaluations.filter(evr_id__evr_round=round)
 
-    # ตรวจสอบวันที่ปัจจุบันกับ end_date ของ evr_round และอัพเดตสถานะ
-    current_date = timezone.now().date()
-    
-    for evaluation in evaluations:
-        evr_round_obj = evaluation.evr_id
-        
-        # ถ้า end_date เกิน current_date ให้เปลี่ยนสถานะเป็น True
-        if evr_round_obj.end_date and current_date > evr_round_obj.end_date:
-            if not evr_round_obj.evr_status:  # ตรวจสอบสถานะก่อนว่าเป็น False อยู่หรือไม่
-                evr_round_obj.evr_status = True  # หมดเวลา: เปลี่ยนสถานะเป็น True
-                evr_round_obj.save()
-    
     # เรียงข้อมูลให้ใหม่สุดอยู่ด้านบน โดยใช้ฟิลด์ created_at ในการจัดเรียง
     evaluations = evaluations.order_by('-created_at')  # เปลี่ยน 'created_at' เป็นฟิลด์เวลาที่เหมาะสม
 
@@ -2153,12 +2140,12 @@ def upload_evidence2(request, criteria_id):
         """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
         year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
         round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
-        username = evaluation.user.first_name  # ชื่อผู้ใช้
+        username = evaluation.user.id  # ชื่อผู้ใช้
         lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
-        workloadname = criteria.selected_name
+        workloadname = criteria.id
 
         base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
-        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}/{workloadname}"
+        folder_path = f"uploads/{year}/{round_number}/{username}/{workloadname}"
 
         # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
         new_filename = f"{base}{ext}"
@@ -2240,6 +2227,7 @@ def upload_evidence2(request, criteria_id):
         'evaluation': evaluation,
         'evidences': evidences,  # ส่งรายการไฟล์/รูปภาพไปยัง template
         'criteria_id': criteria_id,
+        'criteria': criteria,
     })
 
 @login_required
@@ -2755,7 +2743,7 @@ def select_group(request):
     # ถ้าไม่พบรอบการประเมิน ให้แสดงข้อความแจ้งเตือน
     if not evr_round_obj:
         messages.error(request, "ไม่พบรอบการประเมินที่ตรงกับวันที่ปัจจุบัน")
-        return redirect('show_evaluation_outtime') # หรือหน้าอื่นที่เหมาะสม
+        return redirect('search_evaluations') # หรือหน้าอื่นที่เหมาะสม
 
     # ตรวจสอบว่าผู้ใช้มีการเลือกกลุ่มและมีข้อมูลการประเมินสำหรับรอบปัจจุบันแล้วหรือไม่
     selected_agreement = user_evaluation_agreement.objects.filter(
@@ -3676,12 +3664,12 @@ def upload_evidence(request, criteria_id):
         """สร้าง path ตามปี > รอบ > ชื่อผู้ใช้"""
         year = evaluation.evr_id.evr_year + 543  # ปีจาก user_evaluation
         round_number = evaluation.evr_id.evr_round  # รอบการประเมิน
-        username = evaluation.user.first_name  # ชื่อผู้ใช้
+        username = evaluation.user.id  # ชื่อผู้ใช้
         lastname = evaluation.user.last_name  # ใช้ last_name ถูกต้อง
-        workloadname = criteria.selected_name
+        workloadname = criteria.id
 
         base, ext = os.path.splitext(filename)  # แยกชื่อไฟล์และนามสกุล
-        folder_path = f"uploads/{year}/{round_number}/{username}_{lastname}/{workloadname}"
+        folder_path = f"uploads/{year}/{round_number}/{username}/{workloadname}"
 
         # ตรวจสอบว่าชื่อไฟล์ซ้ำหรือไม่
         new_filename = f"{base}{ext}"
@@ -3762,7 +3750,7 @@ def upload_evidence(request, criteria_id):
     return render(request, 'app_evaluation/upload_evidence.html', {
         'form': form,
         'evidences': evidences,
-        'criteria': criteria
+        'criteria': criteria,
     })
 
 @login_required

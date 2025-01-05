@@ -54,8 +54,12 @@
                             {% for round in existing_rounds %}
                                 <td>{{ round.evr_year|add:543 }}</td>
                                 <td>{{ round.evr_round }}</td>
-                                <td>{{ round.start_date }}</td>
-                                <td>{{ round.end_date }}</td>
+                                {% with round.start_date|date:"Y"|add:543 as start_year_thai %}
+                                {% with round.end_date|date:"Y"|add:543 as end_year_thai %}
+                                <td>{{ round.start_date|date:"j F" }} {{ start_year_thai }}</td>
+                                <td>{{ round.end_date|date:"j F" }} {{ end_year_thai }}</td>
+                                {% endwith %}
+                                {% endwith %}
                                 <td><a
                                     href="{% url 'edit_manual_round' round.evr_id %}"
                                     class="btn btn-warning">แก้ไข</a>

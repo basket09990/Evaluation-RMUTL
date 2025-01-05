@@ -513,6 +513,13 @@ class ManualEvrRoundForm2(forms.Form):
         required=True,
         widget=forms.DateInput(attrs={'type': 'date'})
     )
+
+    evr_status = forms.ChoiceField(
+        choices=[(True, "สิ้นสุดรอบการประเมิน"), (False, "เปิดรอบการประเมิน")],
+        label="สถานะรอบการประเมิน",
+        required=True,
+        widget=forms.Select(attrs={'class': 'Toggle-Switch'})
+    )
     
     def clean(self):
         """ตรวจสอบว่า end_date ต้องไม่ก่อน start_date"""
