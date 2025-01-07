@@ -60,10 +60,17 @@
                                 <td>{{ round.end_date|date:"j F" }} {{ end_year_thai }}</td>
                                 {% endwith %}
                                 {% endwith %}
+                                {% if round.evr_status == 0 %}
                                 <td><a
                                     href="{% url 'edit_manual_round' round.evr_id %}"
                                     class="btn btn-warning">แก้ไข</a>
                                 </td>
+                                {% elif round.evr_status == 1 %}
+                                <td><a
+                                    href="{% url 'edit_manual_round' round.evr_id %}"
+                                    class="btn btn-danger">แก้ไข</a>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>

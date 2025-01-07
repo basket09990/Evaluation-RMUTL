@@ -56,12 +56,20 @@
                     {% else %}
                     <td>ผู้รับประเมินหมดเวลาในการทำแบบประเมิน</td>
                     {% endif %}-->
+                    {% if user.groups.all.0.name == "Evaluator" %}
                     {% if evaluation.approve_status == 0 %}
                     <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a>
                     </td>
                     {% else %}
                     <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a>
                     </td>
+                    {% endif %}
+                    {% else %}
+                    {% if evaluation.evr_id.evr_status == 0 %}
+                    <td><a href="{% url 'evaluation_page_from_1' evaluation.uevr_id %}" class="btn btn-primary">แบบประเมิน</a>
+                    {% else %}
+                    <td><a href="{% url 'evaluation_page1' evaluation.uevr_id %}" class="btn btn-info">ดูแบบประเมิน</a>
+                    {% endif %}</td>
                     {% endif %}
                 </tr>
                 {% endfor %}
