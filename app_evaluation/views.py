@@ -4423,8 +4423,8 @@ def print_evaluation_pdf(request, evaluation_id):
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
-    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16)
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
+    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16, leading=17)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16, leading=17)
 
     # ตรวจสอบการขึ้นหน้าใหม่ก่อนแสดงหัวข้อ
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
@@ -4485,7 +4485,7 @@ def print_evaluation_pdf(request, evaluation_id):
         table_data = table_header + data_chunk  # รวมหัวตารางกับข้อมูล
         
         # กำหนดตาราง
-        table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
+        table = Table(table_data, colWidths=[9 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -4508,7 +4508,7 @@ def print_evaluation_pdf(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 20  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 15  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     # วาดตารางในแต่ละหน้า
     for chunk in chunk_data(data, max_rows_per_page):
@@ -5374,8 +5374,8 @@ def print_evaluation_pdf_eva(request, evaluation_id):
 
     # สร้าง Style สำหรับภาษาไทย
     styles = getSampleStyleSheet()
-    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16)
-    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16)
+    styleN = ParagraphStyle(name='Normal', fontName='Sarabun', fontSize=16, leading=15)
+    styleB = ParagraphStyle(name='Bold', fontName='SarabunBold', fontSize=16, leading=15)
 
     # ตรวจสอบการขึ้นหน้าใหม่ก่อนแสดงหัวข้อ
     start_y = check_and_create_new_page(p, start_y, line_height, bottom_margin)
@@ -5433,7 +5433,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
     def draw_table_with_header(p, data_chunk, start_x, start_y):
         table_header = get_table_header()
         table_data = table_header + data_chunk  # รวมหัวตารางกับข้อมูล
-        table = Table(table_data, colWidths=[9.75 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
+        table = Table(table_data, colWidths=[9 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 2.5 * cm])
         table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.white),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
@@ -5456,7 +5456,7 @@ def print_evaluation_pdf_eva(request, evaluation_id):
         return start_y - h  # คืนค่าตำแหน่งใหม่หลังจากวาดตาราง
 
     # คำนวณจำนวนแถวที่พอดีกับแต่ละหน้า
-    max_rows_per_page = 20  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
+    max_rows_per_page = 15  # สมมติว่าเราจะแสดง 30 แถวต่อหน้า
 
     table_header = [[Paragraph("ภาระงาน/กิจกรรม/โครงการ/งาน", styleCenter),
                          Paragraph("จำนวน", styleCenter),
