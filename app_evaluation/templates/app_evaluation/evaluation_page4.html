@@ -499,13 +499,21 @@
                 <tr>
                     <th>องค์ประกอบการประเมิน</th>
                     <th>คะแนนเต็ม</th>
+                    {% if user.groups.all.0.name != "Assessor" %}
+                    <th>คะแนนที่ได้(เดิม)</th>
+                    {% else %}
                     <th>คะแนนที่ได้</th>
+                    {% endif %}
                     <th>หมายเหตุ</th>
                 </tr>
                 <tr>
                     <td>องค์ประกอบที่ 1: ผลสัมฤทธิ์ของงาน</td>
                     <td style="text-align: center;">70</td>
+                    {% if user.groups.all.0.name != "Assessor" %}
+                    <td style="text-align: center;">{{ c_sumwl|floatformat:1  }}({{ achievement_work|floatformat:1  }})</td>
+                    {% else %}
                     <td style="text-align: center;">{{ achievement_work|floatformat:1  }}</td>
+                    {% endif %}
                     <td style="text-align: center;">
                         <textarea name="remark_achievement" style="width: 100%; height: 100%; resize: none; box-sizing: border-box;" rows="2" cols="20">{{ remark_achievement|default_if_none:'' }}</textarea>
                     </td>
@@ -529,13 +537,44 @@
                 <tr>
                     <td>รวม</td>
                     <td style="text-align: center;">100</td>
+                    {% if user.groups.all.0.name != "Assessor" %}
+                    <td style="text-align: center;">{{ cp_main_sum|floatformat:1  }}({{ total_score|floatformat:1  }})</td>
+                    {% else %}
                     <td style="text-align: center;">{{ total_score|floatformat:1  }}</td>
+                    {% endif %}
                     <td style="text-align: center;">
                         <textarea name="remark_total" style="width: 100%; height: 100%; resize: none; box-sizing: border-box;" rows="2" cols="20">{{ remark_total|default_if_none:'' }}</textarea>
                     </td>
                 </tr>
             </table>
         
+
+            {% if user.groups.all.0.name != "Assessor" %}
+            <h3>ระดับผลการประเมิน</h3>
+            <fieldset>
+                <legend>ระดับผลการประเมิน</legend>
+                <div>
+                    <input type="radio" name="evaluation_level" value="ดีเด่น" {% if cp_main_sum >= 90 %}checked{% endif %}>
+                    <label>ดีเด่น (90 - 100)</label>
+                </div>
+                <div>
+                    <input type="radio" name="evaluation_level" value="ดีมาก" {% if cp_main_sum >= 80 and cp_main_sum < 90 %}checked{% endif %}>
+                    <label>ดีมาก (80 - 89.99)</label>
+                </div>
+                <div>
+                    <input type="radio" name="evaluation_level" value="ดี" {% if cp_main_sum >= 70 and cp_main_sum < 80 %}checked{% endif %}>
+                    <label>ดี (70 - 79.99)</label>
+                </div>
+                <div>
+                    <input type="radio" name="evaluation_level" value="พอใช้" {% if cp_main_sum >= 60 and cp_main_sum < 70 %}checked{% endif %}>
+                    <label>พอใช้ (60 - 69.99)</label>
+                </div>
+                <div>
+                    <input type="radio" name="evaluation_level" value="ต้องปรับปรุง" {% if cp_main_sum < 60 %}checked{% endif %}>
+                    <label>ต้องปรับปรุง (ต่ำกว่า 60)</label>
+                </div>
+            </fieldset>
+            {% else %}
             <h3>ระดับผลการประเมิน</h3>
             <fieldset>
                 <legend>ระดับผลการประเมิน</legend>
@@ -575,7 +614,8 @@
                     {% endif %}
                 </div>
             </fieldset>
-            
+            {% endif %}
+
         </form>
         
     

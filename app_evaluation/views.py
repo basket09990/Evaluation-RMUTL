@@ -1371,7 +1371,9 @@ def evaluation_page4(request, evaluation_id):
     # คำนวณคะแนนต่าง ๆ
     achievement_work = evaluation.achievement_work or 0
     mc_score = evaluation.mc_score or 0
+    c_sumwl = evaluation.c_sumwl or 0
     total_score = achievement_work + mc_score
+    cp_main_sum = c_sumwl + mc_score
 
     # กำหนดระดับผลการประเมิน
     if total_score >= 90:
@@ -1385,6 +1387,18 @@ def evaluation_page4(request, evaluation_id):
     else:
         level = 'ต้องปรับปรุง'
 
+    # กำหนดระดับผลการประเมิน
+    if cp_main_sum >= 90:
+        level1 = 'ดีเด่น'
+    elif cp_main_sum >= 80:
+        level1 = 'ดีมาก'
+    elif cp_main_sum >= 70:
+        level1 = 'ดี'
+    elif cp_main_sum >= 60:
+        level1 = 'พอใช้'
+    else:
+        level1 = 'ต้องปรับปรุง'
+
     # ส่งข้อมูลไปยังเทมเพลต
     context = {
         'user_evaluation': evaluation,
@@ -1397,6 +1411,8 @@ def evaluation_page4(request, evaluation_id):
         'remark_other': evaluation.remark_other,
         'remark_total': evaluation.remark_total,
         'evaluation_id': evaluation_id,
+        'cp_main_sum':cp_main_sum,
+        'c_sumwl':c_sumwl,
     }
 
     return render(request, 'app_evaluation/evaluation_page4.html', context)
