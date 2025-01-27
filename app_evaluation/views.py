@@ -2772,7 +2772,7 @@ def select_group(request):
     if evr_round_obj.evr_round == 2:
         round_1_agreement = user_evaluation_agreement.objects.filter(
             user=request.user,
-            evr_id__evr_year=evr_round_obj.evr_year - 1,
+            evr_id__evr_year=evr_round_obj.evr_year,
             evr_id__evr_round=1
         ).first()
 
